@@ -62,6 +62,16 @@ export IP=$( curl -s https://ipinfo.io/ip/ )
 # // Exporting Network Interface
 export NETWORK_IFACE="$(ip route show to default | awk '{print $5}')"
 
+limit_dir="/etc/xray/limit"
+vmess_limit="${limit_dir}/vmess"
+vless_limit="${limit_dir}/vless"
+trojan_limit="${limit_dir}/trojan"
+vmess_lock="${limit_dir}/lock-vmess"
+vless_lock="${limit_dir}/lock-vless"
+trojan_lock="${limit_dir}/lock-trojan"
+mkdir -p "$limit_dir"
+touch "$vmess_limit" "$vless_limit" "$trojan_limit" "$vmess_lock" "$vless_lock" "$trojan_lock"
+
 ##----- Auto Remove Vmess
 data=( `cat /etc/xray/config.json | grep '^#vmsg' | cut -d ' ' -f 2 | sort | uniq`);
 now=`date +"%Y-%m-%d"`
@@ -74,7 +84,9 @@ exp2=$(( (d1 - d2) / 86400 ))
 if [[ "$exp2" -le "0" ]]; then
 sed -i "/^#vms $user $exp/,/^},{/d" /etc/xray/config.json
 sed -i "/^#vmsg $user $exp/,/^},{/d" /etc/xray/config.json
+sed -i "/^### $user $exp/,/^},{/d" /etc/xray/config.json
 rm -f /etc/xray/$user-tls.json /etc/xray/$user-none.json
+sed -i "/^$user /d" "$vmess_limit" "$vmess_lock"
 fi
 done
 
@@ -90,6 +102,7 @@ exp2=$(( (d1 - d2) / 86400 ))
 if [[ "$exp2" -le "0" ]]; then
 sed -i "/^#vls $user $exp/,/^},{/d" /etc/xray/config.json
 sed -i "/^#vlsg $user $exp/,/^},{/d" /etc/xray/config.json
+sed -i "/^$user /d" "$vless_limit" "$vless_lock"
 fi
 done
 
@@ -105,6 +118,7 @@ exp2=$(( (d1 - d2) / 86400 ))
 if [[ "$exp2" -le "0" ]]; then
 sed -i "/^#tr $user $exp/,/^},{/d" /etc/xray/config.json
 sed -i "/^#trg $user $exp/,/^},{/d" /etc/xray/config.json
+sed -i "/^$user /d" "$trojan_limit" "$trojan_lock"
 fi
 done
 systemctl restart xray

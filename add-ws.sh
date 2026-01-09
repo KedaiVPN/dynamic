@@ -96,6 +96,14 @@ menu
 	done
 
 uuid=$(cat /proc/sys/kernel/random/uuid)
+limit_dir="/etc/xray/limit"
+limit_file="${limit_dir}/vmess"
+lock_file="${limit_dir}/lock-vmess"
+mkdir -p "$limit_dir"
+touch "$limit_file" "$lock_file"
+until [[ $quota =~ ^[0-9]+$ && $quota -gt 0 ]]; do
+read -p "Limit Bandwidth (GB): " quota
+done
 read -p "Expired (days): " masaaktif
 exp=`date -d "$masaaktif days" +"%Y-%m-%d"`
 sed -i '/#vmess$/a\#vms '"$user $exp"'\
@@ -106,6 +114,8 @@ sed -i '/#vmesskuota$/a\### '"$user $exp"'\
 },{"id": "'""$uuid""'","alterId": '"0"',"email": "'""$user""'"' /etc/xray/config.json
 sed -i '/#vmessgrpc$/a\#vmsg '"$user $exp"'\
 },{"id": "'""$uuid""'","alterId": '"0"',"email": "'""$user""'"' /etc/xray/config.json
+sed -i "/^$user /d" "$limit_file" "$lock_file"
+echo "$user $uuid $exp $quota 0" >> "$limit_file"
 asu=`cat<<EOF
       {
       "v": "2",
@@ -261,6 +271,7 @@ echo -e "Port GRPC : ${tls}" | tee -a /etc/log-create-user.log
 echo -e "id : ${uuid}" | tee -a /etc/log-create-user.log
 echo -e "alterId : 0" | tee -a /etc/log-create-user.log
 echo -e "Security : auto" | tee -a /etc/log-create-user.log
+echo -e "Limit Bandwidth : ${quota} GB" | tee -a /etc/log-create-user.log
 echo -e "Network : ws/grpc" | tee -a /etc/log-create-user.log
 echo -e "Path : /vmess" | tee -a /etc/log-create-user.log
 #echo -e "Path : /worryfree" | tee -a /etc/log-create-user.log
