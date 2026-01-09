@@ -190,6 +190,7 @@ wget -q -O /usr/bin/cek-speed "https://raw.githubusercontent.com/KedaiVPN/dynami
 wget -q -O /usr/bin/cek-bandwidth "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/cek-bandwidth.sh"
 wget -q -O /usr/bin/cek-ram "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/ram.sh"
 wget -q -O /usr/bin/limit-speed "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/limit-speed.sh"
+wget -q -O /usr/bin/xray-limit "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/xray-limit.sh"
 wget -q -O /usr/bin/menu-vless "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/menu-vless.sh"
 wget -q -O /usr/bin/menu-vmess "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/menu-vmess.sh"
 wget -q -O /usr/bin/menu-socks "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/menu-socks.sh"
@@ -228,6 +229,7 @@ chmod +x /usr/bin/cek-speed
 chmod +x /usr/bin/cek-bandwidth
 chmod +x /usr/bin/cek-ram
 chmod +x /usr/bin/limit-speed
+chmod +x /usr/bin/xray-limit
 chmod +x /usr/bin/menu-vless
 chmod +x /usr/bin/menu-vmess
 chmod +x /usr/bin/menu-ss
@@ -266,6 +268,11 @@ echo "0 5 * * * root reboot" >> /etc/crontab
 echo "0 6 * * * root backup" >> /etc/crontab
 echo "0 23 * * * root backup" >> /etc/crontab
 echo "5 23 * * * root /usr/bin/backup" >> /etc/crontab
+if [ ! -f /etc/cron.d/xray-limit ]; then
+cat > /etc/cron.d/xray-limit <<-END
+*/5 * * * * root /usr/bin/xray-limit
+END
+fi
 cd
 
 #cat > /etc/cron.d/re_otm <<-END

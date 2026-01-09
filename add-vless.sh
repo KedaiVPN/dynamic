@@ -94,12 +94,22 @@ clear
 	done
 
 uuid=$(cat /proc/sys/kernel/random/uuid)
+limit_dir="/etc/xray/limit"
+limit_file="${limit_dir}/vless"
+lock_file="${limit_dir}/lock-vless"
+mkdir -p "$limit_dir"
+touch "$limit_file" "$lock_file"
+until [[ $quota =~ ^[0-9]+$ && $quota -gt 0 ]]; do
+read -p "Limit Bandwidth (GB): " quota
+done
 read -p "Expired (days): " masaaktif
 exp=`date -d "$masaaktif days" +"%Y-%m-%d"`
 sed -i '/#vless$/a\#vls '"$user $exp"'\
 },{"id": "'""$uuid""'","email": "'""$user""'"' /etc/xray/config.json
 sed -i '/#vlessgrpc$/a\#vlsg '"$user $exp"'\
 },{"id": "'""$uuid""'","email": "'""$user""'"' /etc/xray/config.json
+sed -i "/^$user /d" "$limit_file" "$lock_file"
+echo "$user $uuid $exp $quota 0" >> "$limit_file"
 cat > /home/vps/public_html/vless-$user.txt <<-END
 
 ====================================================================
@@ -139,6 +149,7 @@ echo -e "port none TLS : $none" | tee -a /etc/log-create-user.log
 echo -e "id : ${uuid}" | tee -a /etc/log-create-user.log
 echo -e "Network : ws/grpc" | tee -a /etc/log-create-user.log
 echo -e "Encryption : none" | tee -a /etc/log-create-user.log
+echo -e "Limit Bandwidth : ${quota} GB" | tee -a /etc/log-create-user.log
 echo -e "Path : /vless" | tee -a /etc/log-create-user.log
 echo -e "Path : vless-grpc" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log

@@ -102,6 +102,9 @@ touch /root/log-reboot.txt
 touch /home/limit
 echo "" > /root/log-limit.txt
 echo "" > /root/log-reboot.txt
+mkdir -p /etc/xray/limit
+touch /etc/xray/limit/vmess /etc/xray/limit/vless /etc/xray/limit/trojan
+touch /etc/xray/limit/lock-vmess /etc/xray/limit/lock-vless /etc/xray/limit/lock-trojan
 
 # Install Wondershaper
 cd /root/

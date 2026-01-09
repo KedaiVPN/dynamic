@@ -93,12 +93,22 @@ clear
 	done
 
 uuid=$(cat /proc/sys/kernel/random/uuid)
+limit_dir="/etc/xray/limit"
+limit_file="${limit_dir}/trojan"
+lock_file="${limit_dir}/lock-trojan"
+mkdir -p "$limit_dir"
+touch "$limit_file" "$lock_file"
+until [[ $quota =~ ^[0-9]+$ && $quota -gt 0 ]]; do
+read -p "Limit Bandwidth (GB): " quota
+done
 read -p "Expired (days): " masaaktif
 exp=`date -d "$masaaktif days" +"%Y-%m-%d"`
 sed -i '/#trojanws$/a\#tr '"$user $exp"'\
 },{"password": "'""$uuid""'","email": "'""$user""'"' /etc/xray/config.json
 sed -i '/#trojangrpc$/a\#trg '"$user $exp"'\
 },{"password": "'""$uuid""'","email": "'""$user""'"' /etc/xray/config.json
+sed -i "/^$user /d" "$limit_file" "$lock_file"
+echo "$user $uuid $exp $quota 0" >> "$limit_file"
 
 systemctl restart xray
 cat > /home/vps/public_html/trojan-$user.txt <<-END
@@ -135,6 +145,7 @@ echo -e "Host/IP : ${domain}" | tee -a /etc/log-create-user.log
 echo -e "port : ${tr}" | tee -a /etc/log-create-user.log
 echo -e "Key : ${uuid}" | tee -a /etc/log-create-user.log
 echo -e "Network : ws/grpc" | tee -a /etc/log-create-user.log
+echo -e "Limit Bandwidth : ${quota} GB" | tee -a /etc/log-create-user.log
 echo -e "Path : /trojan-ws" | tee -a /etc/log-create-user.log
 echo -e "ServiceName : trojan-grpc" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log

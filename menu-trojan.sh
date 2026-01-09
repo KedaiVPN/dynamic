@@ -150,6 +150,13 @@ NUMBER_OF_CLIENTS=$(grep -c -E "^#trg " "/etc/xray/config.json")
     exp4=`date -d "$exp3 days" +"%Y-%m-%d"`
     sed -i "/#trg $user/c\#trg $user $exp4" /etc/xray/config.json
     sed -i "/#tr $user/c\#tr $user $exp4" /etc/xray/config.json
+    limit_dir="/etc/xray/limit"
+    limit_file="${limit_dir}/trojan"
+    lock_file="${limit_dir}/lock-trojan"
+    mkdir -p "$limit_dir"
+    touch "$limit_file" "$lock_file"
+    awk -v user="$user" -v exp="$exp4" 'BEGIN{OFS=" "} $1==user{$3=exp} {print}' "$limit_file" > "${limit_file}.tmp" && mv "${limit_file}.tmp" "$limit_file"
+    awk -v user="$user" -v exp="$exp4" 'BEGIN{OFS=" "} $1==user{$3=exp} {print}' "$lock_file" > "${lock_file}.tmp" && mv "${lock_file}.tmp" "$lock_file"
     systemctl restart xray > /dev/null 2>&1
     clear
     echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
@@ -193,6 +200,12 @@ exp=$(grep -E "^#trg " "/etc/xray/config.json" | cut -d ' ' -f 3 | sed -n "${CLI
 sed -i "/^#trg $user $exp/,/^},{/d" /etc/xray/config.json
 sed -i "/^#tr $user $exp/,/^},{/d" /etc/xray/config.json
 rm -f /etc/xray/vmess-$user-tls.json /etc/xray/vmess-$user-nontls.json
+limit_dir="/etc/xray/limit"
+limit_file="${limit_dir}/trojan"
+lock_file="${limit_dir}/lock-trojan"
+mkdir -p "$limit_dir"
+touch "$limit_file" "$lock_file"
+sed -i "/^$user /d" "$limit_file" "$lock_file"
 systemctl restart xray.service
 clear
 echo ""
@@ -208,6 +221,72 @@ echo "Script Mod By NevermoreSSH"
     
     menu
 }
+function unlockws() {
+clear
+limit_dir="/etc/xray/limit"
+lock_file="${limit_dir}/lock-trojan"
+limit_file="${limit_dir}/trojan"
+mkdir -p "$limit_dir"
+touch "$lock_file" "$limit_file"
+NUMBER_OF_CLIENTS=$(grep -c -E "^[^ ]" "$lock_file")
+if [[ ${NUMBER_OF_CLIENTS} == '0' ]]; then
+  echo ""
+  echo "No locked Trojan accounts found!"
+  echo ""
+  read -n 1 -s -r -p "Press any key to back on menu"
+  menu
+fi
+
+echo ""
+echo " Select the locked client you want to unlock"
+echo " Press CTRL+C to return"
+echo " ==============================="
+echo "     No  Expired   User"
+nl -s ') ' "$lock_file" | awk '{print $1" "$4" "$2}'
+until [[ ${CLIENT_NUMBER} -ge 1 && ${CLIENT_NUMBER} -le ${NUMBER_OF_CLIENTS} ]]; do
+  if [[ ${CLIENT_NUMBER} == '1' ]]; then
+    read -rp "Select one client [1]: " CLIENT_NUMBER
+  else
+    read -rp "Select one client [1-${NUMBER_OF_CLIENTS}]: " CLIENT_NUMBER
+  fi
+done
+line=$(sed -n "${CLIENT_NUMBER}"p "$lock_file")
+user=$(echo "$line" | awk '{print $1}')
+uuid=$(echo "$line" | awk '{print $2}')
+exp=$(echo "$line" | awk '{print $3}')
+until [[ $quota =~ ^[0-9]+$ && $quota -gt 0 ]]; do
+read -p "Limit Bandwidth (GB): " quota
+done
+reset_bytes=$(/usr/local/bin/xray api stats --server=127.0.0.1:10085 --name "user>>>${user}>>>traffic>>>uplink" 2>/dev/null | awk -F': ' 'NR==1{print $2}')
+down_bytes=$(/usr/local/bin/xray api stats --server=127.0.0.1:10085 --name "user>>>${user}>>>traffic>>>downlink" 2>/dev/null | awk -F': ' 'NR==1{print $2}')
+if [[ -z "$reset_bytes" ]]; then
+  reset_bytes=0
+fi
+if [[ -z "$down_bytes" ]]; then
+  down_bytes=0
+fi
+reset_bytes=$((reset_bytes + down_bytes))
+sed -i "/^$user /d" "$lock_file"
+sed -i "/^$user /d" "$limit_file"
+echo "$user $uuid $exp $quota $reset_bytes" >> "$limit_file"
+sed -i '/#trojanws$/a\#tr '"$user $exp"'\
+},{"password": "'""$uuid""'","email": "'""$user""'"' /etc/xray/config.json
+sed -i '/#trojangrpc$/a\#trg '"$user $exp"'\
+},{"password": "'""$uuid""'","email": "'""$user""'"' /etc/xray/config.json
+systemctl restart xray >/dev/null 2>&1
+clear
+echo ""
+echo "==============================="
+echo "  XRAYS/Trojan Account Unlocked"
+echo "==============================="
+echo "Username  : $user"
+echo "Expired   : $exp"
+echo "Limit     : ${quota} GB"
+echo "==============================="
+echo ""
+read -n 1 -s -r -p "Press any key to back on menu"
+menu
+}
 clear
 echo -e "${BICyan} ┌─────────────────────────────────────────────────────┐${NC}"
 echo -e "       ${BIWhite}${UWhite}Trojan ${NC}"
@@ -216,6 +295,7 @@ echo -e "     ${BICyan}[${BIWhite}1${BICyan}] Add Account Trojan      "
 echo -e "     ${BICyan}[${BIWhite}2${BICyan}] Delete Account Trojan      "
 echo -e "     ${BICyan}[${BIWhite}3${BICyan}] Renew Account Trojan      "
 echo -e "     ${BICyan}[${BIWhite}4${BICyan}] Check User XRAY     "
+echo -e "     ${BICyan}[${BIWhite}5${BICyan}] Unlock Account Trojan      "
 echo -e " ${BICyan}└─────────────────────────────────────────────────────┘${NC}"
 echo -e "     ${BIYellow}Press x or [ Ctrl+C ] • To-${BIWhite}Exit${NC}"
 echo ""
@@ -226,6 +306,7 @@ case $opt in
 2) clear ; delws ;;
 3) clear ; renewws;;
 4) clear ; cekws ;;
+5) clear ; unlockws ;;
 0) clear ; menu ;;
 x) exit ;;
 *) echo -e "" ; echo "Press any key to back on menu" ; sleep 1 ; menu ;;
