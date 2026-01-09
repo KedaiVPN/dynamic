@@ -127,7 +127,7 @@ echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━�
 echo -e "\\E[0;41;36m        Detail Vless Account      \E[0m"
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 echo ""
-grep -E "^#vlsg " "/etc/xray/config.json" | cut -d ' ' -f 2-3 | column -t | sort | uniq
+grep -E "^#vlsg " "/etc/xray/config.json" | cut -d ' ' -f 2-3 | nl -w2 -s '. ' | sort | uniq
 echo ""
 read -rp "Input Username : " user
 if [ -z "$user" ]; then
