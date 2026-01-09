@@ -66,42 +66,97 @@ export NETWORK_IFACE="$(ip route show to default | awk '{print $5}')"
 touch
 
 clear
-_APISERVER=127.0.0.1:10085 
-_Xray=/usr/local/bin/xray
+_APISERVER=127.0.0.1:10085
+_Xray="$(command -v xray)"
+if [[ -z "$_Xray" ]]; then
+  _Xray=/usr/local/bin/xray
+fi
 
-apidata () {
-    local ARGS=
-    if [[ $1 == "reset" ]]; then
-      ARGS="reset: true"
+limit_dir="/etc/xray/limit"
+vmess_file="${limit_dir}/vmess"
+vless_file="${limit_dir}/vless"
+trojan_file="${limit_dir}/trojan"
+lock_vmess="${limit_dir}/lock-vmess"
+lock_vless="${limit_dir}/lock-vless"
+lock_trojan="${limit_dir}/lock-trojan"
+
+mkdir -p "$limit_dir"
+touch "$vmess_file" "$vless_file" "$trojan_file" "$lock_vmess" "$lock_vless" "$lock_trojan"
+
+bytes_to_gb() {
+  local bytes="$1"
+  awk -v b="$bytes" 'BEGIN { printf "%.2f", b/1024/1024/1024 }'
+}
+
+get_stat_value() {
+  local name="$1"
+  local value
+  value="$("$_Xray" api stats --server=$_APISERVER --name "$name" 2>/dev/null | awk -F': ' 'NR==1{print $2}')"
+  if [[ -z "$value" ]]; then
+    echo 0
+    return
+  fi
+  echo "$value"
+}
+
+get_usage_bytes() {
+  local user="$1"
+  local up down
+  up="$(get_stat_value "user>>>${user}>>>traffic>>>uplink")"
+  down="$(get_stat_value "user>>>${user}>>>traffic>>>downlink")"
+  echo $((up + down))
+}
+
+print_header() {
+  local title="$1"
+  echo "-----------------------------"
+  echo "$title"
+  echo "-----------------------------"
+  printf "%-20s %-12s %-12s %-10s\n" "USER" "USED(GB)" "LIMIT(GB)" "STATUS"
+}
+
+print_protocol() {
+  local proto="$1"
+  local file="$2"
+  local lock_file="$3"
+  local has_data=0
+
+  while read -r user uuid exp limit_gb reset_bytes; do
+    if [[ -z "$user" || -z "$limit_gb" ]]; then
+      continue
     fi
-    $_Xray api statsquery --server=$_APISERVER "${ARGS}" \
-    | awk '{
-        if (match($1, /"name":/)) {
-            f=1; gsub(/^"|link"|,$/, "", $2);
-            split($2, p,  ">>>");
-            printf "%s:%s->%s\t", p[1],p[2],p[4];
-        }
-        else if (match($1, /"value":/) && f){ f = 0; printf "%.0f\n", $2; }
-        else if (match($0, /}/) && f) { f = 0; print 0; }
-    }'
+    has_data=1
+    if [[ -z "$reset_bytes" || ! "$reset_bytes" =~ ^[0-9]+$ ]]; then
+      reset_bytes=0
+    fi
+    usage="$(get_usage_bytes "$user")"
+    used_bytes=$((usage - reset_bytes))
+    if [[ "$used_bytes" -lt 0 ]]; then
+      used_bytes=0
+    fi
+    used_gb="$(bytes_to_gb "$used_bytes")"
+    status="UNLOCKED"
+    if grep -q -E "^${user} " "$lock_file"; then
+      status="LOCKED"
+    fi
+    printf "%-20s %-12s %-12s %-10s\n" "$user" "$used_gb" "$limit_gb" "$status"
+  done < "$file"
+
+  if [[ "$has_data" -eq 0 ]]; then
+    echo "No users found."
+  fi
 }
 
-print_sum() {
-    local DATA="$1"
-    local PREFIX="$2"
-    local SORTED=$(echo "$DATA" | grep "^${PREFIX}" | sort -r)
-    local SUM=$(echo "$SORTED" | awk '
-        /->up/{us+=$2}
-        /->down/{ds+=$2}
-        END{
-            printf "SUM->up:\t%.0f\nSUM->down:\t%.0f\nSUM->TOTAL:\t%.0f\n", us, ds, us+ds;
-        }')
-    echo -e "${SORTED}\n${SUM}" \
-    | numfmt --field=2 --suffix=B --to=iec \
-    | column -t
-}
+if [[ ! -x "$_Xray" ]]; then
+  echo "Xray binary not found."
+  exit 0
+fi
 
-DATA=$(apidata $1)
-echo "-------------User------------" 
-print_sum "$DATA" "user"
-echo "-----------------------------"
+print_header "VMESS USERS"
+print_protocol "vmess" "$vmess_file" "$lock_vmess"
+echo ""
+print_header "VLESS USERS"
+print_protocol "vless" "$vless_file" "$lock_vless"
+echo ""
+print_header "TROJAN USERS"
+print_protocol "trojan" "$trojan_file" "$lock_trojan"
