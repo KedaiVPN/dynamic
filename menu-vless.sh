@@ -111,6 +111,39 @@ echo ""
 read -n 1 -s -r -p "Press any key to back on menu"
 menu
 }
+function detailws() {
+clear
+NUMBER_OF_CLIENTS=$(grep -c -E "^#vlsg " "/etc/xray/config.json")
+	if [[ ${NUMBER_OF_CLIENTS} == '0' ]]; then
+		echo ""
+		echo "You have no existing clients!"
+		echo ""
+		read -n 1 -s -r -p "Press any key to back on menu"
+		menu
+	fi
+
+clear
+echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+echo -e "\\E[0;41;36m        Detail Vless Account      \E[0m"
+echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+echo ""
+grep -E "^#vlsg " "/etc/xray/config.json" | cut -d ' ' -f 2-3 | column -t | sort | uniq
+echo ""
+read -rp "Input Username : " user
+if [ -z "$user" ]; then
+menu
+fi
+if [ -f "/home/vps/public_html/vless-$user.txt" ]; then
+clear
+cat "/home/vps/public_html/vless-$user.txt"
+else
+echo ""
+echo "Account not found or detail file missing."
+fi
+echo ""
+read -n 1 -s -r -p "Press any key to back on menu"
+menu
+}
 function renewws(){
 clear
 NUMBER_OF_CLIENTS=$(grep -c -E "^#vlsg " "/etc/xray/config.json")
@@ -187,7 +220,7 @@ NUMBER_OF_CLIENTS=$(grep -c -E "^#vlsg " "/etc/xray/config.json")
 	echo " Select the existing client you want to remove"
 	echo " Press CTRL+C to return"
 	echo " ==============================="
-	echo "     No  Expired   User"
+echo "     No  Expired   User"
 	grep -E "^#vlsg " "/etc/xray/config.json" | cut -d ' ' -f 2-3 | nl -s ') '
 	until [[ ${CLIENT_NUMBER} -ge 1 && ${CLIENT_NUMBER} -le ${NUMBER_OF_CLIENTS} ]]; do
 		if [[ ${CLIENT_NUMBER} == '1' ]]; then
@@ -297,6 +330,7 @@ echo -e "     ${BICyan}[${BIWhite}2${BICyan}] Delete Account Vless     "
 echo -e "     ${BICyan}[${BIWhite}3${BICyan}] Renew Account Vless     "
 echo -e "     ${BICyan}[${BIWhite}4${BICyan}] Check User XRAY     "
 echo -e "     ${BICyan}[${BIWhite}5${BICyan}] Unlock Account Vless     "
+echo -e "     ${BICyan}[${BIWhite}6${BICyan}] Check Detail Account     "
 echo -e " ${BICyan}└─────────────────────────────────────────────────────┘${NC}"
 echo -e "     ${BIYellow}Press x or [ Ctrl+C ] • To-${BIWhite}Exit${NC}"
 echo ""
@@ -308,6 +342,7 @@ case $opt in
 3) clear ; renewws;;
 4) clear ; cekws ;;
 5) clear ; unlockws ;;
+6) clear ; detailws ;;
 0) clear ; menu ;;
 x) exit ;;
 *) echo -e "" ; echo "Press any key to back on menu" ; sleep 1 ; menu ;;
