@@ -43,8 +43,8 @@ export WARNING="${RED}\e[5m"
 export UNDERLINE="\e[4m"
 
 # // Exporting URL Host
-export Server_URL="raw.githubusercontent.com/NevermoreSSH/Blueblue/main/test"
-export Server1_URL="raw.githubusercontent.com/NevermoreSSH/Blueblue/main/limit"
+export Server_URL="raw.githubusercontent.com/KedaiVPN/dynamic/main/test"
+export Server1_URL="raw.githubusercontent.com/KedaiVPN/dynamic/main/limit"
 export Server_Port="443"
 export Server_IP="underfined"
 export Script_Mode="Stable"
@@ -108,11 +108,11 @@ get_usage_bytes() {
 }
 
 print_header() {
-  local title="$1"
-  echo "-----------------------------"
-  echo "$title"
-  echo "-----------------------------"
-  printf "%-20s %-12s %-12s %-10s\n" "USER" "USED(GB)" "LIMIT(GB)" "STATUS"
+echo "──────────────────────────────────────────────────────"
+  printf "                 [ %s ]\n" "$title"
+  echo "──────────────────────────────────────────────────────"
+  printf "    %-12s %-14s %-14s %-10s\n" "USER" "USED(GB)" "LIMIT(GB)" "STATUS"
+  echo " ┌───────────────────────────────────────────────────┐"
 }
 
 print_protocol() {
