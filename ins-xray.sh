@@ -593,6 +593,12 @@ cat <<EOF> /etc/xray/config.json
       "protocol": "freedom",
       "settings": {}
     },
+	{
+  "protocol": "freedom",
+  "settings": {},
+  "tag": "api"
+    },
+
     {
       "protocol": "blackhole",
       "settings": {},
