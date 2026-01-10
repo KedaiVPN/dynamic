@@ -103,7 +103,7 @@ format_bytes() {
 get_stat_value() {
   local name="$1"
   local value
-  value="$("$_Xray" api stats --server=$_APISERVER --name "$name" 2>/dev/null | awk -F': ' 'NR==1{print $2}')"
+  value="$("$_Xray" api stats --server=$_APISERVER --name "$name" 2>/dev/null | awk -F': ' '/"value"/{print $2; exit}')"
   if [[ -z "$value" ]]; then
     echo 0
     return
