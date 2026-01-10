@@ -138,11 +138,13 @@ print_protocol() {
       used_bytes=0
     fi
     used_gb="$(bytes_to_gb "$used_bytes")"
+	used_display="${used_gb}GB"
+    limit_display="${limit_gb}GB"
     status="UNLOCKED"
     if grep -q -E "^${user} " "$lock_file"; then
       status="LOCKED"
     fi
-    printf "${LIGHT}%-20s %-12s %-12s %-10s${NC}\n" "$user" "$used_gb" "$limit_gb" "$status"
+    printf "${LIGHT}%-20s %-12s %-12s %-10s${NC}\n" "$user" "$used_display" "$limit_display" "$status"
   done < "$file"
 
   if [[ "$has_data" -eq 0 ]]; then
