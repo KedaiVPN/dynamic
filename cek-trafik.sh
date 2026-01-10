@@ -41,10 +41,12 @@ export RECEIVE="[${YELLOW} RECEIVE ${NC}]"
 export BOLD="\e[1m"
 export WARNING="${RED}\e[5m"
 export UNDERLINE="\e[4m"
+white="\033[1;97m"
+line_color="\033[1;92m"
 
 # // Exporting URL Host
-export Server_URL="raw.githubusercontent.com/KedaiVPN/dynamic/main/test"
-export Server1_URL="raw.githubusercontent.com/KedaiVPN/dynamic/main/limit"
+export Server_URL="raw.githubusercontent.com/NevermoreSSH/Blueblue/main/test"
+export Server1_URL="raw.githubusercontent.com/NevermoreSSH/Blueblue/main/limit"
 export Server_Port="443"
 export Server_IP="underfined"
 export Script_Mode="Stable"
@@ -108,11 +110,12 @@ get_usage_bytes() {
 }
 
 print_header() {
-echo "──────────────────────────────────────────────────────"
-  printf "                 [ %s ]\n" "$title"
-  echo "──────────────────────────────────────────────────────"
-  printf "    %-12s %-14s %-14s %-10s\n" "USER" "USED(GB)" "LIMIT(GB)" "STATUS"
-  echo " ┌───────────────────────────────────────────────────┐"
+  local title="$1"
+  echo -e "${BLUE}───────────────────────────────────────────────────────${NC}"
+  printf "${LIGHT}                  [ %s ]${NC}\n" "$title"
+  echo -e "${BLUE}───────────────────────────────────────────────────────${NC}"
+  printf "${RED}    %-12s %-14s %-14s %-10s${NC}\n" "USER" "USED(GB)" "LIMIT(GB)" "STATUS"
+  echo -e "${BLUE}┌──────────────────────────────────────────────────────┐${NC}"
 }
 
 print_protocol() {
@@ -139,7 +142,7 @@ print_protocol() {
     if grep -q -E "^${user} " "$lock_file"; then
       status="LOCKED"
     fi
-    printf "%-20s %-12s %-12s %-10s\n" "$user" "$used_gb" "$limit_gb" "$status"
+    printf "${LIGHT}%-20s %-12s %-12s %-10s${NC}\n" "$user" "$used_gb" "$limit_gb" "$status"
   done < "$file"
 
   if [[ "$has_data" -eq 0 ]]; then
