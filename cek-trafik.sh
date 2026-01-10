@@ -85,9 +85,19 @@ lock_trojan="${limit_dir}/lock-trojan"
 mkdir -p "$limit_dir"
 touch "$vmess_file" "$vless_file" "$trojan_file" "$lock_vmess" "$lock_vless" "$lock_trojan"
 
-bytes_to_gb() {
+format_bytes() {
   local bytes="$1"
-  awk -v b="$bytes" 'BEGIN { printf "%.2f", b/1024/1024/1024 }'
+  awk -v b="$bytes" 'BEGIN {
+    if (b < 1024) {
+      printf "%.2fB", b
+    } else if (b < 1024*1024) {
+      printf "%.2fKB", b/1024
+    } else if (b < 1024*1024*1024) {
+      printf "%.2fMB", b/1024/1024
+    } else {
+      printf "%.2fGB", b/1024/1024/1024
+    }
+  }'
 }
 
 get_stat_value() {
@@ -137,8 +147,7 @@ print_protocol() {
     if [[ "$used_bytes" -lt 0 ]]; then
       used_bytes=0
     fi
-    used_gb="$(bytes_to_gb "$used_bytes")"
-	used_display="${used_gb}GB"
+    used_display="$(format_bytes "$used_bytes")"
     limit_display="${limit_gb}GB"
     status="UNLOCKED"
     if grep -q -E "^${user} " "$lock_file"; then
