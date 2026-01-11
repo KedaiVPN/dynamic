@@ -81,9 +81,12 @@ trojan_file="${limit_dir}/trojan"
 lock_vmess="${limit_dir}/lock-vmess"
 lock_vless="${limit_dir}/lock-vless"
 lock_trojan="${limit_dir}/lock-trojan"
+usage_vmess="${limit_dir}/usage-vmess"
+usage_vless="${limit_dir}/usage-vless"
+usage_trojan="${limit_dir}/usage-trojan"
 
 mkdir -p "$limit_dir"
-touch "$vmess_file" "$vless_file" "$trojan_file" "$lock_vmess" "$lock_vless" "$lock_trojan"
+touch "$vmess_file" "$vless_file" "$trojan_file" "$lock_vmess" "$lock_vless" "$lock_trojan" "$usage_vmess" "$usage_vless" "$usage_trojan"
 
 format_bytes() {
   local bytes="$1"
@@ -119,19 +122,41 @@ get_usage_bytes() {
   echo $((up + down))
 }
 
+get_usage_record() {
+  local usage_file="$1"
+  local user="$2"
+  local record
+  record="$(awk -v u="$user" '$1==u{print $2, $3}' "$usage_file")"
+  if [[ -z "$record" ]]; then
+    echo "0 0"
+    return
+  fi
+  echo "$record"
+}
+
+update_usage_record() {
+  local usage_file="$1"
+  local user="$2"
+  local offset="$3"
+  local last_seen="$4"
+  sed -i "/^${user} /d" "$usage_file"
+  echo "$user $offset $last_seen" >> "$usage_file"
+}
+
 print_header() {
   local title="$1"
-  echo -e "${BLUE}───────────────────────────────────────────────────────${NC}"
-  printf "${LIGHT}                  [ %s ]${NC}\n" "$title"
-  echo -e "${BLUE}───────────────────────────────────────────────────────${NC}"
-  printf "${RED}    %-12s %-14s %-14s %-10s${NC}\n" "USER" "USED(GB)" "LIMIT(GB)" "STATUS"
-  echo -e "${BLUE}┌──────────────────────────────────────────────────────┐${NC}"
+  echo -e "${line_color}──────────────────────────────────────────────────────${NC}"
+  printf "${white}               [ %s ]${NC}\n" "$title"
+  echo -e "${line_color} ─────────────────────────────────────────────────────${NC}"
+  printf "${white}    %-12s %-14s %-14s %-10s${NC}\n" "USER" "USED(GB)" "LIMIT(GB)" "STATUS"
+  echo -e "${line_color} ┌───────────────────────────────────────────────────┐${NC}"
 }
 
 print_protocol() {
   local proto="$1"
   local file="$2"
   local lock_file="$3"
+  local usage_file="$4"
   local has_data=0
 
   while read -r user uuid exp limit_gb reset_bytes; do
@@ -143,7 +168,13 @@ print_protocol() {
       reset_bytes=0
     fi
     usage="$(get_usage_bytes "$user")"
-    used_bytes=$((usage - reset_bytes))
+    read -r offset last_seen <<< "$(get_usage_record "$usage_file" "$user")"
+    if [[ "$usage" -lt "$last_seen" ]]; then
+      offset=$((offset + last_seen))
+    fi
+    update_usage_record "$usage_file" "$user" "$offset" "$usage"
+    total_bytes=$((offset + usage))
+    used_bytes=$((total_bytes - reset_bytes))
     if [[ "$used_bytes" -lt 0 ]]; then
       used_bytes=0
     fi
@@ -153,7 +184,7 @@ print_protocol() {
     if grep -q -E "^${user} " "$lock_file"; then
       status="LOCKED"
     fi
-    printf "${LIGHT}%-20s %-12s %-12s %-10s${NC}\n" "$user" "$used_display" "$limit_display" "$status"
+    printf "${white}%-20s %-12s %-12s %-10s${NC}\n" "$user" "$used_display" "$limit_display" "$status"
   done < "$file"
 
   if [[ "$has_data" -eq 0 ]]; then
@@ -167,10 +198,10 @@ if [[ ! -x "$_Xray" ]]; then
 fi
 
 print_header "VMESS USERS"
-print_protocol "vmess" "$vmess_file" "$lock_vmess"
+print_protocol "vmess" "$vmess_file" "$lock_vmess" "$usage_vmess"
 echo ""
 print_header "VLESS USERS"
-print_protocol "vless" "$vless_file" "$lock_vless"
+print_protocol "vless" "$vless_file" "$lock_vless" "$usage_vless"
 echo ""
 print_header "TROJAN USERS"
-print_protocol "trojan" "$trojan_file" "$lock_trojan"
+print_protocol "trojan" "$trojan_file" "$lock_trojan" "$usage_trojan"
