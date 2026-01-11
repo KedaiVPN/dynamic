@@ -19,7 +19,7 @@ touch "$limit_log"
 get_stat_value() {
   local name="$1"
   local value
-  value="$("$xray_bin" api stats --server=127.0.0.1:10085 --name "$name" 2>/dev/null | awk -F': ' 'NR==1{print $2}')"
+  value="$("$xray_bin" api stats --server=127.0.0.1:10085 --name "$name" 2>/dev/null | awk -F': ' '/"value"/{print $2; exit}')"
   if [[ -z "$value" ]]; then
     echo 0
     return
