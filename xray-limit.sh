@@ -14,6 +14,7 @@ limit_log="/root/log-limit.txt"
 mkdir -p "$limit_dir"
 touch "$limit_dir/vmess" "$limit_dir/vless" "$limit_dir/trojan"
 touch "$limit_dir/lock-vmess" "$limit_dir/lock-vless" "$limit_dir/lock-trojan"
+touch "$limit_dir/usage-vmess" "$limit_dir/usage-vless" "$limit_dir/usage-trojan"
 touch "$limit_log"
 
 get_stat_value() {
@@ -33,6 +34,27 @@ get_usage_bytes() {
   up="$(get_stat_value "user>>>${user}>>>traffic>>>uplink")"
   down="$(get_stat_value "user>>>${user}>>>traffic>>>downlink")"
   echo $((up + down))
+}
+
+get_usage_record() {
+  local usage_file="$1"
+  local user="$2"
+  local record
+  record="$(awk -v u="$user" '$1==u{print $2, $3}' "$usage_file")"
+  if [[ -z "$record" ]]; then
+    echo "0 0"
+    return
+  fi
+  echo "$record"
+}
+
+update_usage_record() {
+  local usage_file="$1"
+  local user="$2"
+  local offset="$3"
+  local last_seen="$4"
+  sed -i "/^${user} /d" "$usage_file"
+  echo "$user $offset $last_seen" >> "$usage_file"
 }
 
 remove_user_config() {
@@ -64,10 +86,12 @@ lock_user() {
   local reset_bytes="$6"
   local limit_file="${limit_dir}/${proto}"
   local lock_file="${limit_dir}/lock-${proto}"
+  local usage_file="${limit_dir}/usage-${proto}"
 
   remove_user_config "$proto" "$user"
   sed -i "/^${user} /d" "$limit_file"
   sed -i "/^${user} /d" "$lock_file"
+  sed -i "/^${user} /d" "$usage_file"
   echo "$user $uuid $exp $limit_gb $reset_bytes" >> "$lock_file"
   echo "$(date '+%Y-%m-%d %H:%M:%S') ${proto} ${user} locked (limit ${limit_gb} GB)" >> "$limit_log"
   systemctl restart xray >/dev/null 2>&1
@@ -77,6 +101,7 @@ process_limits() {
   local proto="$1"
   local limit_file="${limit_dir}/${proto}"
   local lock_file="${limit_dir}/lock-${proto}"
+  local usage_file="${limit_dir}/usage-${proto}"
 
   while read -r user uuid exp limit_gb reset_bytes; do
     if [[ -z "$user" || -z "$limit_gb" ]]; then
@@ -92,7 +117,13 @@ process_limits() {
       reset_bytes=0
     fi
     usage="$(get_usage_bytes "$user")"
-    used_bytes=$((usage - reset_bytes))
+    read -r offset last_seen <<< "$(get_usage_record "$usage_file" "$user")"
+    if [[ "$usage" -lt "$last_seen" ]]; then
+      offset=$((offset + last_seen))
+    fi
+    update_usage_record "$usage_file" "$user" "$offset" "$usage"
+    total_bytes=$((offset + usage))
+    used_bytes=$((total_bytes - reset_bytes))
     if [[ "$used_bytes" -lt 0 ]]; then
       used_bytes=0
     fi
