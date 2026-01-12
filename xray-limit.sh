@@ -62,17 +62,17 @@ remove_user_config() {
   local user="$2"
   case "$proto" in
     vmess)
-      sed -i "/^#vms $user /,/^},{/d" /etc/xray/config.json
-      sed -i "/^#vmsg $user /,/^},{/d" /etc/xray/config.json
-      sed -i "/^### $user /,/^},{/d" /etc/xray/config.json
+      sed -i "/^[[:space:]]*#vms $user /,/^[[:space:]]*},{/d" /etc/xray/config.json
+      sed -i "/^[[:space:]]*#vmsg $user /,/^[[:space:]]*},{/d" /etc/xray/config.json
+      sed -i "/^[[:space:]]*### $user /,/^[[:space:]]*},{/d" /etc/xray/config.json
       ;;
     vless)
-      sed -i "/^#vls $user /,/^},{/d" /etc/xray/config.json
-      sed -i "/^#vlsg $user /,/^},{/d" /etc/xray/config.json
+      sed -i "/^[[:space:]]*#vls $user /,/^[[:space:]]*},{/d" /etc/xray/config.json
+      sed -i "/^[[:space:]]*#vlsg $user /,/^[[:space:]]*},{/d" /etc/xray/config.json
       ;;
     trojan)
-      sed -i "/^#tr $user /,/^},{/d" /etc/xray/config.json
-      sed -i "/^#trg $user /,/^},{/d" /etc/xray/config.json
+      sed -i "/^[[:space:]]*#tr $user /,/^[[:space:]]*},{/d" /etc/xray/config.json
+      sed -i "/^[[:space:]]*#trg $user /,/^[[:space:]]*},{/d" /etc/xray/config.json
       ;;
   esac
 }
