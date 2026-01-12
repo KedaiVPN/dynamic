@@ -1,3 +1,4 @@
+#!/bin/bash
 clear
 DEFAULT_LIMIT=1
 DEFAULT_DURATION=5
@@ -50,30 +51,80 @@ get_limit() {
                 jumlah[$i]=0;
                 i=$i+1;
 			done
-        while read -r active_user
-			do
-                i=0;
-                for user1 in "${username[@]}"
-					do
-                        if [ "$active_user" == "$user1" ]; then
-                                jumlah[$i]=`expr ${jumlah[$i]} + 1`;
-                        fi
-                        i=$i+1;
-					done
-			done < <(ps -eo user=,args= | awk '
-                /sshd: / {
-                        split($0, parts, "sshd: ");
-                        split(parts[2], userparts, " ");
-                        if (userparts[1] != "") {
-                                print userparts[1];
+        log_has_dropbear=0
+        log_has_sshd=0
+        if [ -f "$LOG" ]; then
+                if grep -qi "Password auth succeeded" "$LOG"; then
+                        log_has_dropbear=1
+                fi
+                if grep -qi "Accepted password for" "$LOG"; then
+                        log_has_sshd=1
+                fi
+        fi
+
+        if [ $log_has_dropbear -eq 1 ]; then
+                cat $LOG | grep -i dropbear | grep -i "Password auth succeeded" > /tmp/log-db.txt
+                proc=( `ps aux | grep -i dropbear | awk '{print $2}'`);
+                for PID in "${proc[@]}"
+                        do
+                                cat /tmp/log-db.txt | grep "dropbear\[$PID\]" > /tmp/log-db-pid.txt
+                                NUM=`cat /tmp/log-db-pid.txt | wc -l`;
+                                USER=`cat /tmp/log-db-pid.txt | awk '{print $10}' | sed 's/'\''//g'`;
+                                if [ $NUM -eq 1 ]; then
+                                        i=0;
+                                        for user1 in "${username[@]}"
+                                                do
+                                                        if [ "$USER" == "$user1" ]; then
+                                                                jumlah[$i]=`expr ${jumlah[$i]} + 1`;
+                                                        fi
+                                                        i=$i+1;
+                                                done
+                                fi
+                        done
+        fi
+
+        if [ $log_has_sshd -eq 1 ]; then
+                cat $LOG | grep -i sshd | grep -i "Accepted password for" > /tmp/log-db.txt
+                data=( `ps aux | grep "\[priv\]" | sort -k 72 | awk '{print $2}'`);
+                for PID in "${data[@]}"
+                        do
+                                cat /tmp/log-db.txt | grep "sshd\[$PID\]" > /tmp/log-db-pid.txt;
+                                NUM=`cat /tmp/log-db-pid.txt | wc -l`;
+                                USER=`cat /tmp/log-db-pid.txt | awk '{print $9}'`;
+                                if [ $NUM -eq 1 ]; then
+                                        i=0;
+                                        for user1 in "${username[@]}"
+                                                do
+                                                        if [ "$USER" == "$user1" ]; then
+                                                                jumlah[$i]=`expr ${jumlah[$i]} + 1`;
+                                                        fi
+                                                        i=$i+1;
+                                                done
+                                fi
+                done
+        fi
+
+        if [ $log_has_dropbear -eq 0 ] && [ $log_has_sshd -eq 0 ]; then
+                while read -r active_user
+                        do
+                                i=0;
+                                for user1 in "${username[@]}"
+                                        do
+                                                if [ "$active_user" == "$user1" ]; then
+                                                        jumlah[$i]=`expr ${jumlah[$i]} + 1`;
+                                                fi
+                                                i=$i+1;
+                                        done
+                        done < <(ps -eo user=,args= | awk '
+                        /sshd: / {
+                                split($0, parts, "sshd: ");
+                                split(parts[2], userparts, " ");
+                                if (userparts[1] != "") {
+                                        print userparts[1];
+                                }
                         }
-                }
-                /dropbear/ {
-                        if ($1 != "root") {
-                                print $1;
-                        }
-                }
-        ')
+                ')
+        fi
         j="0";
         duration=$(get_duration)
         for i in ${!username[*]}
