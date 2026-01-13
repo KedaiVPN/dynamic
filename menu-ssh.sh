@@ -477,6 +477,44 @@ fi
 read -n 1 -s -r -p "Press any key to back on menu"
 menu
 }
+function manual_lock_unlock(){
+clear
+echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+echo -e "\E[0;41;36m         MANUAL LOCK/UNLOCK SSH           \E[0m"
+echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+echo ""
+read -p "Username : " Login
+if id -u "$Login" >/dev/null 2>&1; then
+    status=$(passwd -S "$Login" | awk '{print $2}')
+    if [[ "$status" == "L" ]]; then
+        echo -e "Status saat ini: [LOCKED]"
+        read -p "Apakah anda ingin meng-UNLOCK user ini? (y/n): " confirm
+        if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
+            usermod -U "$Login"
+            rm -f "/tmp/lock-$Login"
+            echo -e "${GREEN}User $Login telah di-UNLOCK.${NC}"
+        else
+            echo -e "${YELLOW}Dibatalkan.${NC}"
+        fi
+    else
+        echo -e "Status saat ini: [UNLOCKED]"
+        read -p "Apakah anda ingin meng-LOCK user ini? (y/n): " confirm
+        if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
+            usermod -L "$Login"
+            touch "/tmp/lock-$Login"
+            pkill -u "$Login"
+            echo -e "${RED}User $Login telah di-LOCK dan sesi diputus.${NC}"
+        else
+            echo -e "${YELLOW}Dibatalkan.${NC}"
+        fi
+    fi
+else
+    echo -e "${RED}Username tidak ditemukan.${NC}"
+fi
+echo ""
+read -n 1 -s -r -p "Press any key to back on menu"
+menu
+}
 clear
 echo -e "${BICyan} ┌─────────────────────────────────────────────────────┐${NC}"
 echo -e "       ${BIWhite}${UWhite}SSH MENU ${NC}"
@@ -490,6 +528,7 @@ echo -e "     ${BICyan}[${BIWhite}6${BICyan}] Auto Delete user Expired     "
 echo -e "     ${BICyan}[${BIWhite}7${BICyan}] Auto Kill user SSH    "
 echo -e "     ${BICyan}[${BIWhite}8${BICyan}] Check Member SSH"
 echo -e "     ${BICyan}[${BIWhite}9${BICyan}] Edit Limit Login SSH"
+echo -e "     ${BICyan}[${BIWhite}10${BICyan}] Lock/Unlock User SSH"
 echo -e " ${BICyan}└─────────────────────────────────────────────────────┘${NC}"
 echo -e "     ${BIYellow}Press x or [ Ctrl+C ] • To-${BIWhite}Exit${NC}"
 echo ""
@@ -505,6 +544,7 @@ case $opt in
 7) clear ; autokill ;;
 8) clear ; member ;;
 9) clear ; editlimit ;;
+10) clear ; manual_lock_unlock ;;
 0) clear ; menu ;;
 x) exit ;;
 *) echo -e "" ; echo "Press any key to back on menu" ; sleep 1 ; menu ;;
