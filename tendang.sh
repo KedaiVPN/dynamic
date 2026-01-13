@@ -17,14 +17,8 @@ if [ -e "/var/log/secure" ]; then
         LOG="/var/log/secure";
 fi
 
-if [ $OS -eq 1 ]; then
-	service ssh restart > /dev/null 2>&1;
-fi
-if [ $OS -eq 2 ]; then
-	service sshd restart > /dev/null 2>&1;
-fi
-	service dropbear restart > /dev/null 2>&1;
-				
+# Service restarts removed
+
 if [[ ${1+x} ]]; then
         DEFAULT_LIMIT=$1;
 fi
@@ -139,6 +133,7 @@ get_limit() {
 						lock_file="/tmp/lock-${username[$i]}"
                         if [ -f "$lock_file" ] && ! passwd -S "${username[$i]}" 2>/dev/null | awk '{print $2}' | grep -q "L"; then
                                 rm -f "$lock_file"
+                        fi
                         if [ ! -f "$start_file" ]; then
                                 date +%s > "$start_file"
                         fi
@@ -155,7 +150,8 @@ get_limit() {
                                         if [ ! -f "$lock_file" ]; then
                                                 touch "$lock_file"
                                                 usermod -L "${username[$i]}"
-                                                (sleep "$duration" && usermod -U "${username[$i]}" && rm -f "$lock_file") >/dev/null 2>&1 &
+                                                pkill -u "${username[$i]}"
+                                                (sleep $(($duration * 60)) && usermod -U "${username[$i]}" && rm -f "$lock_file") >/dev/null 2>&1 &
                                                 j=`expr $j + 1`;
                                         fi
                                 fi
@@ -164,13 +160,4 @@ get_limit() {
                         rm -f "/tmp/limit-start-${username[$i]}"
                 fi
 			done
-        if [ $j -gt 0 ]; then
-                if [ $OS -eq 1 ]; then
-                        service ssh restart > /dev/null 2>&1;
-                fi
-                if [ $OS -eq 2 ]; then
-                        service sshd restart > /dev/null 2>&1;
-                fi
-                service dropbear restart > /dev/null 2>&1;
-                j=0;
-		fi
+        # Service restarts removed
