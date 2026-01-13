@@ -1,5 +1,5 @@
 #!/usr/bin/python2
-import socket, threading, thread, select, signal, sys, time, getopt
+import socket, threading, thread, select, signal, sys, time, getopt, datetime
 
 # Listen
 LISTENING_ADDR = '127.0.0.1'
@@ -15,7 +15,17 @@ BUFLEN = 4096 * 4
 TIMEOUT = 60
 DEFAULT_HOST = '127.0.0.1:109'
 RESPONSE = 'HTTP/1.1 101 <b><font color="red"> KennXV Switching Protocols </font></b>\r\n\r\nContent-Length: 104857600000\r\n\r\n'
-#RESPONSE = 'HTTP/1.1 101 <b><font color="red"> KennXV Switching Protocols </font></b>\r\n\r\nContent-Length: 104857600000\r\n\r\n'
+
+# Logging
+LOG_FILE = '/var/log/ws-stunnel.log'
+
+def write_tunnel_log(action, local_port, remote_ip):
+    try:
+        with open(LOG_FILE, 'a') as f:
+            ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            f.write("{}|{}|{}|{}\n".format(ts, action, local_port, remote_ip))
+    except:
+        pass
 
 class Server(threading.Thread):
     def __init__(self, host, port):
@@ -92,6 +102,8 @@ class ConnectionHandler(threading.Thread):
         self.client_buffer = ''
         self.server = server
         self.log = 'Connection: ' + str(addr)
+        self.remote_addr = addr
+        self.local_ephemeral_port = None
 
     def close(self):
         try:
@@ -111,6 +123,8 @@ class ConnectionHandler(threading.Thread):
             pass
         finally:
             self.targetClosed = True
+            if self.local_ephemeral_port:
+                 write_tunnel_log("DISCONNECT", self.local_ephemeral_port, self.remote_addr[0])
 
     def run(self):
         try:
@@ -180,6 +194,13 @@ class ConnectionHandler(threading.Thread):
         self.target = socket.socket(soc_family, soc_type, proto)
         self.targetClosed = False
         self.target.connect(address)
+
+        # Log the mapping
+        try:
+            self.local_ephemeral_port = self.target.getsockname()[1]
+            write_tunnel_log("CONNECT", self.local_ephemeral_port, self.remote_addr[0])
+        except:
+            pass
 
     def method_CONNECT(self, path):
         self.log += ' - CONNECT ' + path
