@@ -2,6 +2,7 @@
 clear
 DEFAULT_LIMIT=1
 DEFAULT_DURATION=5
+MULTILOGIN_WINDOW=600
 LIMIT_FILE="/etc/ssh/limit-user.conf"
 DURATION_FILE="/etc/ssh/autokill-duration.conf"
 if [ -e "/var/log/auth.log" ]; then
@@ -131,20 +132,30 @@ get_limit() {
 			do
                 limit=$(get_limit "${username[$i]}")
                 if [ ${jumlah[$i]} -gt $limit ]; then
-                        date=`date +"%Y-%m-%d %X"`;
-                        echo "$date - ${username[$i]} - ${jumlah[$i]}";
-                        echo "$date - ${username[$i]} - ${jumlah[$i]}" >> /root/log-limit.txt;
-                        if passwd -S "${username[$i]}" 2>/dev/null | awk '{print $2}' | grep -q "L"; then
-                                :
-                        else
-                                lock_file="/tmp/lock-${username[$i]}"
-                                if [ ! -f "$lock_file" ]; then
-                                        touch "$lock_file"
-                                        usermod -L "${username[$i]}"
-                                        (sleep "$duration" && usermod -U "${username[$i]}" && rm -f "$lock_file") >/dev/null 2>&1 &
-                                        j=`expr $j + 1`;
+                        start_file="/tmp/limit-start-${username[$i]}"
+                        if [ ! -f "$start_file" ]; then
+                                date +%s > "$start_file"
+                        fi
+                        start_time=$(cat "$start_file" 2>/dev/null)
+                        now_time=$(date +%s)
+                        if [ -n "$start_time" ] && [ $((now_time - start_time)) -ge $MULTILOGIN_WINDOW ]; then
+                                date=`date +"%Y-%m-%d %X"`;
+                                echo "$date - ${username[$i]} - ${jumlah[$i]}";
+                                echo "$date - ${username[$i]} - ${jumlah[$i]}" >> /root/log-limit.txt;
+                                if passwd -S "${username[$i]}" 2>/dev/null | awk '{print $2}' | grep -q "L"; then
+                                        :
+                                else
+                                        lock_file="/tmp/lock-${username[$i]}"
+                                        if [ ! -f "$lock_file" ]; then
+                                                touch "$lock_file"
+                                                usermod -L "${username[$i]}"
+                                                (sleep "$duration" && usermod -U "${username[$i]}" && rm -f "$lock_file") >/dev/null 2>&1 &
+                                                j=`expr $j + 1`;
+                                        fi
                                 fi
                         fi
+                else
+                        rm -f "/tmp/limit-start-${username[$i]}"
                 fi
 			done
         if [ $j -gt 0 ]; then
