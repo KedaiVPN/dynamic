@@ -161,50 +161,83 @@ echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━�
 echo "Username   |  IP Address";
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 
-# --- Hybrid Logic (Log + Netstat) ---
-LOGS=""
-if [ -f "/var/log/auth.log" ]; then LOGS="/var/log/auth.log"; fi
-if [ -f "/var/log/secure" ]; then LOGS="$LOGS /var/log/secure"; fi
+# --- Logic: PID + Netstat + WS Map ---
+WS_LOG_FILE="/var/log/ws-stunnel.log"
 
-TMP_CANDIDATES="/tmp/ssh-check-candidates.tmp"
-SESSION_DB="/tmp/ssh-session-db.txt"
-
-# 1. Load Data
-if [ -f "$SESSION_DB" ]; then
-    cat "$SESSION_DB" > "$TMP_CANDIDATES"
-else
-    touch "$TMP_CANDIDATES"
+# 1. Build WS Map (Local Port -> Real IP)
+declare -A WS_MAP
+if [ -f "$WS_LOG_FILE" ]; then
+    while IFS="|" read -r ts action port ip; do
+        if [ "$action" == "CONNECT" ]; then
+            WS_MAP[$port]="$ip"
+        elif [ "$action" == "DISCONNECT" ]; then
+            unset WS_MAP[$port]
+        fi
+    done < "$WS_LOG_FILE"
 fi
 
-if [ -n "$LOGS" ]; then
-    tail -n 2000 $LOGS | grep "Password auth succeeded for" | \
-    sed -E "s/.*for '([a-zA-Z0-9._-]+)' from ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+).*/\1 \2/" >> "$TMP_CANDIDATES"
-
-    tail -n 2000 $LOGS | grep "Accepted password for" | \
-    sed -E "s/.*for ([a-zA-Z0-9._-]+) from ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+).*/\1 \2/" >> "$TMP_CANDIDATES"
-
-    tail -n 2000 $LOGS | grep "Accepted publickey for" | \
-    sed -E "s/.*for ([a-zA-Z0-9._-]+) from ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+).*/\1 \2/" >> "$TMP_CANDIDATES"
-fi
-
-sort -u "$TMP_CANDIDATES" -o "$TMP_CANDIDATES"
-
-# 2. Get Active IPs
-# Ensure net-tools is installed if missing (though usually root has it)
+# 2. Get Active Connections via Netstat (Filter ESTABLISHED, sshd/dropbear)
+# Output: PID/ProgramName ForeignAddress
 if ! command -v netstat &> /dev/null; then
     apt-get install net-tools -y > /dev/null 2>&1
 fi
-ACTIVE_IPS=$(netstat -tn 2>/dev/null | grep 'ESTABLISHED' | awk '{print $5}' | sed 's/:[0-9]*$//' | sort -u)
 
-# 3. Filter and Display
-while read -r user ip; do
-    if [[ -z "$user" || -z "$ip" ]]; then continue; fi
-    if echo "$ACTIVE_IPS" | grep -qF "$ip"; then
-        printf "%-10s | %s\n" "$user" "$ip"
+netstat -tnp 2>/dev/null | grep 'ESTABLISHED' | grep -E 'sshd|dropbear' | while read -r line; do
+    # Parse line
+    # tcp ... 127.0.0.1:22 127.0.0.1:54321 ESTABLISHED 1234/sshd: user
+
+    # Get Foreign Address (Col 5)
+    foreign_addr=$(echo "$line" | awk '{print $5}')
+    ip=$(echo "$foreign_addr" | cut -d: -f1)
+    port=$(echo "$foreign_addr" | cut -d: -f2)
+
+    # Get PID (Col 7)
+    pid_prog=$(echo "$line" | awk '{print $7}')
+    pid=$(echo "$pid_prog" | cut -d/ -f1)
+
+    if [ -z "$pid" ]; then continue; fi
+
+    # Identify User from PID
+    user=""
+    owner=$(ps -p "$pid" -o user= 2>/dev/null)
+    cmd=$(ps -p "$pid" -o command= 2>/dev/null)
+
+    if [ "$owner" != "root" ]; then
+        user="$owner"
+    else
+        # Handle Root-owned processes (sshd [priv] or dropbear)
+        if [[ "$cmd" =~ sshd:\ ([a-zA-Z0-9._-]+) ]]; then
+            user="${BASH_REMATCH[1]}"
+        elif [[ "$cmd" == *"dropbear"* ]]; then
+             # Check children
+             child_pid=$(pgrep -P "$pid" | head -n 1)
+             if [ -n "$child_pid" ]; then
+                 child_owner=$(ps -p "$child_pid" -o user= 2>/dev/null)
+                 if [ -n "$child_owner" ] && [ "$child_owner" != "root" ]; then
+                     user="$child_owner"
+                 fi
+             fi
+        fi
     fi
-done < "$TMP_CANDIDATES"
 
-rm -f "$TMP_CANDIDATES"
+    # Filter Root/Empty
+    if [[ -z "$user" || "$user" == "root" ]]; then continue; fi
+
+    # Resolve IP if Localhost
+    real_ip="$ip"
+    if [[ "$ip" == "127.0.0.1" || "$ip" == "localhost" ]]; then
+        mapped_ip="${WS_MAP[$port]}"
+        if [ -n "$mapped_ip" ]; then
+             real_ip="$mapped_ip"
+        fi
+    fi
+
+    echo "$user|$real_ip"
+
+done | sort -u | while IFS="|" read -r user ip; do
+    printf "%-10s | %s\n" "$user" "$ip"
+done
+
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 
 if [ -f "/etc/openvpn/server/openvpn-tcp.log" ]; then

@@ -1,6 +1,5 @@
 #!/bin/bash
-# Autokill User SSH Multi-Login (Hybrid Log + Netstat Version)
-# Analyzes auth logs to map IPs to Users, then verifies with Netstat.
+# Autokill User SSH Multi-Login (PID + Netstat + WS-Tunnel Map)
 
 if [ -z "$BASH_VERSION" ]; then
 	exec /bin/bash "$0" "$@"
@@ -13,7 +12,7 @@ MULTILOGIN_WINDOW=600
 LIMIT_FILE="/etc/ssh/limit-user.conf"
 DURATION_FILE="/etc/ssh/autokill-duration.conf"
 LOG_FILE="/root/log-limit.txt"
-SESSION_DB="/tmp/ssh-session-db.txt"
+WS_LOG_FILE="/var/log/ws-stunnel.log"
 
 # Ensure net-tools is installed
 if ! command -v netstat &> /dev/null; then
@@ -40,86 +39,98 @@ get_limit() {
     echo "$limit"
 }
 
-# --- Phase 1: Update Session Database (The Receptionist) ---
-# 1. Identify valid log files
-LOGS=""
-if [ -f "/var/log/auth.log" ]; then LOGS="/var/log/auth.log"; fi
-if [ -f "/var/log/secure" ]; then LOGS="$LOGS /var/log/secure"; fi
-
-# 2. Prepare Candidates
-# We read existing DB + recent logs to build a candidate list of (User, IP)
-CANDIDATES_FILE="/tmp/ssh-candidates.tmp"
-touch "$SESSION_DB"
-cat "$SESSION_DB" > "$CANDIDATES_FILE"
-
-if [ -n "$LOGS" ]; then
-    # We parse the last 2000 lines to catch recent logins
-    # Pattern 1: Dropbear "Password auth succeeded for 'user' from 1.2.3.4"
-    tail -n 2000 $LOGS | grep "Password auth succeeded for" | \
-    sed -E "s/.*for '([a-zA-Z0-9._-]+)' from ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+).*/\1 \2/" >> "$CANDIDATES_FILE"
-
-    # Pattern 2: OpenSSH "Accepted password for user from 1.2.3.4"
-    tail -n 2000 $LOGS | grep "Accepted password for" | \
-    sed -E "s/.*for ([a-zA-Z0-9._-]+) from ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+).*/\1 \2/" >> "$CANDIDATES_FILE"
-
-    # Pattern 3: OpenSSH "Accepted publickey for user from 1.2.3.4"
-    tail -n 2000 $LOGS | grep "Accepted publickey for" | \
-    sed -E "s/.*for ([a-zA-Z0-9._-]+) from ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+).*/\1 \2/" >> "$CANDIDATES_FILE"
+# --- Phase 1: Build WS-Tunnel Port Map ---
+declare -A WS_MAP
+if [ -f "$WS_LOG_FILE" ]; then
+    while IFS="|" read -r ts action port ip; do
+        if [ "$action" == "CONNECT" ]; then
+            WS_MAP[$port]="$ip"
+        elif [ "$action" == "DISCONNECT" ]; then
+            unset WS_MAP[$port]
+        fi
+    done < "$WS_LOG_FILE"
 fi
 
-# 3. Clean and Unique Candidates
-# Sort and Unique to remove duplicates
-sort -u "$CANDIDATES_FILE" -o "$CANDIDATES_FILE"
-
-# --- Phase 2: Validate with Netstat (The Checker) ---
-# 1. Get currently active (ESTABLISHED) remote IPs attached to SSH/Dropbear ports
-# We grep ESTABLISHED. We assume standard SSH ports might be used or any port.
-# But simply "foreign address" of any ESTABLISHED connection is a good enough proxy
-# if we cross-reference with the username login history.
-ACTIVE_IPS_FILE="/tmp/ssh-active-ips.tmp"
-# sed 's/:[0-9]*$//' removes the port number from IP:Port
-netstat -tn 2>/dev/null | grep 'ESTABLISHED' | awk '{print $5}' | sed 's/:[0-9]*$//' | sort -u > "$ACTIVE_IPS_FILE"
-
-# 2. Filter Candidates: Only keep if IP is currently active
-NEW_DB_FILE="/tmp/ssh-session-db.new"
-truncate -s 0 "$NEW_DB_FILE"
-
-while read -r user ip; do
-    # Skip malformed lines
-    if [[ -z "$user" || -z "$ip" ]]; then continue; fi
-
-    # Check if this IP is in the active list
-    if grep -qF "$ip" "$ACTIVE_IPS_FILE"; then
-        echo "$user $ip" >> "$NEW_DB_FILE"
-    fi
-done < "$CANDIDATES_FILE"
-
-# 3. Update the persistent DB
-mv "$NEW_DB_FILE" "$SESSION_DB"
-
-# --- Phase 3: Enforce Limits ---
+# --- Phase 2: Count Active Sessions via PID + Netstat ---
 declare -A USER_IP_COUNT
 declare -A USER_IPS
 
-# 1. Count Active IPs per User
+# We scan netstat for ESTABLISHED connections to sshd/dropbear
+# We use PID to identify User.
+# We use Foreign Address + WS_MAP to identify Real IP.
+
+netstat -tnp 2>/dev/null | grep 'ESTABLISHED' | grep -E 'sshd|dropbear' | while read -r line; do
+    # tcp ... 127.0.0.1:22 127.0.0.1:54321 ESTABLISHED 1234/sshd: user
+
+    # Get Foreign Address (Col 5)
+    foreign_addr=$(echo "$line" | awk '{print $5}')
+    ip=$(echo "$foreign_addr" | cut -d: -f1)
+    port=$(echo "$foreign_addr" | cut -d: -f2)
+
+    # Get PID (Col 7)
+    pid_prog=$(echo "$line" | awk '{print $7}')
+    pid=$(echo "$pid_prog" | cut -d/ -f1)
+
+    if [ -z "$pid" ]; then continue; fi
+
+    # Identify User from PID
+    user=""
+    owner=$(ps -p "$pid" -o user= 2>/dev/null)
+    cmd=$(ps -p "$pid" -o command= 2>/dev/null)
+
+    if [ "$owner" != "root" ]; then
+        user="$owner"
+    else
+        # Handle Root-owned processes
+        if [[ "$cmd" =~ sshd:\ ([a-zA-Z0-9._-]+) ]]; then
+            user="${BASH_REMATCH[1]}"
+        elif [[ "$cmd" == *"dropbear"* ]]; then
+             # Check children
+             child_pid=$(pgrep -P "$pid" | head -n 1)
+             if [ -n "$child_pid" ]; then
+                 child_owner=$(ps -p "$child_pid" -o user= 2>/dev/null)
+                 if [ -n "$child_owner" ] && [ "$child_owner" != "root" ]; then
+                     user="$child_owner"
+                 fi
+             fi
+        fi
+    fi
+
+    # Filter Root/Empty
+    if [[ -z "$user" || "$user" == "root" ]]; then continue; fi
+
+    # Resolve IP if Localhost
+    real_ip="$ip"
+    if [[ "$ip" == "127.0.0.1" || "$ip" == "localhost" ]]; then
+        mapped_ip="${WS_MAP[$port]}"
+        if [ -n "$mapped_ip" ]; then
+             real_ip="$mapped_ip"
+        fi
+    fi
+
+    echo "$user|$real_ip"
+
+done | sort -u | while IFS="|" read -r user ip; do
+    # This loop runs in a subshell, so we cannot update USER_IP_COUNT directly.
+    # We must output the data and read it back.
+    echo "$user $ip"
+done > /tmp/active_sessions.txt
+
+# Read back
 while read -r user ip; do
-    # Only process valid system users with UID >= 1000 (avoid root/daemon)
+    # Check if user exists (uid >= 1000)
     if id -u "$user" >/dev/null 2>&1; then
         uid=$(id -u "$user")
         if [ "$uid" -ge 1000 ]; then
-            count=${USER_IP_COUNT[$user]}
-            if [ -z "$count" ]; then count=0; fi
-
-            # Increment
-            USER_IP_COUNT[$user]=$((count + 1))
-
-            # Store IPs for logging
-            USER_IPS[$user]="${USER_IPS[$user]} $ip"
+             count=${USER_IP_COUNT[$user]}
+             if [ -z "$count" ]; then count=0; fi
+             USER_IP_COUNT[$user]=$((count + 1))
         fi
     fi
-done < "$SESSION_DB"
+done < /tmp/active_sessions.txt
+rm -f /tmp/active_sessions.txt
 
-# 2. Check Limits
+# --- Phase 3: Enforce Limits ---
 duration=$(get_duration)
 
 for user in "${!USER_IP_COUNT[@]}"; do
@@ -127,16 +138,15 @@ for user in "${!USER_IP_COUNT[@]}"; do
     limit=$(get_limit "$user")
 
     if [ "$count" -gt "$limit" ]; then
-        # VIOLATION DETECTED
         start_file="/tmp/limit-start-$user"
         lock_file="/tmp/lock-$user"
 
-        # Clean up stale lock file if user is unlocked manually
+        # Cleanup stale lock
         if [ -f "$lock_file" ] && ! passwd -S "$user" 2>/dev/null | awk '{print $2}' | grep -q "L"; then
              rm -f "$lock_file"
         fi
 
-        # Start Tolerance Timer
+        # Start timer
         if [ ! -f "$start_file" ]; then
              date +%s > "$start_file"
         fi
@@ -144,29 +154,21 @@ for user in "${!USER_IP_COUNT[@]}"; do
         start_time=$(cat "$start_file" 2>/dev/null)
         now_time=$(date +%s)
 
-        # Check Tolerance Window
+        # Check tolerance
         if [ -n "$start_time" ] && [ $((now_time - start_time)) -ge $MULTILOGIN_WINDOW ]; then
-             # Log the event
              date_log=`date +"%Y-%m-%d %X"`
              echo "$date_log - $user - $count IPs (Limit: $limit)" >> "$LOG_FILE"
 
-             # Enforce Lock
              if passwd -S "$user" 2>/dev/null | awk '{print $2}' | grep -q "L"; then
-                 : # Already locked
+                 :
              else
                  touch "$lock_file"
                  usermod -L "$user"
                  pkill -u "$user"
-
-                 # Schedule Unlock
                  (sleep $(($duration * 60)) && usermod -U "$user" && rm -f "$lock_file") >/dev/null 2>&1 &
              fi
         fi
     else
-        # User is safe, reset timer
         rm -f "/tmp/limit-start-$user"
     fi
 done
-
-# Cleanup temporary files
-rm -f "$CANDIDATES_FILE" "$ACTIVE_IPS_FILE" "$NEW_DB_FILE"
