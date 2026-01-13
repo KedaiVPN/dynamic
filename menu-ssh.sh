@@ -331,7 +331,6 @@ echo ""
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 echo -e ""
 read -p "Select From Options [1-4 or x] :  " AutoKill
-read -p "Multilogin Maximum Number Of Allowed: " max
 echo -e ""
 case $AutoKill in
                 1)
@@ -339,13 +338,14 @@ case $AutoKill in
                 sleep 1
                 clear
                 echo > /etc/cron.d/tendang
-                echo "# Autokill" >/etc/cron.d/tendang
-                echo "*/5 * * * *  root /usr/bin/tendang $max" >>/etc/cron.d/tendang && chmod +x /etc/cron.d/tendang
+                echo "# Autokill" >/etc/cron.d/tendan
+                mkdir -p /etc/ssh
+                echo "5" > /etc/ssh/autokill-duration.conf
+                echo "*/5 * * * *  root /usr/bin/tendang" >>/etc/cron.d/tendang && chmod +x /etc/cron.d/tendang
                 echo "" > /root/log-limit.txt
                 echo -e ""
                 echo -e "======================================"
                 echo -e ""
-                echo -e "      Allowed MultiLogin : $max"
                 echo -e "      AutoKill Every     : 5 Minutes"      
                 echo -e ""
                 echo -e "======================================"
@@ -358,12 +358,13 @@ case $AutoKill in
                 clear
                 echo > /etc/cron.d/tendang
                 echo "# Autokill" >/etc/cron.d/tendang
-                echo "*/10 * * * *  root /usr/bin/tendang $max" >>/etc/cron.d/tendang && chmod +x /etc/cron.d/tendang
+                mkdir -p /etc/ssh
+                echo "10" > /etc/ssh/autokill-duration.conf
+                echo "*/10 * * * *  root /usr/bin/tendang" >>/etc/cron.d/tendang && chmod +x /etc/cron.d/tendang
                 echo "" > /root/log-limit.txt
                 echo -e ""
                 echo -e "======================================"
                 echo -e ""
-                echo -e "      Allowed MultiLogin : $max"
                 echo -e "      AutoKill Every     : 10 Minutes"
                 echo -e ""
                 echo -e "======================================"
@@ -376,12 +377,13 @@ case $AutoKill in
                 clear
                 echo > /etc/cron.d/tendang
                 echo "# Autokill" >/etc/cron.d/tendang
-                echo "*/15 * * * *  root /usr/bin/tendang $max" >>/etc/cron.d/tendang && chmod +x /etc/cron.d/tendang
+                mkdir -p /etc/ssh
+                echo "15" > /etc/ssh/autokill-duration.conf
+                echo "*/15 * * * *  root /usr/bin/tendang" >>/etc/cron.d/tendang && chmod +x /etc/cron.d/tendang
                 echo "" > /root/log-limit.txt
                 echo -e ""
                 echo -e "======================================"
                 echo -e ""
-                echo -e "      Allowed MultiLogin : $max"
                 echo -e "      AutoKill Every     : 15 Minutes"
                 echo -e ""
                 echo -e "======================================"
@@ -390,6 +392,7 @@ case $AutoKill in
                 ;;
                 4)
                 rm -fr /etc/cron.d/tendang
+                rm -f /etc/ssh/autokill-duration.conf
                 echo "" > /root/log-limit.txt
                 echo -e ""
                 echo -e "======================================"
@@ -410,6 +413,31 @@ case $AutoKill in
 read -n 1 -s -r -p "Press any key to back on menu"
 menu
 }
+function editlimit(){
+clear
+read -p "Username : " Login
+if id -u "$Login" >/dev/null 2>&1; then
+        read -p "Limit login (1/2/3): " limitlogin
+        if [ -z "$limitlogin" ]; then
+                limitlogin=1
+        fi
+        limit_file="/etc/ssh/limit-user.conf"
+        mkdir -p /etc/ssh
+        if [ -f "$limit_file" ]; then
+                awk -v user="$Login" '$1!=user' "$limit_file" > "${limit_file}.tmp" && mv "${limit_file}.tmp" "$limit_file"
+        fi
+        echo "$Login $limitlogin" >> "$limit_file"
+        echo -e ""
+        echo -e "Limit login $Login diatur ke $limitlogin"
+        echo -e ""
+else
+        echo -e ""
+        echo -e "   Username Doesnt Exist      "
+        echo -e ""
+fi
+read -n 1 -s -r -p "Press any key to back on menu"
+menu
+}
 clear
 echo -e "${BICyan} ┌─────────────────────────────────────────────────────┐${NC}"
 echo -e "       ${BIWhite}${UWhite}SSH MENU ${NC}"
@@ -422,6 +450,7 @@ echo -e "     ${BICyan}[${BIWhite}5${BICyan}] Multilogin SSH     "
 echo -e "     ${BICyan}[${BIWhite}6${BICyan}] Auto Delete user Expired     "
 echo -e "     ${BICyan}[${BIWhite}7${BICyan}] Auto Kill user SSH    "
 echo -e "     ${BICyan}[${BIWhite}8${BICyan}] Check Member SSH"
+echo -e "     ${BICyan}[${BIWhite}9${BICyan}] Edit Limit Login SSH"
 echo -e " ${BICyan}└─────────────────────────────────────────────────────┘${NC}"
 echo -e "     ${BIYellow}Press x or [ Ctrl+C ] • To-${BIWhite}Exit${NC}"
 echo ""
@@ -436,6 +465,7 @@ case $opt in
 6) clear ; autodel ;;
 7) clear ; autokill ;;
 8) clear ; member ;;
+9) clear ; editlimit ;;
 0) clear ; menu ;;
 x) exit ;;
 *) echo -e "" ; echo "Press any key to back on menu" ; sleep 1 ; menu ;;
