@@ -1,4 +1,7 @@
 #!/bin/bash
+if [ -z "$BASH_VERSION" ]; then
+	exec /bin/bash "$0" "$@"
+fi
 clear
 DEFAULT_LIMIT=1
 DEFAULT_DURATION=5
