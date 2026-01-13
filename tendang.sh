@@ -133,6 +133,9 @@ get_limit() {
                 limit=$(get_limit "${username[$i]}")
                 if [ ${jumlah[$i]} -gt $limit ]; then
                         start_file="/tmp/limit-start-${username[$i]}"
+						lock_file="/tmp/lock-${username[$i]}"
+                        if [ -f "$lock_file" ] && ! passwd -S "${username[$i]}" 2>/dev/null | awk '{print $2}' | grep -q "L"; then
+                                rm -f "$lock_file"
                         if [ ! -f "$start_file" ]; then
                                 date +%s > "$start_file"
                         fi
