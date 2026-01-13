@@ -73,11 +73,12 @@ fi
 portsshws=`cat /root/log-install.txt | grep -w "SSH Websocket" | cut -d: -f2 | awk '{print $1}'`
 wsssl=`cat /root/log-install.txt | grep -w "SSH SSL Websocket" | cut -d: -f2 | awk '{print $1}'`
 
-echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 echo -e "\E[0;41;36m            SSH Account            \E[0m"
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 read -p "Username : " Login
 read -p "Password : " Pass
+read -p "Limit login (1/2/3): " limitlogin
 read -p "Expired (hari): " masaaktif
 
 IP=$(curl -sS ifconfig.me);
@@ -103,6 +104,15 @@ clear
 useradd -e `date -d "$masaaktif days" +"%Y-%m-%d"` -s /bin/false -M $Login
 exp="$(chage -l $Login | grep "Account expires" | awk -F": " '{print $2}')"
 echo -e "$Pass\n$Pass\n"|passwd $Login &> /dev/null
+limit_file="/etc/ssh/limit-user.conf"
+if [ -z "$limitlogin" ]; then
+	limitlogin=1
+fi
+mkdir -p /etc/ssh
+if [ -f "$limit_file" ]; then
+	awk -v user="$Login" '$1!=user' "$limit_file" > "${limit_file}.tmp" && mv "${limit_file}.tmp" "$limit_file"
+fi
+echo "$Login $limitlogin" >> "$limit_file"
 PID=`ps -ef |grep -v grep | grep sshws |awk '{print $2}'`
 
 cat > /home/vps/public_html/ssh-$Login.txt <<-END
