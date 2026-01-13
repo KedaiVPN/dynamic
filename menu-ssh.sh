@@ -154,53 +154,59 @@ read -n 1 -s -r -p "Press any key to back on menu"
 menu
 }
 function cek(){
-if [ -e "/var/log/auth.log" ]; then
-        LOG="/var/log/auth.log";
+clear
+echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+echo -e "\E[0;41;36m          User SSH Login           \E[0m"
+echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+echo "Username   |  IP Address";
+echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+
+# --- Hybrid Logic (Log + Netstat) ---
+LOGS=""
+if [ -f "/var/log/auth.log" ]; then LOGS="/var/log/auth.log"; fi
+if [ -f "/var/log/secure" ]; then LOGS="$LOGS /var/log/secure"; fi
+
+TMP_CANDIDATES="/tmp/ssh-check-candidates.tmp"
+SESSION_DB="/tmp/ssh-session-db.txt"
+
+# 1. Load Data
+if [ -f "$SESSION_DB" ]; then
+    cat "$SESSION_DB" > "$TMP_CANDIDATES"
+else
+    touch "$TMP_CANDIDATES"
 fi
-if [ -e "/var/log/secure" ]; then
-        LOG="/var/log/secure";
+
+if [ -n "$LOGS" ]; then
+    tail -n 2000 $LOGS | grep "Password auth succeeded for" | \
+    sed -E "s/.*for '([a-zA-Z0-9._-]+)' from ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+).*/\1 \2/" >> "$TMP_CANDIDATES"
+
+    tail -n 2000 $LOGS | grep "Accepted password for" | \
+    sed -E "s/.*for ([a-zA-Z0-9._-]+) from ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+).*/\1 \2/" >> "$TMP_CANDIDATES"
+
+    tail -n 2000 $LOGS | grep "Accepted publickey for" | \
+    sed -E "s/.*for ([a-zA-Z0-9._-]+) from ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+).*/\1 \2/" >> "$TMP_CANDIDATES"
 fi
-               
-data=( `ps aux | grep -i dropbear | awk '{print $2}'`);
-echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-echo -e "\E[0;41;36m         Dropbear User Login       \E[0m"
-echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-echo "ID  |  Username  |  IP Address";
-echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-cat $LOG | grep -i dropbear | grep -i "Password auth succeeded" > /tmp/login-db.txt;
-for PID in "${data[@]}"
-do
-        cat /tmp/login-db.txt | grep "dropbear\[$PID\]" > /tmp/login-db-pid.txt;
-        NUM=`cat /tmp/login-db-pid.txt | wc -l`;
-        USER=`cat /tmp/login-db-pid.txt | awk '{print $10}'`;
-        IP=`cat /tmp/login-db-pid.txt | awk '{print $12}'`;
-        if [ $NUM -eq 1 ]; then
-                echo "$PID - $USER - $IP";
-        fi
+
+sort -u "$TMP_CANDIDATES" -o "$TMP_CANDIDATES"
+
+# 2. Get Active IPs
+# Ensure net-tools is installed if missing (though usually root has it)
+if ! command -v netstat &> /dev/null; then
+    apt-get install net-tools -y > /dev/null 2>&1
+fi
+ACTIVE_IPS=$(netstat -tn 2>/dev/null | grep 'ESTABLISHED' | awk '{print $5}' | sed 's/:[0-9]*$//' | sort -u)
+
+# 3. Filter and Display
+while read -r user ip; do
+    if [[ -z "$user" || -z "$ip" ]]; then continue; fi
+    if echo "$ACTIVE_IPS" | grep -qF "$ip"; then
+        printf "%-10s | %s\n" "$user" "$ip"
+    fi
+done < "$TMP_CANDIDATES"
+
+rm -f "$TMP_CANDIDATES"
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 
-done
-echo " "
-echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-echo -e "\E[0;41;36m          OpenSSH User Login       \E[0m"
-echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-echo "ID  |  Username  |  IP Address";
-echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-cat $LOG | grep -i sshd | grep -i "Accepted password for" > /tmp/login-db.txt
-data=( `ps aux | grep "\[priv\]" | sort -k 72 | awk '{print $2}'`);
-
-for PID in "${data[@]}"
-do
-        cat /tmp/login-db.txt | grep "sshd\[$PID\]" > /tmp/login-db-pid.txt;
-        NUM=`cat /tmp/login-db-pid.txt | wc -l`;
-        USER=`cat /tmp/login-db-pid.txt | awk '{print $9}'`;
-        IP=`cat /tmp/login-db-pid.txt | awk '{print $11}'`;
-        if [ $NUM -eq 1 ]; then
-                echo "$PID - $USER - $IP";
-        fi
-echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-
-done
 if [ -f "/etc/openvpn/server/openvpn-tcp.log" ]; then
         echo " "
         echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
