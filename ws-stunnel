@@ -32,6 +32,8 @@ def write_tunnel_log(action, local_port, remote_ip):
         with open(LOG_FILE, 'a') as f:
             ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             f.write("{}|{}|{}|{}\n".format(ts, action, local_port, remote_ip))
+            f.flush()
+            os.fsync(f.fileno())
     except:
         pass
 
