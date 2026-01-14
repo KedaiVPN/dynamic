@@ -170,8 +170,8 @@ if [ -f "$WS_LOG_FILE" ]; then
     while IFS="|" read -r ts action port ip; do
         if [ "$action" == "CONNECT" ]; then
             PORT_TO_REAL_IP[$port]="$ip"
-        elif [ "$action" == "DISCONNECT" ]; then
-            unset PORT_TO_REAL_IP[$port]
+        # elif [ "$action" == "DISCONNECT" ]; then
+        #    unset PORT_TO_REAL_IP[$port]
         fi
     done < "$WS_LOG_FILE"
 fi
