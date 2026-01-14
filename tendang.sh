@@ -2,6 +2,9 @@
 # Autokill User SSH Multi-Login (Journalctl + Netstat + WS-Tunnel Map)
 # Uses systemd journal for real-time auth data to bypass file logging delays.
 
+# Ensure PATH is set for Cron execution
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
 if [ -z "$BASH_VERSION" ]; then
 	exec /bin/bash "$0" "$@"
 fi
