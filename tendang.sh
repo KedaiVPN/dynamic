@@ -135,34 +135,28 @@ for user in "${!USER_IP_COUNT[@]}"; do
     limit=$(get_limit "$user")
 
     if [ "$count" -gt "$limit" ]; then
-        start_file="/tmp/limit-start-$user"
+        # start_file="/tmp/limit-start-$user"  <-- No longer needed
         lock_file="/tmp/lock-$user"
 
+        # Cleanup stale lock file if user is manually unlocked
         if [ -f "$lock_file" ] && ! passwd -S "$user" 2>/dev/null | awk '{print $2}' | grep -q "L"; then
              rm -f "$lock_file"
         fi
 
-        if [ ! -f "$start_file" ]; then
-             date +%s > "$start_file"
+        # Immediate Action (No Tolerance)
+        date_log=`date +"%Y-%m-%d %X"`
+        echo "$date_log - $user - $count IPs (Limit: $limit) - LOCKED" >> "$LOG_FILE"
+
+        if passwd -S "$user" 2>/dev/null | awk '{print $2}' | grep -q "L"; then
+             : # Already locked
+        else
+             touch "$lock_file"
+             usermod -L "$user"
+             pkill -u "$user"
+             # Schedule Unlock
+             (sleep $(($duration * 60)) && usermod -U "$user" && rm -f "$lock_file") >/dev/null 2>&1 &
         fi
-
-        start_time=$(cat "$start_file" 2>/dev/null)
-        now_time=$(date +%s)
-
-        if [ -n "$start_time" ] && [ $((now_time - start_time)) -ge $MULTILOGIN_WINDOW ]; then
-             date_log=`date +"%Y-%m-%d %X"`
-             echo "$date_log - $user - $count IPs (Limit: $limit)" >> "$LOG_FILE"
-
-             if passwd -S "$user" 2>/dev/null | awk '{print $2}' | grep -q "L"; then
-                 :
-             else
-                 touch "$lock_file"
-                 usermod -L "$user"
-                 pkill -u "$user"
-                 (sleep $(($duration * 60)) && usermod -U "$user" && rm -f "$lock_file") >/dev/null 2>&1 &
-             fi
-        fi
-    else
-        rm -f "/tmp/limit-start-$user"
+    # else
+        # rm -f "/tmp/limit-start-$user"
     fi
 done
