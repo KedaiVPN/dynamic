@@ -161,78 +161,74 @@ echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━�
 echo "Username   |  IP Address";
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 
-# --- Logic: PID + Netstat + WS Map ---
+# --- Logic: AuthLog Port Map + WS Log Port Map + Netstat ---
 WS_LOG_FILE="/var/log/ws-stunnel.log"
 
 # 1. Build WS Map (Local Port -> Real IP)
-declare -A WS_MAP
+declare -A PORT_TO_REAL_IP
 if [ -f "$WS_LOG_FILE" ]; then
     while IFS="|" read -r ts action port ip; do
         if [ "$action" == "CONNECT" ]; then
-            WS_MAP[$port]="$ip"
+            PORT_TO_REAL_IP[$port]="$ip"
         elif [ "$action" == "DISCONNECT" ]; then
-            unset WS_MAP[$port]
+            unset PORT_TO_REAL_IP[$port]
         fi
     done < "$WS_LOG_FILE"
 fi
 
-# 2. Get Active Connections via Netstat (Filter ESTABLISHED, sshd/dropbear)
-# Output: PID/ProgramName ForeignAddress
+# 2. Build Auth Map (Local Port -> Username)
+declare -A PORT_TO_USER
+LOGS=""
+if [ -f "/var/log/auth.log" ]; then LOGS="/var/log/auth.log"; fi
+if [ -f "/var/log/secure" ]; then LOGS="$LOGS /var/log/secure"; fi
+if [ -f "/var/log/messages" ]; then LOGS="$LOGS /var/log/messages"; fi
+if [ -f "/var/log/syslog" ]; then LOGS="$LOGS /var/log/syslog"; fi
+
+if [ -n "$LOGS" ]; then
+    # Dropbear
+    while read -r line; do
+        if [[ "$line" =~ for\ \'([a-zA-Z0-9._-]+)\'\ from\ [0-9.]+:([0-9]+) ]]; then
+            PORT_TO_USER[${BASH_REMATCH[2]}]="${BASH_REMATCH[1]}"
+        fi
+    done < <(grep "Password auth succeeded for" $LOGS | tail -n 2000)
+
+    # OpenSSH
+    while read -r line; do
+        if [[ "$line" =~ for\ ([a-zA-Z0-9._-]+)\ from\ [0-9.]+\ port\ ([0-9]+) ]]; then
+            PORT_TO_USER[${BASH_REMATCH[2]}]="${BASH_REMATCH[1]}"
+        fi
+    done < <(grep "Accepted .* for" $LOGS | tail -n 2000)
+fi
+
+# 3. Scan Netstat ESTABLISHED
 if ! command -v netstat &> /dev/null; then
     apt-get install net-tools -y > /dev/null 2>&1
 fi
 
 netstat -tnp 2>/dev/null | grep 'ESTABLISHED' | grep -E 'sshd|dropbear' | while read -r line; do
-    # Parse line
-    # tcp ... 127.0.0.1:22 127.0.0.1:54321 ESTABLISHED 1234/sshd: user
-
-    # Get Foreign Address (Col 5)
     foreign_addr=$(echo "$line" | awk '{print $5}')
     ip=$(echo "$foreign_addr" | cut -d: -f1)
     port=$(echo "$foreign_addr" | cut -d: -f2)
 
-    # Get PID (Col 7)
-    pid_prog=$(echo "$line" | awk '{print $7}')
-    pid=$(echo "$pid_prog" | cut -d/ -f1)
-
-    if [ -z "$pid" ]; then continue; fi
-
-    # Identify User from PID
     user=""
-    owner=$(ps -p "$pid" -o user= 2>/dev/null)
-    cmd=$(ps -p "$pid" -o command= 2>/dev/null)
-
-    if [ "$owner" != "root" ]; then
-        user="$owner"
-    else
-        # Handle Root-owned processes (sshd [priv] or dropbear)
-        if [[ "$cmd" =~ sshd:\ ([a-zA-Z0-9._-]+) ]]; then
-            user="${BASH_REMATCH[1]}"
-        elif [[ "$cmd" == *"dropbear"* ]]; then
-             # Check children
-             child_pid=$(pgrep -P "$pid" | head -n 1)
-             if [ -n "$child_pid" ]; then
-                 child_owner=$(ps -p "$child_pid" -o user= 2>/dev/null)
-                 if [ -n "$child_owner" ] && [ "$child_owner" != "root" ]; then
-                     user="$child_owner"
-                 fi
-             fi
-        fi
-    fi
-
-    # Filter Root/Empty
-    if [[ -z "$user" || "$user" == "root" ]]; then continue; fi
-
-    # Resolve IP if Localhost
     real_ip="$ip"
+
     if [[ "$ip" == "127.0.0.1" || "$ip" == "localhost" ]]; then
-        mapped_ip="${WS_MAP[$port]}"
+        # Local Connection (Tunnel)
+        user="${PORT_TO_USER[$port]}"
+
+        mapped_ip="${PORT_TO_REAL_IP[$port]}"
         if [ -n "$mapped_ip" ]; then
-             real_ip="$mapped_ip"
+            real_ip="$mapped_ip"
         fi
+    else
+        # Direct Connection
+        user="${PORT_TO_USER[$port]}"
     fi
 
-    echo "$user|$real_ip"
+    if [[ -n "$user" && "$user" != "root" ]]; then
+        echo "$user|$real_ip"
+    fi
 
 done | sort -u | while IFS="|" read -r user ip; do
     printf "%-10s | %s\n" "$user" "$ip"

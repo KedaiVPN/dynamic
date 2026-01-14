@@ -1,5 +1,6 @@
 #!/bin/bash
-# Autokill User SSH Multi-Login (PID + Netstat + WS-Tunnel Map)
+# Autokill User SSH Multi-Login (Triple Map Strategy: AuthLog + WSLog + Netstat)
+# Bypasses process ownership issues by linking events via Ephemeral Ports.
 
 if [ -z "$BASH_VERSION" ]; then
 	exec /bin/bash "$0" "$@"
@@ -14,7 +15,7 @@ DURATION_FILE="/etc/ssh/autokill-duration.conf"
 LOG_FILE="/root/log-limit.txt"
 WS_LOG_FILE="/var/log/ws-stunnel.log"
 
-# Ensure net-tools is installed
+# Ensure net-tools
 if ! command -v netstat &> /dev/null; then
     apt-get install net-tools -y > /dev/null 2>&1
 fi
@@ -39,98 +40,109 @@ get_limit() {
     echo "$limit"
 }
 
-# --- Phase 1: Build WS-Tunnel Port Map ---
-declare -A WS_MAP
+# --- Phase 1: Build Maps ---
+
+# Map 1: Port -> Real IP (from WS Tunnel Log)
+declare -A PORT_TO_REAL_IP
 if [ -f "$WS_LOG_FILE" ]; then
     while IFS="|" read -r ts action port ip; do
         if [ "$action" == "CONNECT" ]; then
-            WS_MAP[$port]="$ip"
+            PORT_TO_REAL_IP[$port]="$ip"
         elif [ "$action" == "DISCONNECT" ]; then
-            unset WS_MAP[$port]
+            unset PORT_TO_REAL_IP[$port]
         fi
     done < "$WS_LOG_FILE"
 fi
 
-# --- Phase 2: Count Active Sessions via PID + Netstat ---
+# Map 2: Port -> Username (from Auth Log)
+# We scan the last 2000 lines. Dropbear logs the port. OpenSSH logs the port.
+# Dropbear: "Password auth succeeded for 'user' from 127.0.0.1:54321"
+# OpenSSH: "Accepted password for user from 127.0.0.1 port 54321 ssh2"
+declare -A PORT_TO_USER
+
+LOGS=""
+if [ -f "/var/log/auth.log" ]; then LOGS="/var/log/auth.log"; fi
+if [ -f "/var/log/secure" ]; then LOGS="$LOGS /var/log/secure"; fi
+# Some systems use /var/log/messages or syslog
+if [ -f "/var/log/messages" ]; then LOGS="$LOGS /var/log/messages"; fi
+if [ -f "/var/log/syslog" ]; then LOGS="$LOGS /var/log/syslog"; fi
+
+if [ -n "$LOGS" ]; then
+    # Parse Dropbear
+    # Format: ... for 'user' from IP:PORT
+    while read -r line; do
+        if [[ "$line" =~ for\ \'([a-zA-Z0-9._-]+)\'\ from\ [0-9.]+:([0-9]+) ]]; then
+            user="${BASH_REMATCH[1]}"
+            port="${BASH_REMATCH[2]}"
+            PORT_TO_USER[$port]="$user"
+        fi
+    done < <(grep "Password auth succeeded for" $LOGS | tail -n 5000)
+
+    # Parse OpenSSH
+    # Format: ... for user from IP port PORT
+    while read -r line; do
+        if [[ "$line" =~ for\ ([a-zA-Z0-9._-]+)\ from\ [0-9.]+\ port\ ([0-9]+) ]]; then
+            user="${BASH_REMATCH[1]}"
+            port="${BASH_REMATCH[2]}"
+            PORT_TO_USER[$port]="$user"
+        fi
+    done < <(grep "Accepted .* for" $LOGS | tail -n 5000)
+fi
+
+# --- Phase 2: Count Active Sessions via Netstat ---
 declare -A USER_IP_COUNT
 declare -A USER_IPS
 
-# We scan netstat for ESTABLISHED connections to sshd/dropbear
-# We use PID to identify User.
-# We use Foreign Address + WS_MAP to identify Real IP.
+# Scan ESTABLISHED connections to sshd/dropbear
+# We look at the FOREIGN ADDRESS.
+# If Foreign is 127.0.0.1:PORT, we look up PORT in PORT_TO_USER and PORT_TO_REAL_IP.
 
 netstat -tnp 2>/dev/null | grep 'ESTABLISHED' | grep -E 'sshd|dropbear' | while read -r line; do
-    # tcp ... 127.0.0.1:22 127.0.0.1:54321 ESTABLISHED 1234/sshd: user
-
-    # Get Foreign Address (Col 5)
     foreign_addr=$(echo "$line" | awk '{print $5}')
     ip=$(echo "$foreign_addr" | cut -d: -f1)
     port=$(echo "$foreign_addr" | cut -d: -f2)
 
-    # Get PID (Col 7)
-    pid_prog=$(echo "$line" | awk '{print $7}')
-    pid=$(echo "$pid_prog" | cut -d/ -f1)
-
-    if [ -z "$pid" ]; then continue; fi
-
-    # Identify User from PID
     user=""
-    owner=$(ps -p "$pid" -o user= 2>/dev/null)
-    cmd=$(ps -p "$pid" -o command= 2>/dev/null)
-
-    if [ "$owner" != "root" ]; then
-        user="$owner"
-    else
-        # Handle Root-owned processes
-        if [[ "$cmd" =~ sshd:\ ([a-zA-Z0-9._-]+) ]]; then
-            user="${BASH_REMATCH[1]}"
-        elif [[ "$cmd" == *"dropbear"* ]]; then
-             # Check children
-             child_pid=$(pgrep -P "$pid" | head -n 1)
-             if [ -n "$child_pid" ]; then
-                 child_owner=$(ps -p "$child_pid" -o user= 2>/dev/null)
-                 if [ -n "$child_owner" ] && [ "$child_owner" != "root" ]; then
-                     user="$child_owner"
-                 fi
-             fi
-        fi
-    fi
-
-    # Filter Root/Empty
-    if [[ -z "$user" || "$user" == "root" ]]; then continue; fi
-
-    # Resolve IP if Localhost
     real_ip="$ip"
+
     if [[ "$ip" == "127.0.0.1" || "$ip" == "localhost" ]]; then
-        mapped_ip="${WS_MAP[$port]}"
+        # It's a tunnel or local connection.
+        # 1. Identify User from Auth Log Map
+        user="${PORT_TO_USER[$port]}"
+
+        # 2. Identify Real IP from WS Map
+        mapped_ip="${PORT_TO_REAL_IP[$port]}"
         if [ -n "$mapped_ip" ]; then
-             real_ip="$mapped_ip"
+            real_ip="$mapped_ip"
         fi
+    else
+        # Direct connection (Public IP)
+        # We need to find the user.
+        # Since we can't use PID ownership (root issue), we MUST look at Auth Log for this Port too.
+        user="${PORT_TO_USER[$port]}"
     fi
 
-    echo "$user|$real_ip"
+    # If user found and not root
+    if [[ -n "$user" && "$user" != "root" ]]; then
+        echo "$user|$real_ip"
+    fi
 
 done | sort -u | while IFS="|" read -r user ip; do
-    # This loop runs in a subshell, so we cannot update USER_IP_COUNT directly.
-    # We must output the data and read it back.
+    # Output for counting loop
     echo "$user $ip"
 done > /tmp/active_sessions.txt
 
-# Read back
+# --- Phase 3: Enforce Limits ---
 while read -r user ip; do
-    # Check if user exists (uid >= 1000)
+    # Double check valid user
     if id -u "$user" >/dev/null 2>&1; then
-        uid=$(id -u "$user")
-        if [ "$uid" -ge 1000 ]; then
-             count=${USER_IP_COUNT[$user]}
-             if [ -z "$count" ]; then count=0; fi
-             USER_IP_COUNT[$user]=$((count + 1))
-        fi
+         count=${USER_IP_COUNT[$user]}
+         if [ -z "$count" ]; then count=0; fi
+         USER_IP_COUNT[$user]=$((count + 1))
     fi
 done < /tmp/active_sessions.txt
 rm -f /tmp/active_sessions.txt
 
-# --- Phase 3: Enforce Limits ---
 duration=$(get_duration)
 
 for user in "${!USER_IP_COUNT[@]}"; do
@@ -141,12 +153,10 @@ for user in "${!USER_IP_COUNT[@]}"; do
         start_file="/tmp/limit-start-$user"
         lock_file="/tmp/lock-$user"
 
-        # Cleanup stale lock
         if [ -f "$lock_file" ] && ! passwd -S "$user" 2>/dev/null | awk '{print $2}' | grep -q "L"; then
              rm -f "$lock_file"
         fi
 
-        # Start timer
         if [ ! -f "$start_file" ]; then
              date +%s > "$start_file"
         fi
@@ -154,7 +164,6 @@ for user in "${!USER_IP_COUNT[@]}"; do
         start_time=$(cat "$start_file" 2>/dev/null)
         now_time=$(date +%s)
 
-        # Check tolerance
         if [ -n "$start_time" ] && [ $((now_time - start_time)) -ge $MULTILOGIN_WINDOW ]; then
              date_log=`date +"%Y-%m-%d %X"`
              echo "$date_log - $user - $count IPs (Limit: $limit)" >> "$LOG_FILE"
