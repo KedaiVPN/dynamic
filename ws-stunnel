@@ -295,6 +295,14 @@ def main(host=LISTENING_ADDR, port=LISTENING_PORT):
     print "Listening addr: " + LISTENING_ADDR
     print "Listening port: " + str(LISTENING_PORT) + "\n"
     print ":-------------------------:\n"
+
+    # Truncate Log on Start to clean stale ports
+    try:
+        open(LOG_FILE, 'w').close()
+        os.chmod(LOG_FILE, 0o666)
+    except:
+        pass
+
     server = Server(LISTENING_ADDR, LISTENING_PORT)
     server.start()
     while True:
