@@ -176,29 +176,23 @@ if [ -f "$WS_LOG_FILE" ]; then
     done < "$WS_LOG_FILE"
 fi
 
-# 2. Build Auth Map (Local Port -> Username)
+# 2. Build Auth Map (Local Port -> Username) from Journalctl
 declare -A PORT_TO_USER
-LOGS=""
-if [ -f "/var/log/auth.log" ]; then LOGS="/var/log/auth.log"; fi
-if [ -f "/var/log/secure" ]; then LOGS="$LOGS /var/log/secure"; fi
-if [ -f "/var/log/messages" ]; then LOGS="$LOGS /var/log/messages"; fi
-if [ -f "/var/log/syslog" ]; then LOGS="$LOGS /var/log/syslog"; fi
+RAW_LOGS=$(journalctl -u dropbear -u ssh -n 2000 --no-pager)
 
-if [ -n "$LOGS" ]; then
-    # Dropbear
-    while read -r line; do
-        if [[ "$line" =~ for\ \'([a-zA-Z0-9._-]+)\'\ from\ [0-9.]+:([0-9]+) ]]; then
-            PORT_TO_USER[${BASH_REMATCH[2]}]="${BASH_REMATCH[1]}"
-        fi
-    done < <(grep "Password auth succeeded for" $LOGS | tail -n 2000)
+# Parse Dropbear
+while read -r line; do
+    if [[ "$line" =~ for\ \'([a-zA-Z0-9._-]+)\'\ from\ [0-9.]+:([0-9]+) ]]; then
+        PORT_TO_USER[${BASH_REMATCH[2]}]="${BASH_REMATCH[1]}"
+    fi
+done <<< "$RAW_LOGS"
 
-    # OpenSSH
-    while read -r line; do
-        if [[ "$line" =~ for\ ([a-zA-Z0-9._-]+)\ from\ [0-9.]+\ port\ ([0-9]+) ]]; then
-            PORT_TO_USER[${BASH_REMATCH[2]}]="${BASH_REMATCH[1]}"
-        fi
-    done < <(grep "Accepted .* for" $LOGS | tail -n 2000)
-fi
+# Parse OpenSSH
+while read -r line; do
+    if [[ "$line" =~ for\ ([a-zA-Z0-9._-]+)\ from\ [0-9.]+\ port\ ([0-9]+) ]]; then
+        PORT_TO_USER[${BASH_REMATCH[2]}]="${BASH_REMATCH[1]}"
+    fi
+done <<< "$RAW_LOGS"
 
 # 3. Scan Netstat ESTABLISHED
 if ! command -v netstat &> /dev/null; then
