@@ -1,6 +1,6 @@
 #!/bin/bash
-# Autokill User SSH Multi-Login (Triple Map Strategy: AuthLog + WSLog + Netstat)
-# Bypasses process ownership issues by linking events via Ephemeral Ports.
+# Autokill User SSH Multi-Login (Journalctl + Netstat + WS-Tunnel Map)
+# Uses systemd journal for real-time auth data to bypass file logging delays.
 
 if [ -z "$BASH_VERSION" ]; then
 	exec /bin/bash "$0" "$@"
@@ -54,49 +54,39 @@ if [ -f "$WS_LOG_FILE" ]; then
     done < "$WS_LOG_FILE"
 fi
 
-# Map 2: Port -> Username (from Auth Log)
-# We scan the last 2000 lines. Dropbear logs the port. OpenSSH logs the port.
-# Dropbear: "Password auth succeeded for 'user' from 127.0.0.1:54321"
-# OpenSSH: "Accepted password for user from 127.0.0.1 port 54321 ssh2"
+# Map 2: Port -> Username (from Journalctl)
 declare -A PORT_TO_USER
 
-LOGS=""
-if [ -f "/var/log/auth.log" ]; then LOGS="/var/log/auth.log"; fi
-if [ -f "/var/log/secure" ]; then LOGS="$LOGS /var/log/secure"; fi
-# Some systems use /var/log/messages or syslog
-if [ -f "/var/log/messages" ]; then LOGS="$LOGS /var/log/messages"; fi
-if [ -f "/var/log/syslog" ]; then LOGS="$LOGS /var/log/syslog"; fi
+# Fetch recent logs from Dropbear and SSH service
+# We use --output=cat to get raw message, easier to regex
+# We scan 2000 lines to be safe
+RAW_LOGS=$(journalctl -u dropbear -u ssh -n 2000 --no-pager)
 
-if [ -n "$LOGS" ]; then
-    # Parse Dropbear
-    # Format: ... for 'user' from IP:PORT
-    while read -r line; do
-        if [[ "$line" =~ for\ \'([a-zA-Z0-9._-]+)\'\ from\ [0-9.]+:([0-9]+) ]]; then
-            user="${BASH_REMATCH[1]}"
-            port="${BASH_REMATCH[2]}"
-            PORT_TO_USER[$port]="$user"
-        fi
-    done < <(grep "Password auth succeeded for" $LOGS | tail -n 5000)
+# Parse Dropbear
+# Format: Password auth succeeded for 'user' from IP:PORT
+while read -r line; do
+    if [[ "$line" =~ for\ \'([a-zA-Z0-9._-]+)\'\ from\ [0-9.]+:([0-9]+) ]]; then
+        user="${BASH_REMATCH[1]}"
+        port="${BASH_REMATCH[2]}"
+        PORT_TO_USER[$port]="$user"
+    fi
+done <<< "$RAW_LOGS"
 
-    # Parse OpenSSH
-    # Format: ... for user from IP port PORT
-    while read -r line; do
-        if [[ "$line" =~ for\ ([a-zA-Z0-9._-]+)\ from\ [0-9.]+\ port\ ([0-9]+) ]]; then
-            user="${BASH_REMATCH[1]}"
-            port="${BASH_REMATCH[2]}"
-            PORT_TO_USER[$port]="$user"
-        fi
-    done < <(grep "Accepted .* for" $LOGS | tail -n 5000)
-fi
+# Parse OpenSSH
+# Format: Accepted password for user from IP port PORT
+while read -r line; do
+    if [[ "$line" =~ for\ ([a-zA-Z0-9._-]+)\ from\ [0-9.]+\ port\ ([0-9]+) ]]; then
+        user="${BASH_REMATCH[1]}"
+        port="${BASH_REMATCH[2]}"
+        PORT_TO_USER[$port]="$user"
+    fi
+done <<< "$RAW_LOGS"
 
 # --- Phase 2: Count Active Sessions via Netstat ---
 declare -A USER_IP_COUNT
 declare -A USER_IPS
 
 # Scan ESTABLISHED connections to sshd/dropbear
-# We look at the FOREIGN ADDRESS.
-# If Foreign is 127.0.0.1:PORT, we look up PORT in PORT_TO_USER and PORT_TO_REAL_IP.
-
 netstat -tnp 2>/dev/null | grep 'ESTABLISHED' | grep -E 'sshd|dropbear' | while read -r line; do
     foreign_addr=$(echo "$line" | awk '{print $5}')
     ip=$(echo "$foreign_addr" | cut -d: -f1)
@@ -106,19 +96,15 @@ netstat -tnp 2>/dev/null | grep 'ESTABLISHED' | grep -E 'sshd|dropbear' | while 
     real_ip="$ip"
 
     if [[ "$ip" == "127.0.0.1" || "$ip" == "localhost" ]]; then
-        # It's a tunnel or local connection.
-        # 1. Identify User from Auth Log Map
+        # Local Connection (Tunnel)
         user="${PORT_TO_USER[$port]}"
 
-        # 2. Identify Real IP from WS Map
         mapped_ip="${PORT_TO_REAL_IP[$port]}"
         if [ -n "$mapped_ip" ]; then
             real_ip="$mapped_ip"
         fi
     else
-        # Direct connection (Public IP)
-        # We need to find the user.
-        # Since we can't use PID ownership (root issue), we MUST look at Auth Log for this Port too.
+        # Direct Connection
         user="${PORT_TO_USER[$port]}"
     fi
 
@@ -134,7 +120,6 @@ done > /tmp/active_sessions.txt
 
 # --- Phase 3: Enforce Limits ---
 while read -r user ip; do
-    # Double check valid user
     if id -u "$user" >/dev/null 2>&1; then
          count=${USER_IP_COUNT[$user]}
          if [ -z "$count" ]; then count=0; fi
