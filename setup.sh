@@ -258,10 +258,10 @@ chmod +x /usr/bin/bbr
 
 
 # > Setup Crontab
-echo "0 0 * * * root xp" >> /etc/crontab
+echo "*/10 * * * * root xp" >> /etc/crontab
 echo "0 1 * * * root delete" >> /etc/crontab
 echo "0 2 * * * root cleaner" >> /etc/crontab
-echo "0 3 * * * root /usr/bin/xp" >> /etc/crontab
+# echo "0 3 * * * root /usr/bin/xp" >> /etc/crontab
 echo "0 4 * * * root /usr/bin/delete" >> /etc/crontab
 echo "0 7 * * * root /usr/bin/cleaner" >> /etc/crontab
 echo "0 5 * * * root reboot" >> /etc/crontab

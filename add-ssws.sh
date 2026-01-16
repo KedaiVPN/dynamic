@@ -100,6 +100,13 @@ cipher="aes-128-gcm"
 uuid=$(cat /proc/sys/kernel/random/uuid)
 read -p "Expired (days): " masaaktif
 exp=`date -d "$masaaktif days" +"%Y-%m-%d"`
+
+# Add to expiry database
+now_timestamp=$(date +%s)
+expiry_seconds=$((masaaktif * 86400))
+expiry_timestamp=$((now_timestamp + expiry_seconds))
+echo "$user ssws $expiry_timestamp" >> /etc/expired-users.db
+
 sed -i '/#ssws$/a\#ssw '"$user $exp"'\
 },{"password": "'""$uuid""'","method": "'""$cipher""'","email": "'""$user""'"' /etc/xray/config.json
 sed -i '/#ssgrpc$/a\#sswg '"$user $exp"'\
