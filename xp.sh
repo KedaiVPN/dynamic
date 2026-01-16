@@ -1,23 +1,10 @@
-BIBlack='\033[1;90m'      # Black
-BIRed='\033[1;91m'        # Red
-BIGreen='\033[1;92m'      # Green
-BIYellow='\033[1;93m'     # Yellow
-BIBlue='\033[1;94m'       # Blue
-BIPurple='\033[1;95m'     # Purple
-BICyan='\033[1;96m'       # Cyan
-BIWhite='\033[1;97m'      # White
-UWhite='\033[4;37m'       # White
-On_IPurple='\033[0;105m'  #
-On_IRed='\033[0;101m'
-IBlack='\033[0;90m'       # Black
-IRed='\033[0;91m'         # Red
-IGreen='\033[0;92m'       # Green
-IYellow='\033[0;93m'      # Yellow
-IBlue='\033[0;94m'        # Blue
-IPurple='\033[0;95m'      # Purple
-ICyan='\033[0;96m'        # Cyan
-IWhite='\033[0;97m'       # White
-NC='\e[0m'
+#!/bin/bash
+# =========================================
+# Quick Setup | Script Setup Manager
+# Edition : Stable Edition V1.0
+# Auther  : NevermoreSSH
+# (C) Copyright 2022
+# =========================================
 
 # // Export Color & Information
 export RED='\033[0;31m'
@@ -29,129 +16,68 @@ export CYAN='\033[0;36m'
 export LIGHT='\033[0;37m'
 export NC='\033[0m'
 
-# // Export Banner Status Information
-export EROR="[${RED} EROR ${NC}]"
-export INFO="[${YELLOW} INFO ${NC}]"
-export OKEY="[${GREEN} OKEY ${NC}]"
-export PENDING="[${YELLOW} PENDING ${NC}]"
-export SEND="[${YELLOW} SEND ${NC}]"
-export RECEIVE="[${YELLOW} RECEIVE ${NC}]"
+# // Database Expired Users
+EXP_DB="/etc/expired-users.db"
 
-# // Export Align
-export BOLD="\e[1m"
-export WARNING="${RED}\e[5m"
-export UNDERLINE="\e[4m"
-
-# // Exporting URL Host
-export Server_URL="raw.githubusercontent.com/NevermoreSSH/Blueblue/main/test"
-export Server1_URL="raw.githubusercontent.com/NevermoreSSH/Blueblue/main/limit"
-export Server_Port="443"
-export Server_IP="underfined"
-export Script_Mode="Stable"
-export Auther=".geovpn"
-
-# // Root Checking
-if [ "${EUID}" -ne 0 ]; then
-		echo -e "${EROR} Please Run This Script As Root User !"
-		exit 1
+if [ ! -f "$EXP_DB" ]; then
+    echo "Database expired users not found!"
+    exit 1
 fi
 
-# // Exporting IP Address
-export IP=$( curl -s https://ipinfo.io/ip/ )
+now_timestamp=$(date +%s)
 
-# // Exporting Network Interface
-export NETWORK_IFACE="$(ip route show to default | awk '{print $5}')"
+# Read database line by line
+# Format: username type timestamp
+while read -r line; do
+    # Skip empty lines
+    if [[ -z "$line" ]]; then
+        continue
+    fi
 
-limit_dir="/etc/xray/limit"
-vmess_limit="${limit_dir}/vmess"
-vless_limit="${limit_dir}/vless"
-trojan_limit="${limit_dir}/trojan"
-vmess_lock="${limit_dir}/lock-vmess"
-vless_lock="${limit_dir}/lock-vless"
-trojan_lock="${limit_dir}/lock-trojan"
-mkdir -p "$limit_dir"
-touch "$vmess_limit" "$vless_limit" "$trojan_limit" "$vmess_lock" "$vless_lock" "$trojan_lock"
+    user=$(echo "$line" | awk '{print $1}')
+    type=$(echo "$line" | awk '{print $2}')
+    exp_timestamp=$(echo "$line" | awk '{print $3}')
 
-##----- Auto Remove Vmess
-data=( `cat /etc/xray/config.json | grep '^#vmsg' | cut -d ' ' -f 2 | sort | uniq`);
-now=`date +"%Y-%m-%d"`
-for user in "${data[@]}"
-do
-exp=$(grep -w "^#vmsg $user" "/etc/xray/config.json" | cut -d ' ' -f 3 | sort | uniq)
-d1=$(date -d "$exp" +%s)
-d2=$(date -d "$now" +%s)
-exp2=$(( (d1 - d2) / 86400 ))
-if [[ "$exp2" -le "0" ]]; then
-sed -i "/^#vms $user $exp/,/^},{/d" /etc/xray/config.json
-sed -i "/^#vmsg $user $exp/,/^},{/d" /etc/xray/config.json
-sed -i "/^### $user $exp/,/^},{/d" /etc/xray/config.json
-rm -f /etc/xray/$user-tls.json /etc/xray/$user-none.json
-sed -i "/^$user /d" "$vmess_limit" "$vmess_lock"
-fi
-done
+    if [[ "$now_timestamp" -ge "$exp_timestamp" ]]; then
+        echo -e "${RED}Deleting expired account: $user ($type)${NC}"
 
-#----- Auto Remove Vless
-data=( `cat /etc/xray/config.json | grep '^#vlsg' | cut -d ' ' -f 2 | sort | uniq`);
-now=`date +"%Y-%m-%d"`
-for user in "${data[@]}"
-do
-exp=$(grep -w "^#vlsg $user" "/etc/xray/config.json" | cut -d ' ' -f 3 | sort | uniq)
-d1=$(date -d "$exp" +%s)
-d2=$(date -d "$now" +%s)
-exp2=$(( (d1 - d2) / 86400 ))
-if [[ "$exp2" -le "0" ]]; then
-sed -i "/^#vls $user $exp/,/^},{/d" /etc/xray/config.json
-sed -i "/^#vlsg $user $exp/,/^},{/d" /etc/xray/config.json
-sed -i "/^$user /d" "$vless_limit" "$vless_lock"
-fi
-done
+        case $type in
+            ssh)
+                userdel --force "$user"
+                # Remove from limit-user.conf if exists
+                if [ -f "/etc/ssh/limit-user.conf" ]; then
+                    sed -i "/^$user /d" /etc/ssh/limit-user.conf
+                fi
+                ;;
+            vmess)
+                sed -i "/^#vms $user /,/^},{/d" /etc/xray/config.json
+                sed -i "/^#vmsg $user /,/^},{/d" /etc/xray/config.json
+                sed -i "/^### $user /,/^},{/d" /etc/xray/config.json
+                rm -f /etc/xray/$user-tls.json /etc/xray/$user-none.json
+                sed -i "/^$user /d" /etc/xray/limit/vmess /etc/xray/limit/lock-vmess
+                ;;
+            vless)
+                sed -i "/^#vls $user /,/^},{/d" /etc/xray/config.json
+                sed -i "/^#vlsg $user /,/^},{/d" /etc/xray/config.json
+                sed -i "/^$user /d" /etc/xray/limit/vless /etc/xray/limit/lock-vless
+                ;;
+            trojan)
+                sed -i "/^#tr $user /,/^},{/d" /etc/xray/config.json
+                sed -i "/^#trg $user /,/^},{/d" /etc/xray/config.json
+                sed -i "/^$user /d" /etc/xray/limit/trojan /etc/xray/limit/lock-trojan
+                ;;
+            ssws)
+                sed -i "/^#ssw $user /,/^},{/d" /etc/xray/config.json
+                sed -i "/^#sswg $user /,/^},{/d" /etc/xray/config.json
+                ;;
+        esac
 
-#----- Auto Remove Trojan
-data=( `cat /etc/xray/config.json | grep '^#trg' | cut -d ' ' -f 2 | sort | uniq`);
-now=`date +"%Y-%m-%d"`
-for user in "${data[@]}"
-do
-exp=$(grep -w "^#trg $user" "/etc/xray/config.json" | cut -d ' ' -f 3 | sort | uniq)
-d1=$(date -d "$exp" +%s)
-d2=$(date -d "$now" +%s)
-exp2=$(( (d1 - d2) / 86400 ))
-if [[ "$exp2" -le "0" ]]; then
-sed -i "/^#tr $user $exp/,/^},{/d" /etc/xray/config.json
-sed -i "/^#trg $user $exp/,/^},{/d" /etc/xray/config.json
-sed -i "/^$user /d" "$trojan_limit" "$trojan_lock"
-fi
-done
-systemctl restart xray
+        # Remove from database
+        grep -v "^$user $type $exp_timestamp" "$EXP_DB" > "${EXP_DB}.tmp" && mv "${EXP_DB}.tmp" "$EXP_DB"
 
-##------ Auto Remove SSH
-hariini=`date +%d-%m-%Y`
-cat /etc/shadow | cut -d: -f1,8 | sed /:$/d > /tmp/expirelist.txt
-totalaccounts=`cat /tmp/expirelist.txt | wc -l`
-for((i=1; i<=$totalaccounts; i++ ))
-do
-tuserval=`head -n $i /tmp/expirelist.txt | tail -n 1`
-username=`echo $tuserval | cut -f1 -d:`
-userexp=`echo $tuserval | cut -f2 -d:`
-userexpireinseconds=$(( $userexp * 86400 ))
-tglexp=`date -d @$userexpireinseconds`             
-tgl=`echo $tglexp |awk -F" " '{print $3}'`
-while [ ${#tgl} -lt 2 ]
-do
-tgl="0"$tgl
-done
-while [ ${#username} -lt 15 ]
-do
-username=$username" " 
-done
-bulantahun=`echo $tglexp |awk -F" " '{print $2,$6}'`
-todaystime=`date +%s`
-if [ $userexpireinseconds -ge $todaystime ] ;
-then
-:
-else
-userdel --force $username
-fi
-done
-echo -e "[ ${green}INFO${NC} ] Back to menu in 5 sec . . . "
-sleep 5
-menu
+        # Restart Xray service if needed (only for Xray types)
+        if [[ "$type" != "ssh" ]]; then
+             systemctl restart xray
+        fi
+    fi
+done < "$EXP_DB"

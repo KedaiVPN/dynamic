@@ -104,6 +104,13 @@ clear
 useradd -e `date -d "$masaaktif days" +"%Y-%m-%d"` -s /bin/false -M $Login
 exp="$(chage -l $Login | grep "Account expires" | awk -F": " '{print $2}')"
 echo -e "$Pass\n$Pass\n"|passwd $Login &> /dev/null
+
+# Add to expiry database
+now_timestamp=$(date +%s)
+expiry_seconds=$((masaaktif * 86400))
+expiry_timestamp=$((now_timestamp + expiry_seconds))
+echo "$Login ssh $expiry_timestamp" >> /etc/expired-users.db
+
 limit_file="/etc/ssh/limit-user.conf"
 if [ -z "$limitlogin" ]; then
 	limitlogin=1

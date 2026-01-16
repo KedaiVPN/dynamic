@@ -103,6 +103,13 @@ read -p "Limit Bandwidth (GB): " quota
 done
 read -p "Expired (days): " masaaktif
 exp=`date -d "$masaaktif days" +"%Y-%m-%d"`
+
+# Add to expiry database
+now_timestamp=$(date +%s)
+expiry_seconds=$((masaaktif * 86400))
+expiry_timestamp=$((now_timestamp + expiry_seconds))
+echo "$user trojan $expiry_timestamp" >> /etc/expired-users.db
+
 sed -i '/#trojanws$/a\#tr '"$user $exp"'\
 },{"password": "'""$uuid""'","email": "'""$user""'"' /etc/xray/config.json
 sed -i '/#trojangrpc$/a\#trg '"$user $exp"'\
