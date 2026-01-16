@@ -104,7 +104,7 @@ apt --fix-missing update && apt update && apt upgrade -y && apt install -y bzip2
    - Sodosok WS/GRPC         : 443
 
    [ Server Information & Other Features ]
-   - Timezone                : Asia/Kuala_Lumpur (GMT +8)
+   - Timezone                : Asia/Jakarta (GMT +7)
    - Fail2Ban                : [ON]
    - Dflate                  : [ON]
    - IPtables                : [ON]
