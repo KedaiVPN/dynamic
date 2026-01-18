@@ -25,6 +25,7 @@ wget -q -O /usr/bin/add-tr "${REPO}/add-tr.sh" && chmod +x /usr/bin/add-tr
 wget -q -O /usr/bin/add-ssws "${REPO}/add-ssws.sh" && chmod +x /usr/bin/add-ssws
 wget -q -O /usr/bin/usernew "${REPO}/usernew.sh" && chmod +x /usr/bin/usernew
 wget -q -O /usr/bin/xp "${REPO}/xp.sh" && chmod +x /usr/bin/xp
+wget -q -O /usr/bin/cek-expired "${REPO}/cek-expired.sh" && chmod +x /usr/bin/cek-expired
 
 # 3. Buat Database Expired
 echo -e "[ ${GREEN}INFO${NC} ] Membuat database expired users..."

@@ -50,25 +50,25 @@ while read -r line; do
                 fi
                 ;;
             vmess)
-                sed -i "/^#vms $user /,/^},{/d" /etc/xray/config.json
-                sed -i "/^#vmsg $user /,/^},{/d" /etc/xray/config.json
-                sed -i "/^### $user /,/^},{/d" /etc/xray/config.json
+                sed -i "/^#vms $user /,/^ *},{/d" /etc/xray/config.json
+                sed -i "/^#vmsg $user /,/^ *},{/d" /etc/xray/config.json
+                sed -i "/^### $user /,/^ *},{/d" /etc/xray/config.json
                 rm -f /etc/xray/$user-tls.json /etc/xray/$user-none.json
                 sed -i "/^$user /d" /etc/xray/limit/vmess /etc/xray/limit/lock-vmess
                 ;;
             vless)
-                sed -i "/^#vls $user /,/^},{/d" /etc/xray/config.json
-                sed -i "/^#vlsg $user /,/^},{/d" /etc/xray/config.json
+                sed -i "/^#vls $user /,/^ *},{/d" /etc/xray/config.json
+                sed -i "/^#vlsg $user /,/^ *},{/d" /etc/xray/config.json
                 sed -i "/^$user /d" /etc/xray/limit/vless /etc/xray/limit/lock-vless
                 ;;
             trojan)
-                sed -i "/^#tr $user /,/^},{/d" /etc/xray/config.json
-                sed -i "/^#trg $user /,/^},{/d" /etc/xray/config.json
+                sed -i "/^#tr $user /,/^ *},{/d" /etc/xray/config.json
+                sed -i "/^#trg $user /,/^ *},{/d" /etc/xray/config.json
                 sed -i "/^$user /d" /etc/xray/limit/trojan /etc/xray/limit/lock-trojan
                 ;;
             ssws)
-                sed -i "/^#ssw $user /,/^},{/d" /etc/xray/config.json
-                sed -i "/^#sswg $user /,/^},{/d" /etc/xray/config.json
+                sed -i "/^#ssw $user /,/^ *},{/d" /etc/xray/config.json
+                sed -i "/^#sswg $user /,/^ *},{/d" /etc/xray/config.json
                 ;;
         esac
 
