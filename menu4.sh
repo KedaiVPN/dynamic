@@ -229,7 +229,7 @@ echo -e "     ${BICyan}[${BIWhite}03${BICyan}] VLESS       ${WB}[${GB}${vless}${
 echo -e "     ${BICyan}[${BIWhite}04${BICyan}] TROJAN      ${WB}[${GB}${tr}${WB}] ${BICyan}${BIYellow}${BICyan}${NC}" 
 echo -e "     ${BICyan}[${BIWhite}05${BICyan}] SHADOWSOCKS ${WB}[${GB}${ss}${WB}] ${BICyan}${BIYellow}${BICyan}${NC}"   
 echo -e "" 
-echo -e "     ${BICyan}[${BIWhite}06${BICyan}] EXP FILES ${BICyan}${BIYellow}${BICyan}${NC}"    
+echo -e "     ${BICyan}[${BIWhite}06${BICyan}] RESTORE EXPIRED USER ${BICyan}${BIYellow}${BICyan}${NC}"
 echo -e "     ${BICyan}[${BIWhite}07${BICyan}] AUTO REBOOT ${BICyan}${BIYellow}${BICyan}${NC}"    
 echo -e "     ${BICyan}[${BIWhite}08${BICyan}] REBOOT ${BICyan}${BIYellow}${BICyan}${NC}"    
 echo -e "     ${BICyan}[${BIWhite}09${BICyan}] RESTART ${BICyan}${BIYellow}${BICyan}${NC}"    
@@ -246,7 +246,6 @@ echo -e "     ${BICyan}[${BIWhite}18${BICyan}] LIMIT SPEED ${BICyan}${BIYellow}$
 echo -e "     ${BICyan}[${BIWhite}19${BICyan}] WEBMIN ${BICyan}${BIYellow}${BICyan}${NC}"
 echo -e "     ${BICyan}[${BIWhite}20${BICyan}] INFO SCRIPT ${BICyan}${BIYellow}${BICyan}${NC}" 
 echo -e "     ${BICyan}[${BIWhite}21${BICyan}] CLEAR LOG ${BICyan}${BIYellow}${BICyan}${NC}" 
-echo -e "     ${BICyan}[${BIWhite}22${BICyan}] TASK MANAGER ${BICyan}${BIYellow}${BICyan}${NC}"
 echo -e "     ${BICyan}[${BIWhite}23${BICyan}] DNS CHANGER ${BICyan}${BIYellow}${BICyan}${NC}"
 echo -e "     ${BICyan}[${BIWhite}24${BICyan}] NETFLIX CHECKER ${BICyan}${BIYellow}${BICyan}${NC}"
 echo -e "     ${BICyan}[${BIWhite}25${BICyan}] TENDANG ${BICyan}${BIYellow}${BICyan}${NC}"
@@ -274,7 +273,7 @@ case $opt in
 3) clear ; menu-vless ;;
 4) clear ; menu-trojan ;;
 5) clear ; menu-ss ;;
-6) clear ; xp ;;
+6) clear ; cek-expired ;;
 7) clear ; autoreboot ;;
 8) clear ; reboot ;;
 9) clear ; restart ;;
@@ -294,7 +293,6 @@ case $opt in
 23) clear ; dns ;;
 24) clear ; netf ;;
 25) clear ; tendang ;;
-26) clear ; cek-expired ;;
 55) clear ; wget -q -O /usr/bin/xraychanger "https://raw.githubusercontent.com/NevermoreSSH/Xcore-custompath/main/xraychanger.sh" && chmod +x /usr/bin/xraychanger && xraychanger ;;
 66) clear ; bbr ;;
 77) clear ; wget -q -O /usr/bin/swapram "https://raw.githubusercontent.com/NevermoreSSH/swapram/main/swapram.sh" && chmod +x /usr/bin/swapram && swapram ;;
