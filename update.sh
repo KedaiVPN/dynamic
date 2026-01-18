@@ -27,14 +27,18 @@ wget -q -O /usr/bin/usernew "${REPO}/usernew.sh" && chmod +x /usr/bin/usernew
 wget -q -O /usr/bin/xp "${REPO}/xp.sh" && chmod +x /usr/bin/xp
 wget -q -O /usr/bin/cek-expired "${REPO}/cek-expired.sh" && chmod +x /usr/bin/cek-expired
 
-# 3. Buat Database Expired
-echo -e "[ ${GREEN}INFO${NC} ] Membuat database expired users..."
+# 3. Buat Database Expired & Trash
+echo -e "[ ${GREEN}INFO${NC} ] Membuat database expired & trash users..."
 if [ ! -f /etc/expired-users.db ]; then
     touch /etc/expired-users.db
     chmod 644 /etc/expired-users.db
-    echo "Database dibuat."
-else
-    echo "Database sudah ada."
+    echo "Database expired-users.db dibuat."
+fi
+
+if [ ! -f /etc/expired-users-trash.db ]; then
+    touch /etc/expired-users-trash.db
+    chmod 644 /etc/expired-users-trash.db
+    echo "Database expired-users-trash.db dibuat."
 fi
 
 # 4. Update Cron Job
