@@ -112,12 +112,15 @@ while read -r line; do
                 ;;
         esac
 
-        # Add to TRASH database
+        # Add to TRASH database (Check for duplicates first)
         # Format: username type deleted_timestamp credentials(uuid/pass)
-        echo "$user $type $now_timestamp $pass" >> "$TRASH_DB"
+        if ! grep -q "^$user $type" "$TRASH_DB"; then
+            echo "$user $type $now_timestamp $pass" >> "$TRASH_DB"
+        fi
 
         # Remove from ACTIVE database
-        grep -v "^$user $type $exp_timestamp" "$EXP_DB" > "${EXP_DB}.tmp" && mv "${EXP_DB}.tmp" "$EXP_DB"
+        # Use sed -i for safer deletion of the specific line
+        sed -i "/^$user $type /d" "$EXP_DB"
 
         # Restart Xray service if needed
         if [[ "$type" != "ssh" ]]; then
