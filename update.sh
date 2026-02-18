@@ -47,8 +47,8 @@ fi
 echo -e "[ ${GREEN}INFO${NC} ] Memperbarui Cron Job..."
 # Hapus cron xp lama jika ada (yang harian atau duplikat)
 sed -i "/root xp/d" /etc/crontab
-# Tambahkan cron xp baru (tiap 10 menit)
-echo "*/10 * * * * root xp" >> /etc/crontab
+# Tambahkan cron xp baru (tiap 1 menit)
+echo "* * * * * root xp" >> /etc/crontab
 # Restart cron
 service cron restart
 

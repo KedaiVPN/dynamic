@@ -505,6 +505,80 @@ echo ""
 read -n 1 -s -r -p "Press any key to back on menu"
 menu
 }
+
+function trialssh(){
+    clear
+    echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+    echo -e "\E[0;41;36m               TRIAL SSH                  \E[0m"
+    echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+
+    rand_suffix=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 3)
+    user="trialSSH${rand_suffix}"
+    pass=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 3)
+
+    read -p "Masa Aktif (Menit): " masa_aktif_menit
+
+    if [[ -z "$masa_aktif_menit" || ! "$masa_aktif_menit" =~ ^[0-9]+$ ]]; then
+        echo -e "${EROR} Input tidak valid!"
+        sleep 2
+        menu
+    fi
+
+    now=$(date +%s)
+    exp_seconds=$((masa_aktif_menit * 60))
+    exp_timestamp=$((now + exp_seconds))
+
+    # Create user with 1 day expiry as fail-safe
+    useradd -e $(date -d "+1 day" +"%Y-%m-%d") -s /bin/false -M $user
+    echo -e "$pass\n$pass\n"|passwd $user &> /dev/null
+
+    # Add to database
+    echo "$user ssh $exp_timestamp" >> /etc/expired-users.db
+
+    # Set Limit
+    limit_file="/etc/ssh/limit-user.conf"
+    mkdir -p /etc/ssh
+    if [ -f "$limit_file" ]; then
+        awk -v user="$user" '$1!=user' "$limit_file" > "${limit_file}.tmp" && mv "${limit_file}.tmp" "$limit_file"
+    fi
+    echo "$user 1" >> "$limit_file"
+
+    # Display
+    domain=$(cat /etc/xray/domain 2>/dev/null)
+    if [[ -z "$domain" ]]; then
+        domain=$(curl -s https://ipinfo.io/ip/)
+    fi
+
+    portsshws=$(cat /root/log-install.txt | grep -w "SSH Websocket" | cut -d: -f2 | awk '{print $1}')
+    wsssl=$(cat /root/log-install.txt | grep -w "SSH SSL Websocket" | cut -d: -f2 | awk '{print $1}')
+    opensh=$(cat /root/log-install.txt | grep -w "OpenSSH" | cut -f2 -d: | awk '{print $1}')
+    db=$(cat /root/log-install.txt | grep -w "Dropbear" | cut -f2 -d: | awk '{print $1,$2}')
+    ssl=$(cat /root/log-install.txt | grep -w "Stunnel5" | cut -d: -f2)
+
+    clear
+    echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+    echo -e "\E[0;41;36m          TRIAL SSH ACCOUNT        \E[0m"
+    echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+    echo -e "Username   : $user"
+    echo -e "Password   : $pass"
+    echo -e "Expired    : $masa_aktif_menit Menit"
+    echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+    echo -e "Host       : $domain"
+    echo -e "OpenSSH    : $opensh"
+    echo -e "Dropbear   : $db"
+    echo -e "SSH-WS     : $portsshws"
+    echo -e "SSH-SSL-WS : $wsssl"
+    echo -e "SSL/TLS    : $ssl"
+    echo -e "UDPGW      : 7100-7300"
+    echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+    echo -e "Payload WS"
+    echo -e "GET / [protocol][crlf]Host: $domain[crlf]Connection: Keep-Alive[crlf]Connection: Upgrade[crlf]Upgrade: websocket[crlf][crlf]"
+    echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+
+    read -n 1 -s -r -p "Press any key to back on menu"
+    menu
+}
+
 clear
 echo -e "${BICyan} ┌─────────────────────────────────────────────────────┐${NC}"
 echo -e "       ${BIWhite}${UWhite}SSH MENU ${NC}"
@@ -519,6 +593,7 @@ echo -e "     ${BICyan}[${BIWhite}7${BICyan}] Auto Kill user SSH    "
 echo -e "     ${BICyan}[${BIWhite}8${BICyan}] Check Member SSH"
 echo -e "     ${BICyan}[${BIWhite}9${BICyan}] Edit Limit Login SSH"
 echo -e "     ${BICyan}[${BIWhite}10${BICyan}] Lock/Unlock User SSH"
+echo -e "     ${BICyan}[${BIWhite}11${BICyan}] Trial Account SSH"
 echo -e " ${BICyan}└─────────────────────────────────────────────────────┘${NC}"
 echo -e "     ${BIYellow}Press x or [ Ctrl+C ] • To-${BIWhite}Exit${NC}"
 echo ""
@@ -535,6 +610,7 @@ case $opt in
 8) clear ; member ;;
 9) clear ; editlimit ;;
 10) clear ; manual_lock_unlock ;;
+11) clear ; trialssh ;;
 0) clear ; menu ;;
 x) exit ;;
 *) echo -e "" ; echo "Press any key to back on menu" ; sleep 1 ; menu ;;
