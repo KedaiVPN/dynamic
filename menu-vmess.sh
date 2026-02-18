@@ -327,6 +327,145 @@ echo ""
 read -n 1 -s -r -p "Press any key to back on menu"
 menu
 }
+
+function trialvmess(){
+    clear
+    echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+    echo -e "\E[0;41;36m               TRIAL VMESS                \E[0m"
+    echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+
+    rand_suffix=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 3)
+    user="trialVM${rand_suffix}"
+
+    read -p "Masa Aktif (Menit): " masa_aktif_menit
+    if [[ -z "$masa_aktif_menit" || ! "$masa_aktif_menit" =~ ^[0-9]+$ ]]; then
+        echo -e "${EROR} Input tidak valid!"
+        sleep 2
+        menu
+    fi
+
+    # Check if user exists
+    CLIENT_EXISTS=$(grep -w $user /etc/xray/config.json | wc -l)
+    if [[ ${CLIENT_EXISTS} == '1' ]]; then
+        echo "User conflict, try again."
+        sleep 2
+        menu
+    fi
+
+    uuid=$(cat /proc/sys/kernel/random/uuid)
+    quota=2
+
+    # Timestamps
+    now=$(date +%s)
+    exp_seconds=$((masa_aktif_menit * 60))
+    exp_timestamp=$((now + exp_seconds))
+    exp_display=$(date -d "+${masa_aktif_menit} minutes" +"%Y-%m-%d")
+
+    # Add to database
+    echo "$user vmess $exp_timestamp" >> /etc/expired-users.db
+
+    # Set Quota
+    limit_dir="/etc/xray/limit"
+    limit_file="${limit_dir}/vmess"
+    lock_file="${limit_dir}/lock-vmess"
+    mkdir -p "$limit_dir"
+    touch "$limit_file" "$lock_file"
+    sed -i "/^$user /d" "$limit_file" "$lock_file"
+    echo "$user $uuid $exp_display $quota 0" >> "$limit_file"
+
+    # Add to config.json
+    sed -i '/#vmess$/a\#vms '"$user $exp_display"'\
+},{"id": "'""$uuid""'","alterId": '"0"',"email": "'""$user""'"' /etc/xray/config.json
+    sed -i '/#vmessworry$/a\### '"$user $exp_display"'\
+},{"id": "'""$uuid""'","alterId": '"0"',"email": "'""$user""'"' /etc/xray/config.json
+    sed -i '/#vmesskuota$/a\### '"$user $exp_display"'\
+},{"id": "'""$uuid""'","alterId": '"0"',"email": "'""$user""'"' /etc/xray/config.json
+    sed -i '/#vmessgrpc$/a\#vmsg '"$user $exp_display"'\
+},{"id": "'""$uuid""'","alterId": '"0"',"email": "'""$user""'"' /etc/xray/config.json
+
+    # Generate links
+    domain=$(cat /etc/xray/domain 2>/dev/null)
+    if [[ -z "$domain" ]]; then
+        domain=$(curl -s https://ipinfo.io/ip/)
+    fi
+
+    asu=`cat<<EOF
+      {
+      "v": "2",
+      "ps": "VMESS_TLS_${user}",
+      "add": "${domain}",
+      "port": "443",
+      "id": "${uuid}",
+      "aid": "0",
+      "net": "ws",
+      "path": "/vmess",
+      "type": "none",
+      "host": "${domain}",
+      "tls": "tls"
+}
+EOF`
+    ask=`cat<<EOF
+      {
+      "v": "2",
+      "ps": "VMESS_NTLS_${user}",
+      "add": "${domain}",
+      "port": "80",
+      "id": "${uuid}",
+      "aid": "0",
+      "net": "ws",
+      "path": "/vmess",
+      "type": "none",
+      "host": "${domain}",
+      "tls": "none"
+}
+EOF`
+    grpc=`cat<<EOF
+      {
+      "v": "2",
+      "ps": "VMESS_GRPC_${user}",
+      "add": "${domain}",
+      "port": "443",
+      "id": "${uuid}",
+      "aid": "0",
+      "net": "grpc",
+      "path": "vmess-grpc",
+      "type": "none",
+      "host": "${domain}",
+      "tls": "tls"
+}
+EOF`
+
+    vmesslink1="vmess://$(echo $asu | base64 -w 0)"
+    vmesslink2="vmess://$(echo $ask | base64 -w 0)"
+    vmesslink5="vmess://$(echo $grpc | base64 -w 0)"
+
+    # Restart Xray
+    systemctl restart xray > /dev/null 2>&1
+
+    # Display
+    clear
+    echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+    echo -e "\E[0;41;36m       TRIAL VMESS ACCOUNT         \E[0m"
+    echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+    echo -e "Remarks   : ${user}"
+    echo -e "Domain    : ${domain}"
+    echo -e "Port TLS  : 443"
+    echo -e "Port none : 80"
+    echo -e "ID        : ${uuid}"
+    echo -e "Limit     : ${quota} GB"
+    echo -e "Expired   : ${masa_aktif_menit} Menit"
+    echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+    echo -e "Link TLS  : ${vmesslink1}"
+    echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+    echo -e "Link None : ${vmesslink2}"
+    echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+    echo -e "Link GRPC : ${vmesslink5}"
+    echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+
+    read -n 1 -s -r -p "Press any key to back on menu"
+    menu
+}
+
 clear
 echo -e "${BICyan} ┌─────────────────────────────────────────────────────┐${NC}"
 echo -e "       ${BIWhite}${UWhite}VMESS${NC}"
@@ -337,6 +476,7 @@ echo -e "     ${BICyan}[${BIWhite}3${BICyan}] Renew Account Vmess     "
 echo -e "     ${BICyan}[${BIWhite}4${BICyan}] Check User XRAY     "
 echo -e "     ${BICyan}[${BIWhite}5${BICyan}] Unlock Account Vmess     "
 echo -e "     ${BICyan}[${BIWhite}6${BICyan}] Check Detail Account     "
+echo -e "     ${BICyan}[${BIWhite}7${BICyan}] Trial Account Vmess     "
 echo -e " ${BICyan}└─────────────────────────────────────────────────────┘${NC}"
 echo -e "     ${BIYellow}Press x or [ Ctrl+C ] • To-${BIWhite}Exit${NC}"
 echo ""
@@ -349,6 +489,7 @@ case $opt in
 4) clear ; cekws ;;
 5) clear ; unlockws ;;
 6) clear ; detailws ;;
+7) clear ; trialvmess ;;
 0) clear ; menu ;;
 x) exit ;;
 *) echo -e "" ; echo "Press any key to back on menu" ; sleep 1 ; menu ;;

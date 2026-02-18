@@ -258,7 +258,7 @@ chmod +x /usr/bin/bbr
 
 
 # > Setup Crontab
-echo "*/10 * * * * root xp" >> /etc/crontab
+# echo "*/10 * * * * root xp" >> /etc/crontab
 echo "0 1 * * * root delete" >> /etc/crontab
 echo "0 2 * * * root cleaner" >> /etc/crontab
 # echo "0 3 * * * root /usr/bin/xp" >> /etc/crontab
@@ -284,7 +284,7 @@ cd
 cat > /etc/cron.d/xp_otm <<-END
 SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-2 0 * * * root /usr/bin/xp
+* * * * * root /usr/bin/xp
 END
 
 cat > /etc/cron.d/cl_otm <<-END
