@@ -137,7 +137,6 @@ mkdir -p /usr/bin/xray
 mkdir -p /etc/xray
 mkdir -p /usr/local/etc/xray
 
-#rm -fr /etc/xray/domain
 # // String / Request Data
 mkdir -p /var/lib/scrz-prem >/dev/null 2>&1
 echo "IP=$host" >> /var/lib/scrz-prem/ipvps.conf
@@ -202,7 +201,6 @@ wget -q -O /usr/bin/menu-bckp "https://raw.githubusercontent.com/KedaiVPN/dynami
 wget -q -O /usr/bin/menu-bckp "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/menu-bckp-github.sh"
 wget -q -O /usr/bin/bckp "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/bckpbot.sh"
 wget -q -O /usr/bin/usernew "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/usernew.sh"
-# wget -q -O /usr/bin/menu "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/menu.sh"
 wget -q -O /usr/bin/menu "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/menu4.sh"
 wget -q -O /usr/bin/wbm "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/webmin.sh"
 wget -q -O /usr/bin/xp "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/xp.sh"
@@ -210,8 +208,6 @@ wget -q -O /usr/bin/update "https://raw.githubusercontent.com/KedaiVPN/dynamic/m
 wget -q -O /usr/bin/dns "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/dns.sh"
 wget -q -O /usr/bin/netf "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/netf.sh"
 wget -q -O /usr/bin/bbr "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/bbr.sh"
-#wget -q -O /usr/bin/del-xrays "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/del-xrays.sh"
-#wget -q -O /usr/bin/user-xrays "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/user-xrays.sh"
 chmod +x /usr/bin/add-ws
 chmod +x /usr/bin/add-ssws
 chmod +x /usr/bin/add-socks
@@ -246,8 +242,6 @@ chmod +x /usr/bin/update
 chmod +x /usr/bin/dns
 chmod +x /usr/bin/netf
 chmod +x /usr/bin/bbr
-#chmod +x /usr/bin/del-xrays
-#chmod +x /usr/bin/user-xrays
 
 
 # > install gotop
@@ -258,10 +252,8 @@ chmod +x /usr/bin/bbr
 
 
 # > Setup Crontab
-# echo "*/10 * * * * root xp" >> /etc/crontab
 echo "0 1 * * * root delete" >> /etc/crontab
 echo "0 2 * * * root cleaner" >> /etc/crontab
-# echo "0 3 * * * root /usr/bin/xp" >> /etc/crontab
 echo "0 4 * * * root /usr/bin/delete" >> /etc/crontab
 echo "0 7 * * * root /usr/bin/cleaner" >> /etc/crontab
 echo "0 5 * * * root reboot" >> /etc/crontab
@@ -275,11 +267,6 @@ END
 fi
 cd
 
-#cat > /etc/cron.d/re_otm <<-END
-#SHELL=/bin/sh
-#PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-#0 7 * * * root /sbin/reboot
-#END
 
 cat > /etc/cron.d/xp_otm <<-END
 SHELL=/bin/sh
@@ -373,7 +360,6 @@ echo "   - XRAY  Vless None TLS    : 80" | tee -a log-install.txt
 echo "   - Trojan GRPC             : 443" | tee -a log-install.txt
 echo "   - Trojan WS               : 443" | tee -a log-install.txt
 echo "   - Trojan GO               : 443" | tee -a log-install.txt
-#echo "   - Trojan GFW              : 443" | tee -a log-install.txt
 echo "   - Sodosok WS/GRPC         : 443" | tee -a log-install.txt
 echo ""  | tee -a log-install.txt
 echo "   >>> Server Information & Other Features"  | tee -a log-install.txt
