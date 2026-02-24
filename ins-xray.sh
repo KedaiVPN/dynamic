@@ -53,41 +53,18 @@ export NETWORK_IFACE="$(ip route show to default | awk '{print $5}')"
 
 
 clear && printf '\033[3J'
-# source /var/lib/scrz-prem/ipvps.conf # This is usually missing on fresh installs
-
-# Fix Domain Detection Logic
-mkdir -p /etc/xray
-domain=""
-
-# Try reading from file first
-if [[ -f /etc/xray/domain ]]; then
-    domain=$(cat /etc/xray/domain)
-fi
-
-# Try reading from ipvps.conf if still empty
-if [[ -z "$domain" ]] && [[ -f /var/lib/scrz-prem/ipvps.conf ]]; then
-    source /var/lib/scrz-prem/ipvps.conf
-    domain=$domain # Usually exported in conf
-fi
-
-# If still empty, ask user
-if [[ -z "$domain" ]]; then
-    echo -e "${EROR} Domain Not Found!"
-    read -p "Please Enter Your Domain: " domain
-    echo "$domain" > /etc/xray/domain
-    echo -e "${OKEY} Domain Set To: $domain"
-fi
-
-if [[ -z "$domain" ]]; then
-    echo -e "${EROR} Domain Is Required! Exiting..."
-    exit 1
+source /var/lib/scrz-prem/ipvps.conf
+if [[ "$IP" = "" ]]; then
+domain=$(cat /etc/xray/domain)
+else
+domain=$IP
 fi
 
 echo -e "[ ${GREEN}INFO${NC} ] Checking... "
 sleep 1
 echo -e "[ ${GREEN}INFO$NC ] Setting ntpdate"
 sleep 1
-# domain=$(cat /root/domain) # Use the verified $domain variable instead
+domain=$(cat /root/domain)
 apt install iptables iptables-persistent -y
 apt install curl socat xz-utils wget apt-transport-https gnupg gnupg2 gnupg1 dnsutils lsb-release -y
 apt install socat cron bash-completion ntpdate -y
@@ -100,7 +77,7 @@ systemctl enable chrony && systemctl restart chrony
 timedatectl set-timezone Asia/Jakarta
 #chronyc sourcestats -v
 #chronyc tracking -v
-apt install curl pwgen openssl netcat cron unzip -y
+apt install curl pwgen openssl netcat cron -y
 
 # Make Folder & Log XRay & Log Trojan
 rm -fr /var/log/xray
@@ -109,7 +86,7 @@ rm -fr /home/vps/public_html
 mkdir -p /var/log/xray
 #mkdir -p /var/log/trojan
 mkdir -p /home/vps/public_html
-# chown www-data.www-data /var/log/xray # Moved to after touch
+chown www-data.www-data /var/log/xray
 chown www-data.www-data /etc/xray
 chmod +x /var/log/xray
 #chmod +x /var/log/trojan
@@ -129,10 +106,6 @@ mkdir -p /etc/xray/limit
 touch /etc/xray/limit/vmess /etc/xray/limit/vless /etc/xray/limit/trojan
 touch /etc/xray/limit/lock-vmess /etc/xray/limit/lock-vless /etc/xray/limit/lock-trojan
 touch /etc/xray/limit/usage-vmess /etc/xray/limit/usage-vless /etc/xray/limit/usage-trojan
-
-# FIX PERMISSIONS: Ensure www-data owns all logs we just created
-chown -R www-data:www-data /var/log/xray
-chmod -R 755 /var/log/xray
 
 # Install Wondershaper
 cd /root/
@@ -184,124 +157,18 @@ apt install -y nginx
 cd
 rm -fr /etc/nginx/sites-enabled/default
 rm -fr /etc/nginx/sites-available/default
-# wget -q -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/NevermoreSSH/Blueblue/main/nginx.conf" 
-# Embed nginx.conf with Proxy Protocol support for Xray frontend
-# Merging user optimizations
-rm -fr /etc/nginx/nginx.conf
-cat >/etc/nginx/nginx.conf <<EOF
-user www-data;
-worker_processes auto;
-worker_rlimit_nofile 65536;
-pid /var/run/nginx.pid;
-include /etc/nginx/modules-enabled/*.conf;
-
-events {
-    multi_accept on;
-    worker_connections 2048;
-}
-
-http {
-    gzip on;
-    gzip_vary on;
-    gzip_comp_level 5;
-    gzip_types text/plain application/x-javascript text/xml text/css;
-    autoindex on;
-    sendfile on;
-    tcp_nopush on;
-    tcp_nodelay on;
-    keepalive_timeout 65;
-    types_hash_max_size 2048;
-    server_tokens off;
-    include /etc/nginx/mime.types;
-    default_type application/octet-stream;
-    
-    # User Optimization
-    client_max_body_size 32M;
-    client_header_buffer_size 8m;
-    large_client_header_buffers 8 8m;
-    fastcgi_buffer_size 8m;
-    fastcgi_buffers 8 8m;
-    fastcgi_read_timeout 600;
-
-    access_log /var/log/nginx/access.log;
-    error_log /var/log/nginx/error.log;
-    
-    # Real IP Config (Cloudflare & Incapsula)
-    # CloudFlare IPv4
-    set_real_ip_from 199.27.128.0/21;
-    set_real_ip_from 173.245.48.0/20;
-    set_real_ip_from 103.21.244.0/22;
-    set_real_ip_from 103.22.200.0/22;
-    set_real_ip_from 103.31.4.0/22;
-    set_real_ip_from 141.101.64.0/18;
-    set_real_ip_from 108.162.192.0/18;
-    set_real_ip_from 190.93.240.0/20;
-    set_real_ip_from 188.114.96.0/20;
-    set_real_ip_from 197.234.240.0/22;
-    set_real_ip_from 198.41.128.0/17;
-    set_real_ip_from 162.158.0.0/15;
-    set_real_ip_from 104.16.0.0/12;
-    # Incapsula
-    set_real_ip_from 199.83.128.0/21;
-    set_real_ip_from 198.143.32.0/19;
-    set_real_ip_from 149.126.72.0/21;
-    set_real_ip_from 103.28.248.0/22;
-    set_real_ip_from 45.64.64.0/22;
-    set_real_ip_from 185.11.124.0/22;
-    set_real_ip_from 192.230.64.0/18;
-    
-    # REMOVED PROXY PROTOCOL from Real IP - Fallback is now standard HTTP
-    # set_real_ip_from 127.0.0.1;
-    # real_ip_header proxy_protocol;
-
-    include /etc/nginx/conf.d/*.conf;
-    include /etc/nginx/sites-enabled/*;
-}
-EOF
-
+wget -q -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/NevermoreSSH/Blueblue/main/nginx.conf" 
 #mkdir -p /home/vps/public_html
 wget -q -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/NevermoreSSH/Blueblue/main/vps.conf"
 
 # Install Xray #
 #==========#
-# Use specific stable version known to work (v24.11.30) instead of latest (v26+)
-# to avoid deprecation issues with VMess/WebSocket
-latest_version="v24.11.30"
-
-# Detect Architecture
-arch=$(uname -m)
-if [[ "$arch" == "x86_64" ]]; then
-    xraycore_link="https://github.com/XTLS/Xray-core/releases/download/$latest_version/Xray-linux-64.zip"
-elif [[ "$arch" == "aarch64" ]]; then
-    xraycore_link="https://github.com/XTLS/Xray-core/releases/download/$latest_version/Xray-linux-arm64-v8a.zip"
-else
-    echo -e "[ ${RED}ERROR${NC} ] Unsupported Architecture: $arch"
-    exit 1
-fi
-
-echo -e "[ ${GREEN}INFO${NC} ] Downloading Xray $latest_version for $arch..."
-cd `mktemp -d`
-curl -sL "$xraycore_link" -o xray.zip
-unzip -q xray.zip
-if [[ -f "xray" ]]; then
-    rm -rf xray.zip
-    mv xray /usr/local/bin/xray
-    chmod +x /usr/local/bin/xray
-    echo -e "[ ${GREEN}INFO${NC} ] Xray installed successfully."
-else
-    echo -e "[ ${RED}ERROR${NC} ] Failed to extract xray binary!"
-    # Try to find it if it's in a subfolder
-    found_bin=$(find . -type f -name "xray" | head -n 1)
-    if [[ -n "$found_bin" ]]; then
-        mv "$found_bin" /usr/local/bin/xray
-        chmod +x /usr/local/bin/xray
-        echo -e "[ ${GREEN}INFO${NC} ] Xray installed successfully (from subfolder)."
-    else
-        echo -e "[ ${RED}ERROR${NC} ] Xray binary not found. Aborting."
-        exit 1
-    fi
-fi
-cd
+# / / Ambil Xray Core Version Terbaru
+latest_version="$(curl -s https://api.github.com/repos/XTLS/Xray-core/releases | grep tag_name | sed -E 's/.*"v(.*)".*/\1/' | head -n 1)"
+# / / Installation Xray Core
+xraycore_link="https://github.com/XTLS/Xray-core/releases/download/v$latest_version/xray-linux-64.zip"
+# / / Ambil Xray Core Version Terbaru
+bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install -u www-data --version $latest_version >/dev/null 2>&1
 
 # / / Make Main Directory
 mkdir -p /usr/bin/xray
@@ -314,64 +181,47 @@ echo -e "[ ${GREEN}INFO${NC} ] Starting renew cert... "
 sleep 2
 echo -e "${OKEY} Starting Generating Certificate"
 ##Generate acme certificate
-# Stop services first to free port 80/443
-systemctl stop nginx
-systemctl stop xray
-# Kill any rogue process on 80/443
-kill $(lsof -t -i:80) >/dev/null 2>&1
-kill $(lsof -t -i:443) >/dev/null 2>&1
-
-mkdir -p /root/.acme.sh
 curl https://get.acme.sh | sh
 alias acme.sh=~/.acme.sh/acme.sh
 /root/.acme.sh/acme.sh --upgrade --auto-upgrade
 /root/.acme.sh/acme.sh --set-default-ca --server letsencrypt
 #/root/.acme.sh/acme.sh --issue -d "${domain}" --standalone --keylength ec-2048
-if [[ -n "$domain" ]]; then
-    /root/.acme.sh/acme.sh --issue -d "${domain}" --standalone --keylength ec-256 --force
-    /root/.acme.sh/acme.sh --install-cert -d "${domain}" --ecc \
-    --fullchain-file /etc/xray/xray.crt \
-    --key-file /etc/xray/xray.key --force
-    
-    chown -R nobody:nogroup /etc/xray
-    chmod 644 /etc/xray/xray.crt
-    chmod 644 /etc/xray/xray.key
-    echo -e "${OKEY} Your Domain : $domain"
-else
-    echo -e "${EROR} Domain Not Found! Certificate generation skipped."
-    # We exit here because Xray won't start without certs
-    exit 1
-fi
+/root/.acme.sh/acme.sh --issue -d "${domain}" --standalone --keylength ec-256
+/root/.acme.sh/acme.sh --install-cert -d "${domain}" --ecc \
+--fullchain-file /etc/xray/xray.crt \
+--key-file /etc/xray/xray.key
+chown -R nobody:nogroup /etc/xray
+chmod 644 /etc/xray/xray.crt
+chmod 644 /etc/xray/xray.key
+echo -e "${OKEY} Your Domain : $domain"
 
 # nginx renew ssl
 echo -n '#!/bin/bash
 /etc/init.d/nginx stop
-/etc/init.d/xray stop
 "/root/.acme.sh"/acme.sh --cron --home "/root/.acme.sh" &> /root/renew_ssl.log
 /etc/init.d/nginx start
-/etc/init.d/xray start
 ' > /usr/local/bin/ssl_renew.sh
 chmod +x /usr/local/bin/ssl_renew.sh
 if ! grep -q 'ssl_renew.sh' /var/spool/cron/crontabs/root;then (crontab -l;echo "15 03 */3 * * /usr/local/bin/ssl_renew.sh") | crontab;fi
 
+# / / Unzip Xray Linux 64
+cd `mktemp -d`
+curl -sL "$xraycore_link" -o xray.zip
+unzip -q xray.zip && rm -rf xray.zip
+mv xray /usr/local/bin/xray
+chmod +x /usr/local/bin/xray
 
-# Fixed Ports for Stability
-vless=10001
-vmess=10002
-trojanws=10003
-ssws=10004
-vlessgrpc=10005
-vmessgrpc=10006
-trojangrpc=10007
-ssgrpc=10008
-
-# UPDATE log-install.txt so add-ws.sh knows the TLS port (443)
-# We need to make sure 'Vmess TLS' grep returns '443'
-sed -i 's/Vmess TLS         : .*/Vmess TLS         : 443/g' /root/log-install.txt
-sed -i 's/Vmess None TLS    : .*/Vmess None TLS    : 80/g' /root/log-install.txt
-sed -i 's/Vless TLS         : .*/Vless TLS         : 443/g' /root/log-install.txt
-sed -i 's/Vless None TLS    : .*/Vless None TLS    : 80/g' /root/log-install.txt
-sed -i 's/Trojan .*         : .*/Trojan WS         : 443/g' /root/log-install.txt
+# Random Port Xray
+trojanws=$((RANDOM + 10000))
+ssws=$((RANDOM + 10000))
+ssgrpc=$((RANDOM + 10000))
+vless=$((RANDOM + 10000))
+vlessgrpc=$((RANDOM + 10000))
+vmess=$((RANDOM + 10000))
+worryfree=$((RANDOM + 10000))
+kuotahabis=$((RANDOM + 10000))
+vmessgrpc=$((RANDOM + 10000))
+trojangrpc=$((RANDOM + 10000))
 
 # nginx xray.conf
 rm -fr /etc/nginx/conf.d/xray.conf
@@ -379,14 +229,13 @@ cat >/etc/nginx/conf.d/xray.conf <<EOF
     server {
              listen 80;
              listen [::]:80;
-             # REMOVED Proxy Protocol for better compatibility
-             listen 81 http2;
-             listen [::]:81 http2;	
+             listen 443 ssl http2 reuseport;
+             listen [::]:443 http2 reuseport;	
              server_name 127.0.0.1 localhost;
-             
-             # Optimization Headers
-             add_header X-XSS-Protection "1; mode=block";
-             
+             ssl_certificate /etc/xray/xray.crt;
+             ssl_certificate_key /etc/xray/xray.key;
+             ssl_ciphers EECDH+CHACHA20:EECDH+CHACHA20-draft:EECDH+ECDSA+AES128:EECDH+aRSA+AES128:RSA+AES128:EECDH+ECDSA+AES256:EECDH+aRSA+AES256:RSA+AES256:EECDH+ECDSA+3DES:EECDH+aRSA+3DES:RSA+3DES:!MD5;
+             ssl_protocols TLSv1.1 TLSv1.2 TLSv1.3;
              root /home/vps/public_html;
         }
 EOF
@@ -402,8 +251,7 @@ sed -i '$ iproxy_set_header Connection "upgrade";' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_set_header Host \$http_host;' /etc/nginx/conf.d/xray.conf
 sed -i '$ i}' /etc/nginx/conf.d/xray.conf
 
-# Use Prefix Match (location /vless) instead of Exact (=) to be safer
-sed -i '$ ilocation /vless' /etc/nginx/conf.d/xray.conf
+sed -i '$ ilocation = /vless' /etc/nginx/conf.d/xray.conf
 sed -i '$ i{' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_redirect off;' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_pass http://127.0.0.1:'"$vless"';' /etc/nginx/conf.d/xray.conf
@@ -415,7 +263,7 @@ sed -i '$ iproxy_set_header Connection "upgrade";' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_set_header Host \$http_host;' /etc/nginx/conf.d/xray.conf
 sed -i '$ i}' /etc/nginx/conf.d/xray.conf
 
-sed -i '$ ilocation /vmess' /etc/nginx/conf.d/xray.conf
+sed -i '$ ilocation = /vmess' /etc/nginx/conf.d/xray.conf
 sed -i '$ i{' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_redirect off;' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_pass http://127.0.0.1:'"$vmess"';' /etc/nginx/conf.d/xray.conf
@@ -427,7 +275,7 @@ sed -i '$ iproxy_set_header Connection "upgrade";' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_set_header Host \$http_host;' /etc/nginx/conf.d/xray.conf
 sed -i '$ i}' /etc/nginx/conf.d/xray.conf
 
-sed -i '$ ilocation /worryfree' /etc/nginx/conf.d/xray.conf
+sed -i '$ ilocation = /worryfree' /etc/nginx/conf.d/xray.conf
 sed -i '$ i{' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_redirect off;' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_pass http://127.0.0.1:'"$worryfree"';' /etc/nginx/conf.d/xray.conf
@@ -439,7 +287,7 @@ sed -i '$ iproxy_set_header Connection "upgrade";' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_set_header Host \$http_host;' /etc/nginx/conf.d/xray.conf
 sed -i '$ i}' /etc/nginx/conf.d/xray.conf
 
-sed -i '$ ilocation /kuota-habis' /etc/nginx/conf.d/xray.conf
+sed -i '$ ilocation = /kuota-habis' /etc/nginx/conf.d/xray.conf
 sed -i '$ i{' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_redirect off;' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_pass http://127.0.0.1:'"$kuotahabis"';' /etc/nginx/conf.d/xray.conf
@@ -451,7 +299,7 @@ sed -i '$ iproxy_set_header Connection "upgrade";' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_set_header Host \$http_host;' /etc/nginx/conf.d/xray.conf
 sed -i '$ i}' /etc/nginx/conf.d/xray.conf
 
-sed -i '$ ilocation /trojan-ws' /etc/nginx/conf.d/xray.conf
+sed -i '$ ilocation = /trojan-ws' /etc/nginx/conf.d/xray.conf
 sed -i '$ i{' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_redirect off;' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_pass http://127.0.0.1:'"$trojanws"';' /etc/nginx/conf.d/xray.conf
@@ -463,7 +311,7 @@ sed -i '$ iproxy_set_header Connection "upgrade";' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_set_header Host \$http_host;' /etc/nginx/conf.d/xray.conf
 sed -i '$ i}' /etc/nginx/conf.d/xray.conf
 
-sed -i '$ ilocation /ss-ws' /etc/nginx/conf.d/xray.conf
+sed -i '$ ilocation = /ss-ws' /etc/nginx/conf.d/xray.conf
 sed -i '$ i{' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_redirect off;' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_pass http://127.0.0.1:'"$ssws"';' /etc/nginx/conf.d/xray.conf
@@ -529,51 +377,6 @@ cat <<EOF> /etc/xray/config.json
   },
   "inbounds": [
       {
-      "port": 443,
-      "protocol": "vless",
-      "settings": {
-        "clients": [
-          {
-             "id": "${uuid}"
-          }
-        ],
-        "decryption": "none",
-        "fallbacks": [
-            {
-                "dest": 81,
-                "xver": 0,
-                "alpn": "h2"
-            },
-            {
-                "dest": 81,
-                "xver": 0,
-                "alpn": "http/1.1"
-            },
-            {
-                "dest": 81,
-                "xver": 0,
-                "path": "/"
-            },
-            {
-                "dest": 109,
-                "xver": 0
-            }
-        ]
-      },
-      "streamSettings": {
-        "network": "tcp",
-        "security": "tls",
-        "tlsSettings": {
-          "certificates": [
-            {
-              "certificateFile": "/etc/xray/xray.crt",
-              "keyFile": "/etc/xray/xray.key"
-            }
-          ]
-        }
-      }
-    },
-      {
       "listen": "127.0.0.1",
       "port": 10085,
       "protocol": "dokodemo-door",
@@ -584,7 +387,7 @@ cat <<EOF> /etc/xray/config.json
     },
    {
      "listen": "127.0.0.1",
-     "port": $vless,
+     "port": "$vless",
      "protocol": "vless",
       "settings": {
           "decryption":"none",
@@ -604,7 +407,7 @@ cat <<EOF> /etc/xray/config.json
      },
      {
      "listen": "127.0.0.1",
-     "port": $vmess,
+     "port": "$vmess",
      "protocol": "vmess",
       "settings": {
             "clients": [
@@ -624,8 +427,48 @@ cat <<EOF> /etc/xray/config.json
      },
      {
      "listen": "127.0.0.1",
-     "port": $trojanws,
-     "protocol": "trojan",
+     "port": "$worryfree",
+     "protocol": "vmess",
+      "settings": {
+            "clients": [
+               {
+                 "id": "${uuid}",
+                 "alterId": 0
+#vmessworry
+             }
+          ]
+       },
+       "streamSettings":{
+         "network": "ws",
+            "wsSettings": {
+                "path": "/worryfree"
+          }
+        }
+     },
+     {
+     "listen": "127.0.0.1",
+     "port": "$kuotahabis",
+     "protocol": "vmess",
+      "settings": {
+            "clients": [
+               {
+                 "id": "${uuid}",
+                 "alterId": 0
+#vmesskuota
+             }
+          ]
+       },
+       "streamSettings":{
+         "network": "ws",
+            "wsSettings": {
+                "path": "/kuota-habis"
+          }
+        }
+     },
+    {
+      "listen": "127.0.0.1",
+      "port": "$trojanws",
+      "protocol": "trojan",
       "settings": {
           "decryption":"none",		
            "clients": [
@@ -645,7 +488,7 @@ cat <<EOF> /etc/xray/config.json
      },
     {
          "listen": "127.0.0.1",
-        "port": $ssws,
+        "port": "$ssws",
         "protocol": "shadowsocks",
         "settings": {
            "clients": [
@@ -666,7 +509,7 @@ cat <<EOF> /etc/xray/config.json
      },	
       {
         "listen": "127.0.0.1",
-        "port": $vlessgrpc,
+        "port": "$vlessgrpc",
         "protocol": "vless",
         "settings": {
          "decryption":"none",
@@ -686,7 +529,7 @@ cat <<EOF> /etc/xray/config.json
      },
      {
       "listen": "127.0.0.1",
-      "port": $vmessgrpc,
+      "port": "$vmessgrpc",
      "protocol": "vmess",
       "settings": {
             "clients": [
@@ -706,7 +549,7 @@ cat <<EOF> /etc/xray/config.json
      },
      {
         "listen": "127.0.0.1",
-        "port": $trojangrpc,
+        "port": "$trojangrpc",
         "protocol": "trojan",
         "settings": {
           "decryption":"none",
@@ -726,7 +569,7 @@ cat <<EOF> /etc/xray/config.json
    },
    {
     "listen": "127.0.0.1",
-    "port": $ssgrpc,
+    "port": "$ssgrpc",
     "protocol": "shadowsocks",
     "settings": {
         "clients": [
@@ -867,27 +710,3 @@ echo -e "[ ${GREEN}ok${NC} ] Restart & Xray & Nginx"
 systemctl daemon-reload >/dev/null 2>&1
 systemctl restart xray >/dev/null 2>&1
 systemctl restart nginx >/dev/null 2>&1
-
-# Output the NEW UUID and Ports
-echo ""
-echo "========================================================"
-echo "   INSTALLATION COMPLETED - IMPORTANT INFORMATION"
-echo "========================================================"
-echo "   UUID         : $uuid"
-echo "   Vless Port   : $vless"
-echo "   Vmess Port   : $vmess"
-echo "   Trojan Port  : $trojanws"
-echo "   Domain       : $domain"
-echo "========================================================"
-echo "   NOTE: Please update your client with this NEW UUID!"
-echo "   NOTE: If services are still OFF, check /var/log/xray/error.log"
-echo "========================================================"
-
-# Final check
-sleep 3
-if ! systemctl is-active --quiet xray; then
-    echo -e "${RED}ERROR: Xray failed to start! Checking logs...${NC}"
-    journalctl -u xray --no-pager -n 20
-else
-    echo -e "${GREEN}SUCCESS: Xray is running.${NC}"
-fi
