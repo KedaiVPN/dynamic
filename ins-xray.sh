@@ -515,6 +515,26 @@ cat <<EOF> /etc/xray/config.json
             {
                 "dest": 81,
                 "xver": 0,
+                "path": "/vless"
+            },
+            {
+                "dest": 81,
+                "xver": 0,
+                "path": "/vmess"
+            },
+            {
+                "dest": 81,
+                "xver": 0,
+                "path": "/trojan-ws"
+            },
+            {
+                "dest": 81,
+                "xver": 0,
+                "path": "/ss-ws"
+            },
+            {
+                "dest": 81,
+                "xver": 0,
                 "alpn": "h2"
             },
             {
@@ -542,6 +562,10 @@ cat <<EOF> /etc/xray/config.json
               "certificateFile": "/etc/xray/xray.crt",
               "keyFile": "/etc/xray/xray.key"
             }
+          ],
+          "alpn": [
+            "h2",
+            "http/1.1"
           ]
         }
       }
