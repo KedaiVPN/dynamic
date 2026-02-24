@@ -362,8 +362,8 @@ cat >/etc/nginx/conf.d/xray.conf <<EOF
              listen 80;
              listen [::]:80;
              # Use Proxy Protocol to receive IP from Xray
-             listen 81 proxy_protocol;
-             listen [::]:81 proxy_protocol;
+             listen 81 proxy_protocol http2;
+             listen [::]:81 proxy_protocol http2;
              server_name 127.0.0.1 localhost;
 
              # Optimization Headers
@@ -883,3 +883,17 @@ echo -e "[ ${GREEN}ok${NC} ] Restart & Xray & Nginx"
 systemctl daemon-reload >/dev/null 2>&1
 systemctl restart xray >/dev/null 2>&1
 systemctl restart nginx >/dev/null 2>&1
+
+# Output the NEW UUID and Ports
+echo ""
+echo "========================================================"
+echo "   INSTALLATION COMPLETED - IMPORTANT INFORMATION"
+echo "========================================================"
+echo "   UUID         : $uuid"
+echo "   Vless Port   : $vless"
+echo "   Vmess Port   : $vmess"
+echo "   Trojan Port  : $trojanws"
+echo "   Domain       : $domain"
+echo "========================================================"
+echo "   NOTE: Please update your client with this NEW UUID!"
+echo "========================================================"
