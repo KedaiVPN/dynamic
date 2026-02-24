@@ -29,6 +29,9 @@ wget -q -O /usr/bin/cek-expired "${REPO}/cek-expired.sh" && chmod +x /usr/bin/ce
 wget -q -O /usr/bin/menu "${REPO}/menu4.sh" && chmod +x /usr/bin/menu
 wget -q -O /usr/bin/menu-ssh "${REPO}/menu-ssh.sh" && chmod +x /usr/bin/menu-ssh
 
+# Download setup.sh terbaru
+wget -q -O /usr/bin/setup.sh "${REPO}/setup.sh" && chmod +x /usr/bin/setup.sh
+
 # 3. Buat Database Expired & Trash
 echo -e "[ ${GREEN}INFO${NC} ] Membuat database expired & trash users..."
 if [ ! -f /etc/expired-users.db ]; then
@@ -55,3 +58,4 @@ service cron restart
 echo -e "[ ${GREEN}INFO${NC} ] Update Selesai!"
 echo -e "[ ${GREEN}INFO${NC} ] Fitur Auto-Delete presisi (10 menit) sudah aktif."
 echo -e "[ ${GREEN}INFO${NC} ] Timezone server sekarang: $(date)"
+echo -e "[ ${GREEN}INFO${NC} ] Menu utama telah diperbarui. Ketik 'menu' untuk melihat tampilan baru."
