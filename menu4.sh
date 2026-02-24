@@ -293,9 +293,9 @@ echo -e "     ${BICyan}[${BIWhite}03${BICyan}] VLESS       ${WB}[${GB}${vless}${
 echo -e "     ${BICyan}[${BIWhite}04${BICyan}] TROJAN      ${WB}[${GB}${tr}${WB}]         ${BICyan}[${BIWhite}09${BICyan}] BACKUP/RESTORE${NC}"
 echo -e "     ${BICyan}[${BIWhite}05${BICyan}] SHADOWSOCKS ${WB}[${GB}${ss}${WB}]         ${BICyan}[${BIWhite}10${BICyan}] FEATURES${NC}"
 echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
-echo -e "${BICyan} ┌─────────────────────────────────────┐${NC}"
-echo -e "${BICyan} │  Version  : $sem Last Update  ${BIWhite}[x] exit${NC}"
-echo -e "${BICyan} └─────────────────────────────────────┘${NC}"
+echo -e "${BICyan}             ┌─────────────────────────────────────┐${NC}"
+echo -e "${BICyan}             │  Version  : $sem Last Update  ${BIWhite}[x] exit${NC}"
+echo -e "${BICyan}             └─────────────────────────────────────┘${NC}"
 echo
 read -p " Select menu : " opt
 echo -e ""
