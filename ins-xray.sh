@@ -268,9 +268,19 @@ latest_version="$(curl -s https://api.github.com/repos/XTLS/Xray-core/releases |
 if [[ -z "$latest_version" ]]; then
     latest_version="1.8.4"
 fi
-xraycore_link="https://github.com/XTLS/Xray-core/releases/download/v$latest_version/Xray-linux-64.zip"
 
-echo -e "[ ${GREEN}INFO${NC} ] Downloading Xray v$latest_version..."
+# Detect Architecture
+arch=$(uname -m)
+if [[ "$arch" == "x86_64" ]]; then
+    xraycore_link="https://github.com/XTLS/Xray-core/releases/download/v$latest_version/Xray-linux-64.zip"
+elif [[ "$arch" == "aarch64" ]]; then
+    xraycore_link="https://github.com/XTLS/Xray-core/releases/download/v$latest_version/Xray-linux-arm64-v8a.zip"
+else
+    echo -e "[ ${RED}ERROR${NC} ] Unsupported Architecture: $arch"
+    exit 1
+fi
+
+echo -e "[ ${GREEN}INFO${NC} ] Downloading Xray v$latest_version for $arch..."
 cd `mktemp -d`
 curl -sL "$xraycore_link" -o xray.zip
 unzip -q xray.zip
@@ -308,6 +318,9 @@ echo -e "${OKEY} Starting Generating Certificate"
 # Stop services first to free port 80/443
 systemctl stop nginx
 systemctl stop xray
+# Kill any rogue process on 80/443
+kill $(lsof -t -i:80) >/dev/null 2>&1
+kill $(lsof -t -i:443) >/dev/null 2>&1
 
 mkdir -p /root/.acme.sh
 curl https://get.acme.sh | sh
@@ -896,4 +909,14 @@ echo "   Trojan Port  : $trojanws"
 echo "   Domain       : $domain"
 echo "========================================================"
 echo "   NOTE: Please update your client with this NEW UUID!"
+echo "   NOTE: If services are still OFF, check /var/log/xray/error.log"
 echo "========================================================"
+
+# Final check
+sleep 3
+if ! systemctl is-active --quiet xray; then
+    echo -e "${RED}ERROR: Xray failed to start! Checking logs...${NC}"
+    journalctl -u xray --no-pager -n 20
+else
+    echo -e "${GREEN}SUCCESS: Xray is running.${NC}"
+fi
