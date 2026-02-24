@@ -77,9 +77,9 @@ export IP=$( curl -s https://ipinfo.io/ip/ )
 export NETWORK_IFACE="$(ip route show to default | awk '{print $5}')"
 
 # // Clear
-clear
-clear && clear && clear
-clear;clear;clear
+clear && printf '\033[3J'
+clear && printf '\033[3J' && clear && printf '\033[3J' && clear && printf '\033[3J'
+clear && printf '\033[3J';clear && printf '\033[3J';clear && printf '\033[3J'
 cek=$(service ssh status | grep active | cut -d ' ' -f5)
 if [ "$cek" = "active" ]; then
 stat=-f5
@@ -123,7 +123,7 @@ else
 resv2r="${red}OFF${NC}"
 fi
 function addhost(){
-clear
+clear && printf '\033[3J'
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 echo ""
 read -rp "Domain/Host: " -e host
@@ -145,7 +145,7 @@ menu
 fi
 }
 function genssl(){
-clear
+clear && printf '\033[3J'
 systemctl stop nginx
 systemctl stop xray
 domain=$(cat /var/lib/scrz-prem/ipvps.conf | cut -d'=' -f2)
@@ -180,7 +180,7 @@ menu
 }
 
 function menu_backup_restore(){
-clear
+clear && printf '\033[3J'
 echo -e "${BICyan} ┌────────────────────────────────────────────────────────────┐${NC}"
 echo -e "${BICyan} │                  ${BIWhite}${UWhite}BACKUP / RESTORE${NC}"
 echo -e "${BICyan} │"
@@ -191,15 +191,15 @@ echo -e "${BICyan} └───────────────────�
 echo
 read -p " Select menu : " opt_br
 case $opt_br in
-1) clear ; backup ;;
-2) clear ; restore ;;
+1) clear && printf '\033[3J' ; backup ;;
+2) clear && printf '\033[3J' ; restore ;;
 x) menu ;;
 *) menu ;;
 esac
 }
 
 function menu_features(){
-clear
+clear && printf '\033[3J'
 echo -e "${BICyan} ┌────────────────────────────────────────────────────────────┐${NC}"
 echo -e "${BICyan} │                  ${BIWhite}${UWhite}ADDITIONAL FEATURES${NC}"
 echo -e "${BICyan} │"
@@ -218,25 +218,25 @@ echo -e "${BICyan} └───────────────────�
 echo
 read -p " Select menu : " opt_feat
 case $opt_feat in
-1) clear ; addhost ;;
-2) clear ; genssl ;;
-3) clear ; nano /etc/issue.net ;;
-4) clear ; cek-bandwidth ;;
-5) clear ; cek-speed ;;
-6) clear ; limit-speed ;;
-7) clear ; autoreboot ;;
-8) clear ; reboot ;;
-9) clear ; restart ;;
-10) clear ; gotop ;;
-11) clear ; wbm ;;
-12) clear ; cat /root/log-install.txt ;;
-13) clear ; clearlog ;;
-14) clear ; dns ;;
-15) clear ; netf ;;
-16) clear ; tendang ;;
-17) clear ; wget -q -O /usr/bin/xraychanger "https://raw.githubusercontent.com/NevermoreSSH/Xcore-custompath/main/xraychanger.sh" && chmod +x /usr/bin/xraychanger && xraychanger ;;
-18) clear ; bbr ;;
-19) clear ; wget -q -O /usr/bin/swapram "https://raw.githubusercontent.com/NevermoreSSH/swapram/main/swapram.sh" && chmod +x /usr/bin/swapram && swapram ;;
+1) clear && printf '\033[3J' ; addhost ;;
+2) clear && printf '\033[3J' ; genssl ;;
+3) clear && printf '\033[3J' ; nano /etc/issue.net ;;
+4) clear && printf '\033[3J' ; cek-bandwidth ;;
+5) clear && printf '\033[3J' ; cek-speed ;;
+6) clear && printf '\033[3J' ; limit-speed ;;
+7) clear && printf '\033[3J' ; autoreboot ;;
+8) clear && printf '\033[3J' ; reboot ;;
+9) clear && printf '\033[3J' ; restart ;;
+10) clear && printf '\033[3J' ; gotop ;;
+11) clear && printf '\033[3J' ; wbm ;;
+12) clear && printf '\033[3J' ; cat /root/log-install.txt ;;
+13) clear && printf '\033[3J' ; clearlog ;;
+14) clear && printf '\033[3J' ; dns ;;
+15) clear && printf '\033[3J' ; netf ;;
+16) clear && printf '\033[3J' ; tendang ;;
+17) clear && printf '\033[3J' ; wget -q -O /usr/bin/xraychanger "https://raw.githubusercontent.com/NevermoreSSH/Xcore-custompath/main/xraychanger.sh" && chmod +x /usr/bin/xraychanger && xraychanger ;;
+18) clear && printf '\033[3J' ; bbr ;;
+19) clear && printf '\033[3J' ; wget -q -O /usr/bin/swapram "https://raw.githubusercontent.com/NevermoreSSH/swapram/main/swapram.sh" && chmod +x /usr/bin/swapram && swapram ;;
 x) menu ;;
 *) menu ;;
 esac
@@ -268,7 +268,7 @@ cpu_usage+="%"
 cname=$(awk -F: '/model name/ {name=$2} END {print name}' /proc/cpuinfo)
 cores=$(awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo)
 freq=$(awk -F: ' /cpu MHz/ {freq=$2} END {print freq}' /proc/cpuinfo)
-clear
+clear && printf '\033[3J'
 echo -e "${BICyan} ┌────────────────────────────────────────────────────────────┐${NC}"
 echo -e "${BICyan} │                  ${BIWhite}${UWhite}Server Informations${NC}"         
 echo -e "${BICyan} │"                                                                      
@@ -300,17 +300,17 @@ echo
 read -p " Select menu : " opt
 echo -e ""
 case $opt in
-1) clear ; menu-ssh ;;
-2) clear ; menu-vmess ;;
-3) clear ; menu-vless ;;
-4) clear ; menu-trojan ;;
-5) clear ; menu-ss ;;
-6) clear ; cek-expired ;;
-7) clear ; cek-trafik ;;
-8) clear ; running ;;
+1) clear && printf '\033[3J' ; menu-ssh ;;
+2) clear && printf '\033[3J' ; menu-vmess ;;
+3) clear && printf '\033[3J' ; menu-vless ;;
+4) clear && printf '\033[3J' ; menu-trojan ;;
+5) clear && printf '\033[3J' ; menu-ss ;;
+6) clear && printf '\033[3J' ; cek-expired ;;
+7) clear && printf '\033[3J' ; cek-trafik ;;
+8) clear && printf '\033[3J' ; running ;;
 9) menu_backup_restore ;;
 10) menu_features ;;
-0) clear ; menu ;;
+0) clear && printf '\033[3J' ; menu ;;
 x) exit ;;
 *) echo -e "" ; echo "Press any key to back exit" ; sleep 1 ; exit ;;
 esac

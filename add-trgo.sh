@@ -65,7 +65,7 @@ export NETWORK_IFACE="$(ip route show to default | awk '{print $5}')"
 
 # // Validate Result ( 1 )
 touch
-clear
+clear && printf '\033[3J'
 uuid=$(cat /etc/trojan-go/uuid.txt)
 source /var/lib/scrz-prem/ipvps.conf
 if [[ "$IP" = "" ]]; then
@@ -92,7 +92,7 @@ echo -e "### $user $exp" >> /etc/trojan-go/akun.conf
 systemctl restart trojan-go.service
 link="trojan-go://${uuid}@isi_bug_disini:${trgo}/?sni=${domain}&type=ws&host=${domain}&path=%2Ftrojango#$user"
 link1="trojan://${uuid}@isi_bug_disini:${trgo}/?sni=${domain}&type=ws&host=${domain}&path=%2Ftrojango#$user"
-clear
+clear && printf '\033[3J'
 #echo -e "\033[0;34mБ■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│\033[0m" | tee -a /etc/log-create-user.log
 #echo -e "\E[0;41;36m          TROJAN GO          \E[0m" | tee -a /etc/log-create-user.log
 #echo -e "\033[0;34mБ■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│Б■│\033[0m" | tee -a /etc/log-create-user.log

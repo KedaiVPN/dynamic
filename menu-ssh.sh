@@ -65,9 +65,9 @@ export IP=$( curl -s https://ipinfo.io/ip/ )
 export NETWORK_IFACE="$(ip route show to default | awk '{print $5}')"
 
 
-clear
+clear && printf '\033[3J'
 function del(){
-clear
+clear && printf '\033[3J'
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 echo -e "\E[0;41;36m               DELETE USER                \E[0m"
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"  
@@ -86,7 +86,7 @@ read -n 1 -s -r -p "Press any key to back on menu"
 menu
 }
 function autodel(){
-clear
+clear && printf '\033[3J'
                hariini=`date +%d-%m-%Y`
                echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
                echo -e "\E[0;41;36m               AUTO DELETE                \E[0m"
@@ -131,7 +131,7 @@ clear
         
 }
 function ceklim(){
-clear
+clear && printf '\033[3J'
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 echo -e "\E[0;41;36m         CHECK USER MULTI SSH        \E[0m"
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
@@ -154,7 +154,7 @@ read -n 1 -s -r -p "Press any key to back on menu"
 menu
 }
 function cek(){
-clear
+clear && printf '\033[3J'
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 echo -e "\E[0;41;36m          User SSH Login           \E[0m"
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
@@ -264,7 +264,7 @@ read -n 1 -s -r -p "Press any key to back on menu"
 menu
 }
 function member(){
-clear
+clear && printf '\033[3J'
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 echo -e "\E[0;41;36m                 MEMBER SSH               \E[0m"
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"      
@@ -292,8 +292,8 @@ read -n 1 -s -r -p "Press any key to back on menu"
 menu
 }
 function renew(){
-clear
-clear
+clear && printf '\033[3J'
+clear && printf '\033[3J'
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 echo -e "\E[0;41;36m               RENEW  USER                \E[0m"
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"  
@@ -311,7 +311,7 @@ passwd -u $User
 usermod -e  $Expiration $User
 egrep "^$User" /etc/passwd >/dev/null
 echo -e "$Pass\n$Pass\n"|passwd $User &> /dev/null
-clear
+clear && printf '\033[3J'
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 echo -e "\E[0;41;36m               RENEW  USER                \E[0m"
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"  
@@ -322,7 +322,7 @@ echo -e " Expires on :  $Expiration_Display"
 echo -e ""
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 else
-clear
+clear && printf '\033[3J'
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 echo -e "\E[0;41;36m               RENEW  USER                \E[0m"
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"  
@@ -335,7 +335,7 @@ read -n 1 -s -r -p "Press any key to back on menu"
 menu
 }
 function autokill(){
-clear
+clear && printf '\033[3J'
 Green_font_prefix="\033[32m" && Red_font_prefix="\033[31m" && Green_background_prefix="\033[42;37m" && Red_background_prefix="\033[41;37m" && Font_color_suffix="\033[0m"
 Info="${Green_font_prefix}[ON]${Font_color_suffix}"
 Error="${Red_font_prefix}[OFF]${Font_color_suffix}"
@@ -345,7 +345,7 @@ sts="${Info}"
 else
 sts="${Error}"
 fi
-clear
+clear && printf '\033[3J'
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 echo -e "\E[44;1;39m             AUTOKILL SSH          \E[0m"
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
@@ -365,7 +365,7 @@ case $AutoKill in
                 1)
                 echo -e ""
                 sleep 1
-                clear
+                clear && printf '\033[3J'
                 echo > /etc/cron.d/tendang
                 echo "# Autokill" >/etc/cron.d/tendan
                 mkdir -p /etc/ssh
@@ -384,7 +384,7 @@ case $AutoKill in
                 2)
                 echo -e ""
                 sleep 1
-                clear
+                clear && printf '\033[3J'
                 echo > /etc/cron.d/tendang
                 echo "# Autokill" >/etc/cron.d/tendang
                 mkdir -p /etc/ssh
@@ -403,7 +403,7 @@ case $AutoKill in
                 3)
                 echo -e ""
                 sleep 1
-                clear
+                clear && printf '\033[3J'
                 echo > /etc/cron.d/tendang
                 echo "# Autokill" >/etc/cron.d/tendang
                 mkdir -p /etc/ssh
@@ -443,7 +443,7 @@ read -n 1 -s -r -p "Press any key to back on menu"
 menu
 }
 function editlimit(){
-clear
+clear && printf '\033[3J'
 read -p "Username : " Login
 if id -u "$Login" >/dev/null 2>&1; then
         read -p "Limit login (1/2/3): " limitlogin
@@ -468,7 +468,7 @@ read -n 1 -s -r -p "Press any key to back on menu"
 menu
 }
 function manual_lock_unlock(){
-clear
+clear && printf '\033[3J'
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 echo -e "\E[0;41;36m         MANUAL LOCK/UNLOCK SSH           \E[0m"
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
@@ -507,7 +507,7 @@ menu
 }
 
 function trialssh(){
-    clear
+    clear && printf '\033[3J'
     echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
     echo -e "\E[0;41;36m               TRIAL SSH                  \E[0m"
     echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
@@ -555,7 +555,7 @@ function trialssh(){
     db=$(cat /root/log-install.txt | grep -w "Dropbear" | cut -f2 -d: | awk '{print $1,$2}')
     ssl=$(cat /root/log-install.txt | grep -w "Stunnel5" | cut -d: -f2)
 
-    clear
+    clear && printf '\033[3J'
     echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
     echo -e "\E[0;41;36m          TRIAL SSH ACCOUNT        \E[0m"
     echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
@@ -579,7 +579,7 @@ function trialssh(){
     menu
 }
 
-clear
+clear && printf '\033[3J'
 echo -e "${BICyan} ┌─────────────────────────────────────────────────────┐${NC}"
 echo -e "       ${BIWhite}${UWhite}SSH MENU ${NC}"
 echo -e ""
@@ -600,18 +600,18 @@ echo ""
 read -p " Select menu : " opt
 echo -e ""
 case $opt in
-1) clear ; usernew ;;
-2) clear ; del ;;
-3) clear ; renew;;
-4) clear ; cek ;;
-5) clear ; ceklim ;;
-6) clear ; autodel ;;
-7) clear ; autokill ;;
-8) clear ; member ;;
-9) clear ; editlimit ;;
-10) clear ; manual_lock_unlock ;;
-11) clear ; trialssh ;;
-0) clear ; menu ;;
+1) clear && printf '\033[3J' ; usernew ;;
+2) clear && printf '\033[3J' ; del ;;
+3) clear && printf '\033[3J' ; renew;;
+4) clear && printf '\033[3J' ; cek ;;
+5) clear && printf '\033[3J' ; ceklim ;;
+6) clear && printf '\033[3J' ; autodel ;;
+7) clear && printf '\033[3J' ; autokill ;;
+8) clear && printf '\033[3J' ; member ;;
+9) clear && printf '\033[3J' ; editlimit ;;
+10) clear && printf '\033[3J' ; manual_lock_unlock ;;
+11) clear && printf '\033[3J' ; trialssh ;;
+0) clear && printf '\033[3J' ; menu ;;
 x) exit ;;
 *) echo -e "" ; echo "Press any key to back on menu" ; sleep 1 ; menu ;;
 esac

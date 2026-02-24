@@ -92,7 +92,7 @@ NC='\e[0m'
 green() { echo -e "\\033[32;1m${*}\\033[0m"; }
 red() { echo -e "\\033[31;1m${*}\\033[0m"; }
 PERMISSION
-clear
+clear && printf '\033[3J'
 
 # GETTING OS INFORMATION
 source /etc/os-release
@@ -106,15 +106,15 @@ basedong=$ID
 #ITAM='\033[0;30m'
 echo -e "$ITAM"
 REGION=$( curl -s ipinfo.io/region )
-#clear
+#clear && printf '\033[3J'
 #COUNTRY=$( curl -s ipinfo.io/country )
-#clear
+#clear && printf '\033[3J'
 #WAKTU=$( curl -s ipinfo.ip/timezone )
-#clear
+#clear && printf '\033[3J'
 CITY=$( curl -s ipinfo.io/city )
-#clear
+#clear && printf '\033[3J'
 #REGION=$( curl -s ipinfo.io/region )
-#clear
+#clear && printf '\033[3J'
 
 # CHEK STATUS 
 #openvpn_service="$(systemctl show openvpn.service --no-page)"
@@ -167,7 +167,7 @@ BLUE='\033[0;34m'
 PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
 LIGHT='\033[0;37m'
-clear
+clear && printf '\033[3J'
 
 # STATUS SERVICE OPENVPN
 if [[ $oovpn == "active" ]]; then

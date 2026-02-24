@@ -75,7 +75,7 @@ NC='\e[0m'
 green() { echo -e "\\033[32;1m${*}\\033[0m"; }
 red() { echo -e "\\033[31;1m${*}\\033[0m"; }
 
-clear
+clear && printf '\033[3J'
 if [[ -e /etc/debian_version ]]; then
 	source /etc/os-release
 	OS=$ID # debian or ubuntu
@@ -105,4 +105,4 @@ rm -rf /root/vnstat-2.6 >/dev/null 2>&1
 yellow() { echo -e "\\033[33;1m${*}\\033[0m"; }
 yellow "JEMBOOT successfully installed..."
 sleep 3
-clear
+clear && printf '\033[3J'

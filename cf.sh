@@ -6,7 +6,7 @@ MYIP=$(curl -sS ipv4.icanhazip.com)
 MYIP=$(curl -sS ifconfig.me )
 #MYIP=$(wget -qO- https://ipv4.icanhazip.com);
 #MYIP=$(wget -qO- https://ipv6.icanhazip.com);
-clear
+clear && printf '\033[3J'
 apt install jq curl -y
 # sub=$(</dev/urandom tr -dc a-z | head -c4)
 sub=$(premium)

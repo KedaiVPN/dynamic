@@ -5,7 +5,7 @@
 # Auther  : NevermoreSSH
 # (C) Copyright 2022
 # =========================================
-clear
+clear && printf '\033[3J'
 red='\e[1;31m'
 green='\e[0;32m'
 NC='\e[0m'
@@ -39,7 +39,7 @@ user=$(grep -E "^### " "/etc/xray/config.json" | cut -d ' ' -f 2 | sed -n "${CLI
 exp=$(grep -E "^### " "/etc/xray/config.json" | cut -d ' ' -f 3 | sed -n "${CLIENT_NUMBER}"p)
 sed -i "/^### $user $exp/,/^},{/d" /etc/xray/config.json
 systemctl restart xray
-clear
+clear && printf '\033[3J'
 echo " XRAYS WS Account Deleted"
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 echo " Client Name : $user"

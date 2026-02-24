@@ -63,9 +63,9 @@ export IP=$( curl -s https://ipinfo.io/ip/ )
 export NETWORK_IFACE="$(ip route show to default | awk '{print $5}')"
 
 # // Clear
-clear
-clear && clear && clear
-clear;clear;clear
+clear && printf '\033[3J'
+clear && printf '\033[3J' && clear && printf '\033[3J' && clear && printf '\033[3J'
+clear && printf '\033[3J';clear && printf '\033[3J';clear && printf '\033[3J'
 cek=$(service ssh status | grep active | cut -d ' ' -f5)
 if [ "$cek" = "active" ]; then
 stat=-f5
@@ -109,7 +109,7 @@ else
 resv2r="${red}OFF${NC}"
 fi
 function addhost(){
-clear
+clear && printf '\033[3J'
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 echo ""
 read -rp "Domain/Host: " -e host
@@ -131,7 +131,7 @@ menu
 fi
 }
 function genssl(){
-clear
+clear && printf '\033[3J'
 systemctl stop nginx
 systemctl stop xray
 domain=$(cat /var/lib/scrz-prem/ipvps.conf | cut -d'=' -f2)
@@ -168,7 +168,7 @@ export sem=$( curl -s https://raw.githubusercontent.com/NevermoreSSH/Blueblue/ma
 export pak=$( cat /home/.ver)
 IPVPS=$(curl -s ipinfo.io/ip )
 ISPVPS=$( curl -s ipinfo.io/org )
-clear
+clear && printf '\033[3J'
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m${NC}"
 echo -e "\E[44;1;39m                   ⇱ SERVER INFORMATION ⇲                      \E[0m"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m${NC}"
@@ -209,32 +209,32 @@ echo
 read -p " Select menu : " opt
 echo -e ""
 case $opt in
-1) clear ; menu-ssh ;;
-2) clear ; menu-vmess ;;
-3) clear ; menu-vless ;;
-4) clear ; menu-trojan ;;
-5) clear ; menu-ss ;;
-6) clear ; tendang ;;
-7) clear ; autoreboot ;;
-8) clear ; reboot ;;
-9) clear ; restart ;;
-10) clear ; menu-bckp ;;
-11) clear ; addhost ;;
-12) clear ; genssl ;;
-13) clear ; nano /etc/issue.net ;;
-14) clear ; running ;;
-15) clear ; cek-trafik ;;
-16) clear ; cek-speed ;;
-17) clear ; cek-bandwidth ;;
-#18) clear ; cek-ram ;;
-18) clear ; limit-speed ;;
-19) clear ; wbm ;;
-20) clear ; cat /root/log-install.txt ;;
-21) clear ; clearlog ;;
-#99) clear ; update ;;
-22) clear ; wget https://raw.githubusercontent.com/NevermoreSSH/Blueblue/main/cf.sh && chmod +x cf.sh && ./cf.sh ;;
+1) clear && printf '\033[3J' ; menu-ssh ;;
+2) clear && printf '\033[3J' ; menu-vmess ;;
+3) clear && printf '\033[3J' ; menu-vless ;;
+4) clear && printf '\033[3J' ; menu-trojan ;;
+5) clear && printf '\033[3J' ; menu-ss ;;
+6) clear && printf '\033[3J' ; tendang ;;
+7) clear && printf '\033[3J' ; autoreboot ;;
+8) clear && printf '\033[3J' ; reboot ;;
+9) clear && printf '\033[3J' ; restart ;;
+10) clear && printf '\033[3J' ; menu-bckp ;;
+11) clear && printf '\033[3J' ; addhost ;;
+12) clear && printf '\033[3J' ; genssl ;;
+13) clear && printf '\033[3J' ; nano /etc/issue.net ;;
+14) clear && printf '\033[3J' ; running ;;
+15) clear && printf '\033[3J' ; cek-trafik ;;
+16) clear && printf '\033[3J' ; cek-speed ;;
+17) clear && printf '\033[3J' ; cek-bandwidth ;;
+#18) clear && printf '\033[3J' ; cek-ram ;;
+18) clear && printf '\033[3J' ; limit-speed ;;
+19) clear && printf '\033[3J' ; wbm ;;
+20) clear && printf '\033[3J' ; cat /root/log-install.txt ;;
+21) clear && printf '\033[3J' ; clearlog ;;
+#99) clear && printf '\033[3J' ; update ;;
+22) clear && printf '\033[3J' ; wget https://raw.githubusercontent.com/NevermoreSSH/Blueblue/main/cf.sh && chmod +x cf.sh && ./cf.sh ;;
 
-0) clear ; menu ;;
+0) clear && printf '\033[3J' ; menu ;;
 x) exit ;;
 *) echo -e "" ; echo "Press any key to back exit" ; sleep 1 ; exit ;;
 esac

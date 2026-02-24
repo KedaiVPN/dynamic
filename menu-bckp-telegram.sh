@@ -110,23 +110,23 @@ if [[ $sisa_hari -lt 0 ]]; then
 else
     echo $sisa_hari > /etc/${Auther}/license-remaining-active-days.db
 fi
-clear
+clear && printf '\033[3J'
 function bckpbot(){
-clear
+clear && printf '\033[3J'
 IP=$(curl -sS ipv4.icanhazip.com);
 date=$(date +"%Y-%m-%d")
 domain=$(cat /etc/xray/domain)
 
 
 
-clear
+clear && printf '\033[3J'
 echo -e "[ ${green}INFO${NC} ] Create for database"
 read -rp "Enter Token (Creat on Botfather) : " -e token
 read -rp "Enter Chat id, Channel, Group Or Your Id  : " -e id_chat
 echo -e "toket=$token" >> /root/botapi.conf
 echo -e "chat_idc=$id_chat" >> /root/botapi.conf
 sleep 1
-clear
+clear && printf '\033[3J'
 echo -e "[ ${green}INFO${NC} ] Processing... "
 mkdir -p /root/backup
 sleep 1
@@ -160,7 +160,7 @@ read -n 1 -s -r -p "Press any key to back on menu"
 menu
 }
 function autobckpbot(){
-clear
+clear && printf '\033[3J'
 cat > /etc/cron.d/bckp_otm <<-END
 SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
@@ -175,13 +175,13 @@ read -n 1 -s -r -p "Press any key to back on menu"
 menu
 }
 function backup(){
-clear
+clear && printf '\033[3J'
 IP=$(curl -sS ipv4.icanhazip.com);
 date=$(date +"%Y-%m-%d")
 
 
 
-clear
+clear && printf '\033[3J'
 echo -e "[ ${green}INFO${NC} ] Create password for database"
 read -rp "Enter Token (Contact Admin) : " -e token
 read -rp "Enter Name File Your Backup  : " -e NameUser
@@ -338,7 +338,7 @@ echo
 read -n 1 -s -r -p "Press any key to back on menu"
 menu
 }
-clear
+clear && printf '\033[3J'
 echo -e "${BICyan} ┌─────────────────────────────────────────────────────┐${NC}"
 echo -e "       ${BIWhite}${UWhite}Backup / Restore ${NC}"
 echo -e ""
@@ -354,12 +354,12 @@ echo ""
 read -p " Select menu : " opt
 echo -e ""
 case $opt in
-1) clear ; backup ;;
-#2) clear ; bckp ;;
-2) clear ; restore;;
-3) clear ; bckpbot;;
-4) clear ; autobckpbot;;
-0) clear ; menu ;;
+1) clear && printf '\033[3J' ; backup ;;
+#2) clear && printf '\033[3J' ; bckp ;;
+2) clear && printf '\033[3J' ; restore;;
+3) clear && printf '\033[3J' ; bckpbot;;
+4) clear && printf '\033[3J' ; autobckpbot;;
+0) clear && printf '\033[3J' ; menu ;;
 x) exit ;;
 *) echo -e "" ; echo "Press any key to back on menu" ; sleep 1 ; menu ;;
 esac

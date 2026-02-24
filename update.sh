@@ -32,7 +32,30 @@ wget -q -O /usr/bin/menu-ssh "${REPO}/menu-ssh.sh" && chmod +x /usr/bin/menu-ssh
 # Download setup.sh terbaru
 wget -q -O /usr/bin/setup.sh "${REPO}/setup.sh" && chmod +x /usr/bin/setup.sh
 
-# 3. Buat Database Expired & Trash
+# 3. Terapkan Fix 'Clear Ghosting' (Scrollback Buffer Wipe)
+# Mengganti 'clear' biasa dengan 'clear && printf "\033[3J"' pada script yang didownload
+echo -e "[ ${GREEN}INFO${NC} ] Menerapkan fix terminal ghosting..."
+
+files_to_fix=(
+    "/usr/bin/add-ws"
+    "/usr/bin/add-vless"
+    "/usr/bin/add-tr"
+    "/usr/bin/add-ssws"
+    "/usr/bin/usernew"
+    "/usr/bin/xp"
+    "/usr/bin/cek-expired"
+    "/usr/bin/menu"
+    "/usr/bin/menu-ssh"
+    "/usr/bin/setup.sh"
+)
+
+for file in "${files_to_fix[@]}"; do
+    if [ -f "$file" ]; then
+        sed -i "s/\bclear\b/clear \&\& printf '\\\033[3J'/g" "$file"
+    fi
+done
+
+# 4. Buat Database Expired & Trash
 echo -e "[ ${GREEN}INFO${NC} ] Membuat database expired & trash users..."
 if [ ! -f /etc/expired-users.db ]; then
     touch /etc/expired-users.db
@@ -46,7 +69,7 @@ if [ ! -f /etc/expired-users-trash.db ]; then
     echo "Database expired-users-trash.db dibuat."
 fi
 
-# 4. Update Cron Job
+# 5. Update Cron Job
 echo -e "[ ${GREEN}INFO${NC} ] Memperbarui Cron Job..."
 # Hapus cron xp lama jika ada (yang harian atau duplikat)
 sed -i "/root xp/d" /etc/crontab

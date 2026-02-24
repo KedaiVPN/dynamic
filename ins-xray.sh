@@ -52,7 +52,7 @@ IP=$(curl -sS ifconfig.me )
 export NETWORK_IFACE="$(ip route show to default | awk '{print $5}')"
 
 
-clear
+clear && printf '\033[3J'
 source /var/lib/scrz-prem/ipvps.conf
 if [[ "$IP" = "" ]]; then
 domain=$(cat /etc/xray/domain)
@@ -176,7 +176,7 @@ mkdir -p /etc/xray
 mkdir -p /usr/local/etc/xray
 
 # // Making Certificate
-clear
+clear && printf '\033[3J'
 echo -e "[ ${GREEN}INFO${NC} ] Starting renew cert... " 
 sleep 2
 echo -e "${OKEY} Starting Generating Certificate"

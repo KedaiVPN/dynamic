@@ -64,7 +64,7 @@ export NETWORK_IFACE="$(ip route show to default | awk '{print $5}')"
 
 # // Validate Result ( 1 )
 touch
-clear
+clear && printf '\033[3J'
 Green_font_prefix="\033[32m" && Red_font_prefix="\033[31m" && Green_background_prefix="\033[42;37m" && Red_background_prefix="\033[41;37m" && Font_color_suffix="\033[0m"
 Info="${Green_font_prefix}[ON]${Font_color_suffix}"
 Error="${Red_font_prefix}[OFF]${Font_color_suffix}"
@@ -98,7 +98,7 @@ sts="${Info}"
 else
 sts="${Error}"
 fi
-clear
+clear && printf '\033[3J'
 echo -e " =============================="
 echo -e "     Limit Bandwidth Speed         "
 echo -e " =============================="
@@ -112,7 +112,7 @@ start
 elif [[ "$num" = "2" ]]; then
 stop
 else
-clear
+clear && printf '\033[3J'
 echo " You Entered The Wrong Number"
 menu
 fi�

@@ -11,20 +11,20 @@ green='\e[0;32m'
 purple='\e[0;35m'
 orange='\e[0;33m'
 NC='\e[0m'
-clear
+clear && printf '\033[3J'
 IP=$(wget -qO- icanhazip.com);
 IP=$(curl -s ipinfo.io/ip )
 IP=$(curl -sS ipv4.icanhazip.com)
 IP=$(curl -sS ifconfig.me )
 date=$(date +"%Y-%m-%d-%H:%M:%S")
 domain=$(cat /etc/xray/domain)
-clear
+clear && printf '\033[3J'
 echo " VPS Data Backup By NevermoreSSH "
 sleep 1
 echo -e "[ ${green}INFO${NC} ] Processing . . . "
 mkdir -p /root/backup
 sleep 1
-clear
+clear && printf '\033[3J'
 echo " Please Wait VPS Data Backup In Progress . . . "
 echo " "
 echo " Backup SSH & XRAY Account . . . "
@@ -45,7 +45,7 @@ rclone copy /root/$IP-$date-$domain-blueblue.zip dr:backup/
 url=$(rclone link dr:backup/$IP-$date-$domain-blueblue.zip)
 id=(`echo $url | grep '^https' | cut -d'=' -f2`)
 link="https://drive.google.com/u/4/uc?id=${id}&export=download"
-clear
+clear && printf '\033[3J'
 echo -e "\033[1;37mVPS Data Backup By NevermoreSSH\033[0m
 \033[1;37mTelegram : https://t.me/todfix667 / @NevermoreSSH\033[0m"
 echo ""
