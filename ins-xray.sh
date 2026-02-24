@@ -77,7 +77,7 @@ systemctl enable chrony && systemctl restart chrony
 timedatectl set-timezone Asia/Jakarta
 #chronyc sourcestats -v
 #chronyc tracking -v
-apt install curl pwgen openssl netcat cron -y
+apt install curl pwgen openssl netcat cron unzip -y
 
 # Make Folder & Log XRay & Log Trojan
 rm -fr /var/log/xray
@@ -200,10 +200,36 @@ wget -q -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/Nevermo
 #==========#
 # / / Ambil Xray Core Version Terbaru
 latest_version="$(curl -s https://api.github.com/repos/XTLS/Xray-core/releases | grep tag_name | sed -E 's/.*"v(.*)".*/\1/' | head -n 1)"
-# / / Installation Xray Core
-xraycore_link="https://github.com/XTLS/Xray-core/releases/download/v$latest_version/xray-linux-64.zip"
-# / / Ambil Xray Core Version Terbaru
-bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install -u www-data --version $latest_version >/dev/null 2>&1
+# / / Installation Xray Core Manual (No script dependency)
+# Fallback to hardcoded latest if grep fails
+if [[ -z "$latest_version" ]]; then
+    latest_version="1.8.4"
+fi
+xraycore_link="https://github.com/XTLS/Xray-core/releases/download/v$latest_version/Xray-linux-64.zip"
+
+echo -e "[ ${GREEN}INFO${NC} ] Downloading Xray v$latest_version..."
+cd `mktemp -d`
+curl -sL "$xraycore_link" -o xray.zip
+unzip -q xray.zip
+if [[ -f "xray" ]]; then
+    rm -rf xray.zip
+    mv xray /usr/local/bin/xray
+    chmod +x /usr/local/bin/xray
+    echo -e "[ ${GREEN}INFO${NC} ] Xray installed successfully."
+else
+    echo -e "[ ${RED}ERROR${NC} ] Failed to extract xray binary!"
+    # Try to find it if it's in a subfolder
+    found_bin=$(find . -type f -name "xray" | head -n 1)
+    if [[ -n "$found_bin" ]]; then
+        mv "$found_bin" /usr/local/bin/xray
+        chmod +x /usr/local/bin/xray
+        echo -e "[ ${GREEN}INFO${NC} ] Xray installed successfully (from subfolder)."
+    else
+        echo -e "[ ${RED}ERROR${NC} ] Xray binary not found. Aborting."
+        exit 1
+    fi
+fi
+cd
 
 # / / Make Main Directory
 mkdir -p /usr/bin/xray
@@ -241,12 +267,6 @@ echo -n '#!/bin/bash
 chmod +x /usr/local/bin/ssl_renew.sh
 if ! grep -q 'ssl_renew.sh' /var/spool/cron/crontabs/root;then (crontab -l;echo "15 03 */3 * * /usr/local/bin/ssl_renew.sh") | crontab;fi
 
-# / / Unzip Xray Linux 64
-cd `mktemp -d`
-curl -sL "$xraycore_link" -o xray.zip
-unzip -q xray.zip && rm -rf xray.zip
-mv xray /usr/local/bin/xray
-chmod +x /usr/local/bin/xray
 
 # Random Port Xray
 trojanws=$((RANDOM + 10000))
