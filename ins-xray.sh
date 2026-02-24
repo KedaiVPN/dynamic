@@ -372,6 +372,14 @@ kuotahabis=$((RANDOM + 10000))
 vmessgrpc=$((RANDOM + 10000))
 trojangrpc=$((RANDOM + 10000))
 
+# UPDATE log-install.txt so add-ws.sh knows the TLS port (443)
+# We need to make sure 'Vmess TLS' grep returns '443'
+sed -i 's/Vmess TLS         : .*/Vmess TLS         : 443/g' /root/log-install.txt
+sed -i 's/Vmess None TLS    : .*/Vmess None TLS    : 80/g' /root/log-install.txt
+sed -i 's/Vless TLS         : .*/Vless TLS         : 443/g' /root/log-install.txt
+sed -i 's/Vless None TLS    : .*/Vless None TLS    : 80/g' /root/log-install.txt
+sed -i 's/Trojan .*         : .*/Trojan WS         : 443/g' /root/log-install.txt
+
 # nginx xray.conf
 rm -fr /etc/nginx/conf.d/xray.conf
 cat >/etc/nginx/conf.d/xray.conf <<EOF
@@ -401,7 +409,8 @@ sed -i '$ iproxy_set_header Connection "upgrade";' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_set_header Host \$http_host;' /etc/nginx/conf.d/xray.conf
 sed -i '$ i}' /etc/nginx/conf.d/xray.conf
 
-sed -i '$ ilocation = /vless' /etc/nginx/conf.d/xray.conf
+# Use Prefix Match (location /vless) instead of Exact (=) to be safer
+sed -i '$ ilocation /vless' /etc/nginx/conf.d/xray.conf
 sed -i '$ i{' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_redirect off;' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_pass http://127.0.0.1:'"$vless"';' /etc/nginx/conf.d/xray.conf
@@ -413,7 +422,7 @@ sed -i '$ iproxy_set_header Connection "upgrade";' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_set_header Host \$http_host;' /etc/nginx/conf.d/xray.conf
 sed -i '$ i}' /etc/nginx/conf.d/xray.conf
 
-sed -i '$ ilocation = /vmess' /etc/nginx/conf.d/xray.conf
+sed -i '$ ilocation /vmess' /etc/nginx/conf.d/xray.conf
 sed -i '$ i{' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_redirect off;' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_pass http://127.0.0.1:'"$vmess"';' /etc/nginx/conf.d/xray.conf
@@ -425,7 +434,7 @@ sed -i '$ iproxy_set_header Connection "upgrade";' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_set_header Host \$http_host;' /etc/nginx/conf.d/xray.conf
 sed -i '$ i}' /etc/nginx/conf.d/xray.conf
 
-sed -i '$ ilocation = /worryfree' /etc/nginx/conf.d/xray.conf
+sed -i '$ ilocation /worryfree' /etc/nginx/conf.d/xray.conf
 sed -i '$ i{' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_redirect off;' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_pass http://127.0.0.1:'"$worryfree"';' /etc/nginx/conf.d/xray.conf
@@ -437,7 +446,7 @@ sed -i '$ iproxy_set_header Connection "upgrade";' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_set_header Host \$http_host;' /etc/nginx/conf.d/xray.conf
 sed -i '$ i}' /etc/nginx/conf.d/xray.conf
 
-sed -i '$ ilocation = /kuota-habis' /etc/nginx/conf.d/xray.conf
+sed -i '$ ilocation /kuota-habis' /etc/nginx/conf.d/xray.conf
 sed -i '$ i{' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_redirect off;' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_pass http://127.0.0.1:'"$kuotahabis"';' /etc/nginx/conf.d/xray.conf
@@ -449,7 +458,7 @@ sed -i '$ iproxy_set_header Connection "upgrade";' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_set_header Host \$http_host;' /etc/nginx/conf.d/xray.conf
 sed -i '$ i}' /etc/nginx/conf.d/xray.conf
 
-sed -i '$ ilocation = /trojan-ws' /etc/nginx/conf.d/xray.conf
+sed -i '$ ilocation /trojan-ws' /etc/nginx/conf.d/xray.conf
 sed -i '$ i{' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_redirect off;' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_pass http://127.0.0.1:'"$trojanws"';' /etc/nginx/conf.d/xray.conf
@@ -461,7 +470,7 @@ sed -i '$ iproxy_set_header Connection "upgrade";' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_set_header Host \$http_host;' /etc/nginx/conf.d/xray.conf
 sed -i '$ i}' /etc/nginx/conf.d/xray.conf
 
-sed -i '$ ilocation = /ss-ws' /etc/nginx/conf.d/xray.conf
+sed -i '$ ilocation /ss-ws' /etc/nginx/conf.d/xray.conf
 sed -i '$ i{' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_redirect off;' /etc/nginx/conf.d/xray.conf
 sed -i '$ iproxy_pass http://127.0.0.1:'"$ssws"';' /etc/nginx/conf.d/xray.conf
@@ -546,6 +555,11 @@ cat <<EOF> /etc/xray/config.json
                 "dest": 81,
                 "xver": 1,
                 "alpn": "http/1.1"
+            },
+            {
+                "dest": 81,
+                "xver": 1,
+                "path": "/"
             },
             {
                 "dest": 109,
