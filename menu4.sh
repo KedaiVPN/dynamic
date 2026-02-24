@@ -178,6 +178,70 @@ echo ""
 read -n 1 -s -r -p "Press any key to back on menu"
 menu
 }
+
+function menu_backup_restore(){
+clear
+echo -e "${BICyan} ┌────────────────────────────────────────────────────────────┐${NC}"
+echo -e "${BICyan} │                  ${BIWhite}${UWhite}BACKUP / RESTORE${NC}"
+echo -e "${BICyan} │"
+echo -e "     ${BICyan}[${BIWhite}01${BICyan}] BACKUP DATA ${BICyan}${BIYellow}${BICyan}${NC}"
+echo -e "     ${BICyan}[${BIWhite}02${BICyan}] RESTORE DATA ${BICyan}${BIYellow}${BICyan}${NC}"
+echo -e "     ${BICyan}[${BIWhite}x ${BICyan}] BACK TO MENU ${BICyan}${BIYellow}${BICyan}${NC}"
+echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
+echo
+read -p " Select menu : " opt_br
+case $opt_br in
+1) clear ; backup ;;
+2) clear ; restore ;;
+x) menu ;;
+*) menu ;;
+esac
+}
+
+function menu_features(){
+clear
+echo -e "${BICyan} ┌────────────────────────────────────────────────────────────┐${NC}"
+echo -e "${BICyan} │                  ${BIWhite}${UWhite}ADDITIONAL FEATURES${NC}"
+echo -e "${BICyan} │"
+echo -e "     ${BICyan}[${BIWhite}01${BICyan}] ADD HOST/DOMAIN      ${BICyan}[${BIWhite}11${BICyan}] WEBMIN${NC}"
+echo -e "     ${BICyan}[${BIWhite}02${BICyan}] RENEW CERT           ${BICyan}[${BIWhite}12${BICyan}] INFO SCRIPT${NC}"
+echo -e "     ${BICyan}[${BIWhite}03${BICyan}] EDIT BANNER          ${BICyan}[${BIWhite}13${BICyan}] CLEAR LOG${NC}"
+echo -e "     ${BICyan}[${BIWhite}04${BICyan}] CHECK BANDWIDTH      ${BICyan}[${BIWhite}14${BICyan}] DNS CHANGER${NC}"
+echo -e "     ${BICyan}[${BIWhite}05${BICyan}] SPEEDTEST            ${BICyan}[${BIWhite}15${BICyan}] NETFLIX CHECKER${NC}"
+echo -e "     ${BICyan}[${BIWhite}06${BICyan}] LIMIT SPEED          ${BICyan}[${BIWhite}16${BICyan}] TENDANG${NC}"
+echo -e "     ${BICyan}[${BIWhite}07${BICyan}] AUTO REBOOT          ${BICyan}[${BIWhite}17${BICyan}] XRAY-CORE MENU${NC}"
+echo -e "     ${BICyan}[${BIWhite}08${BICyan}] REBOOT               ${BICyan}[${BIWhite}18${BICyan}] INSTALL BBRPLUS${NC}"
+echo -e "     ${BICyan}[${BIWhite}09${BICyan}] RESTART              ${BICyan}[${BIWhite}19${BICyan}] SWAPRAM MENU${NC}"
+echo -e "     ${BICyan}[${BIWhite}10${BICyan}] GOTOP (RAM MONITOR)${NC}"
+echo -e "     ${BICyan}[${BIWhite}x ${BICyan}] BACK TO MENU ${BICyan}${BIYellow}${BICyan}${NC}"
+echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
+echo
+read -p " Select menu : " opt_feat
+case $opt_feat in
+1) clear ; addhost ;;
+2) clear ; genssl ;;
+3) clear ; nano /etc/issue.net ;;
+4) clear ; cek-bandwidth ;;
+5) clear ; cek-speed ;;
+6) clear ; limit-speed ;;
+7) clear ; autoreboot ;;
+8) clear ; reboot ;;
+9) clear ; restart ;;
+10) clear ; gotop ;;
+11) clear ; wbm ;;
+12) clear ; cat /root/log-install.txt ;;
+13) clear ; clearlog ;;
+14) clear ; dns ;;
+15) clear ; netf ;;
+16) clear ; tendang ;;
+17) clear ; wget -q -O /usr/bin/xraychanger "https://raw.githubusercontent.com/NevermoreSSH/Xcore-custompath/main/xraychanger.sh" && chmod +x /usr/bin/xraychanger && xraychanger ;;
+18) clear ; bbr ;;
+19) clear ; wget -q -O /usr/bin/swapram "https://raw.githubusercontent.com/NevermoreSSH/swapram/main/swapram.sh" && chmod +x /usr/bin/swapram && swapram ;;
+x) menu ;;
+*) menu ;;
+esac
+}
+
 export sem=$( curl -s https://raw.githubusercontent.com/NevermoreSSH/Blueblue/main/test/versions)
 export pak=$( cat /home/.ver)
 IPVPS=$(curl -s ipinfo.io/ip )
@@ -220,50 +284,18 @@ echo -e "${BICyan} │  ${BICyan}IP-VPS          :  ${BIWhite}$IPVPS${NC}"
 echo -e "${BICyan} │  ${BICyan}Daily Bandwidth :  ${BIWhite}$daily_usage ${NC}"
 echo -e "${BICyan} │  ${BICyan}Total Bandwidth :  ${BIWhite}$monthly_usage ${NC}"
 echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
-echo -e "     ${BICyan} SSH ${NC}: $ressh"" ${BICyan} NGINX ${NC}: $resngx"" ${BICyan}  XRAY ${NC}: $resv2r"" ${BICyan} TROJAN ${NC}: $resv2r"
-echo -e "     ${BICyan} DROPBEAR ${NC}: $resdbr" "${BICyan} SSH-WS ${NC}: $ressshws" Stunnel ${NC}: $sshstunel" "${BICyan}
+echo -e "      ${BICyan}SSH : $ressh ${BICyan} NGINX : $resngx ${BICyan}  XRAY : $resv2r ${BICyan} TROJAN : $resv2r${NC}"
+echo -e "      ${BICyan}DROPBEAR : $resdbr ${BICyan} SSH-WS : $ressshws ${BICyan} Stunnel : $sshstunel${NC}"
 echo -e "${BICyan} ┌────────────────────────────────────────────────────────────┐${NC}"
-echo -e "     ${BICyan}[${BIWhite}01${BICyan}] SSHWS       ${WB}[${GB}${ssh}${WB}] ${BICyan}${BIYellow}${BICyan}${NC}" 
-echo -e "     ${BICyan}[${BIWhite}02${BICyan}] VMESS       ${WB}[${GB}${vmess}${WB}] ${BICyan}${BIYellow}${BICyan}${NC}"    
-echo -e "     ${BICyan}[${BIWhite}03${BICyan}] VLESS       ${WB}[${GB}${vless}${WB}] ${BICyan}${BIYellow}${BICyan}${NC}"    
-echo -e "     ${BICyan}[${BIWhite}04${BICyan}] TROJAN      ${WB}[${GB}${tr}${WB}] ${BICyan}${BIYellow}${BICyan}${NC}" 
-echo -e "     ${BICyan}[${BIWhite}05${BICyan}] SHADOWSOCKS ${WB}[${GB}${ss}${WB}] ${BICyan}${BIYellow}${BICyan}${NC}"   
-echo -e "" 
-echo -e "     ${BICyan}[${BIWhite}06${BICyan}] RESTORE EXPIRED USER ${BICyan}${BIYellow}${BICyan}${NC}"
-echo -e "     ${BICyan}[${BIWhite}07${BICyan}] AUTO REBOOT ${BICyan}${BIYellow}${BICyan}${NC}"    
-echo -e "     ${BICyan}[${BIWhite}08${BICyan}] REBOOT ${BICyan}${BIYellow}${BICyan}${NC}"    
-echo -e "     ${BICyan}[${BIWhite}09${BICyan}] RESTART ${BICyan}${BIYellow}${BICyan}${NC}"    
-#echo -e "     ${BICyan}[${BIWhite}10${BICyan}] BACKUP/RESTORE ${BICyan}${BIYellow}${BICyan}${NC}"
-echo -e ""   
-echo -e "     ${BICyan}[${BIWhite}11${BICyan}] ADD HOST/DOMAIN ${BICyan}${BIYellow}${BICyan}${NC}" 
-echo -e "     ${BICyan}[${BIWhite}12${BICyan}] RENEW CERT ${BICyan}${BIYellow}${BICyan}${NC}"       
-echo -e "     ${BICyan}[${BIWhite}13${BICyan}] EDIT BANNER ${BICyan}${BIYellow}${BICyan}${NC}" 
-echo -e "     ${BICyan}[${BIWhite}14${BICyan}] RUNNING STATUS ${BICyan}${BIYellow}${BICyan}${NC}" 
-echo -e "     ${BICyan}[${BIWhite}15${BICyan}] USER BANDWIDTH ${BICyan}${BIYellow}${BICyan}${NC}" 
-echo -e "     ${BICyan}[${BIWhite}16${BICyan}] SPEEDTEST ${BICyan}${BIYellow}${BICyan}${NC}"
-echo -e "     ${BICyan}[${BIWhite}17${BICyan}] CHECK BANDWIDTH ${BICyan}${BIYellow}${BICyan}${NC}"
-echo -e "     ${BICyan}[${BIWhite}18${BICyan}] LIMIT SPEED ${BICyan}${BIYellow}${BICyan}${NC}"
-echo -e "     ${BICyan}[${BIWhite}19${BICyan}] WEBMIN ${BICyan}${BIYellow}${BICyan}${NC}"
-echo -e "     ${BICyan}[${BIWhite}20${BICyan}] INFO SCRIPT ${BICyan}${BIYellow}${BICyan}${NC}" 
-echo -e "     ${BICyan}[${BIWhite}21${BICyan}] CLEAR LOG ${BICyan}${BIYellow}${BICyan}${NC}" 
-echo -e "     ${BICyan}[${BIWhite}23${BICyan}] DNS CHANGER ${BICyan}${BIYellow}${BICyan}${NC}"
-echo -e "     ${BICyan}[${BIWhite}24${BICyan}] NETFLIX CHECKER ${BICyan}${BIYellow}${BICyan}${NC}"
-echo -e "     ${BICyan}[${BIWhite}25${BICyan}] TENDANG ${BICyan}${BIYellow}${BICyan}${NC}"
-#echo -e "     ${BICyan}[${BIWhite}25${BICyan}] DELETE XRAYS USER [${BIWhite} $xrays users ${BICyan}] ${BICyan}${BIYellow}${BICyan}${NC}"
-#echo -e "     ${BICyan}[${BIWhite}30${BICyan}] VLESS CONFIG ${BICyan}${BIYellow}${BICyan}${NC}"
-echo -e " "
-echo -e "     ${BICyan}[${BIWhite}55${BICyan}] XRAY-CORE MENU ${BICyan}${BIYellow}${BICyan}${NC}"
-echo -e "     ${BICyan}[${BIWhite}66${BICyan}] INSTALL BBRPLUS ${BICyan}${BIYellow}${BICyan}${NC}"
-echo -e "     ${BICyan}[${BIWhite}77${BICyan}] SWAPRAM MENU ${BICyan}${BIYellow}${BICyan}${NC}"
-echo -e "     ${BICyan}[${BIWhite}88${BICyan}] BACKUP ${BICyan}${BIYellow}${BICyan}${NC}"
-echo -e "     ${BICyan}[${BIWhite}99${BICyan}] RESTORE ${BICyan}${BIYellow}${BICyan}${NC}"
-#echo -e "     ${BICyan}[${BIWhite}88${BICyan}] INSTALL SLOWDNS ${BICyan}${BIYellow}${BICyan}${NC}"
-#echo -e "     ${BICyan}[${BIWhite}99${BICyan}] INSTALL UDPCUSTOM ${BICyan}${BIYellow}${BICyan}${NC}" 
-echo -e "     ${BICyan}[${BIWhite}x ${BICyan}] EXIT ${BICyan}${BIYellow}${BICyan}${NC}"  
+echo -e "     ${BICyan}[${BIWhite}01${BICyan}] SSHWS       ${WB}[${GB}${ssh}${WB}]         ${BICyan}[${BIWhite}06${BICyan}] RESTORE EXPIRED USER${NC}"
+echo -e "     ${BICyan}[${BIWhite}02${BICyan}] VMESS       ${WB}[${GB}${vmess}${WB}]         ${BICyan}[${BIWhite}07${BICyan}] USER BANDWIDTH${NC}"
+echo -e "     ${BICyan}[${BIWhite}03${BICyan}] VLESS       ${WB}[${GB}${vless}${WB}]         ${BICyan}[${BIWhite}08${BICyan}] RUNNING STATUS${NC}"
+echo -e "     ${BICyan}[${BIWhite}04${BICyan}] TROJAN      ${WB}[${GB}${tr}${WB}]         ${BICyan}[${BIWhite}09${BICyan}] BACKUP/RESTORE${NC}"
+echo -e "     ${BICyan}[${BIWhite}05${BICyan}] SHADOWSOCKS ${WB}[${GB}${ss}${WB}]         ${BICyan}[${BIWhite}10${BICyan}] FEATURES${NC}"
 echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
-echo -e " ${BICyan}┌─────────────────────────────────────┐${NC}"
-echo -e " ${BICyan}│  Version      ${NC} : $sem Last Update"    
-echo -e " ${BICyan}└─────────────────────────────────────┘${NC}"
+echo -e "${BICyan} ┌─────────────────────────────────────┐${NC}"
+echo -e "${BICyan} │  Version  : $sem Last Update  ${BIWhite}[x] exit${NC}"
+echo -e "${BICyan} └─────────────────────────────────────┘${NC}"
 echo
 read -p " Select menu : " opt
 echo -e ""
@@ -274,35 +306,10 @@ case $opt in
 4) clear ; menu-trojan ;;
 5) clear ; menu-ss ;;
 6) clear ; cek-expired ;;
-7) clear ; autoreboot ;;
-8) clear ; reboot ;;
-9) clear ; restart ;;
-#10) clear ; menu-bckp ;;
-11) clear ; addhost ;;
-12) clear ; genssl ;;
-13) clear ; nano /etc/issue.net ;;
-14) clear ; running ;;
-15) clear ; cek-trafik ;;
-16) clear ; cek-speed ;;
-17) clear ; cek-bandwidth ;;
-18) clear ; limit-speed ;;
-19) clear ; wbm ;;
-20) clear ; cat /root/log-install.txt ;;
-21) clear ; clearlog ;;
-22) clear ; gotop ;;
-23) clear ; dns ;;
-24) clear ; netf ;;
-25) clear ; tendang ;;
-55) clear ; wget -q -O /usr/bin/xraychanger "https://raw.githubusercontent.com/NevermoreSSH/Xcore-custompath/main/xraychanger.sh" && chmod +x /usr/bin/xraychanger && xraychanger ;;
-66) clear ; bbr ;;
-77) clear ; wget -q -O /usr/bin/swapram "https://raw.githubusercontent.com/NevermoreSSH/swapram/main/swapram.sh" && chmod +x /usr/bin/swapram && swapram ;;
-88) clear ; backup ;;
-99) clear ; restore ;;
-#88) clear ; wget https://raw.githubusercontent.com/NevermoreSSH/Vergil/main2/addons/dns2.sh && chmod +x dns2.sh && ./dns2.sh ;;
-#99) clear ; wget https://raw.githubusercontent.com/NevermoreSSH/Vergil/main/Tunnel/udp.sh && bash udp.sh ;;
-#22) clear ; wget https://raw.githubusercontent.com/NevermoreSSH/Blueblue/main/cf.sh && chmod +x cf.sh && ./cf.sh ;;
-#25) clear ; del-xrays ;;
-#30) clear ; user-xrays ;;
+7) clear ; cek-trafik ;;
+8) clear ; running ;;
+9) menu_backup_restore ;;
+10) menu_features ;;
 0) clear ; menu ;;
 x) exit ;;
 *) echo -e "" ; echo "Press any key to back exit" ; sleep 1 ; exit ;;
