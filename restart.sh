@@ -62,7 +62,7 @@ export IP=$( curl -s https://ipinfo.io/ip/ )
 # // Exporting Network Interface
 export NETWORK_IFACE="$(ip route show to default | awk '{print $5}')"
 
-clear
+clear && printf '\033[3J'
 echo -e ""
 echo -e "======================================"
 echo -e ""
@@ -79,10 +79,10 @@ read -p "    Select From Options [1-6 or x] :  " Restart
 echo -e ""
 echo -e "======================================"
 sleep 1
-clear
+clear && printf '\033[3J'
 case $Restart in
                 1)
-                clear
+                clear && printf '\033[3J'
                 #systemctl restart ws-dropbear.service >/dev/null 2>&1
                 systemctl restart ws-stunnel.service >/dev/null 2>&1
                 systemctl restart xray.service >/dev/null 2>&1
@@ -104,7 +104,7 @@ case $Restart in
                 echo -e "======================================"
                 ;;
                 2)
-                clear
+                clear && printf '\033[3J'
                 /etc/init.d/ssh restart
                 echo -e ""
                 echo -e "======================================"
@@ -114,7 +114,7 @@ case $Restart in
                 echo -e "======================================"
                 ;;
                 3)
-                clear
+                clear && printf '\033[3J'
                 /etc/init.d/dropbear restart
                 echo -e ""
                 echo -e "======================================"
@@ -124,7 +124,7 @@ case $Restart in
                 echo -e "======================================"
                 ;;
                 4)
-                clear
+                clear && printf '\033[3J'
                 /etc/init.d/stunnel5 restart
                 echo -e ""
                 echo -e "======================================"
@@ -134,7 +134,7 @@ case $Restart in
                 echo -e "======================================"
                 ;;
                 5)
-                clear
+                clear && printf '\033[3J'
                 /etc/init.d/nginx restart
                 echo -e ""
                 echo -e "======================================"
@@ -144,7 +144,7 @@ case $Restart in
                 echo -e "======================================"
                 ;;
                 6)
-                clear
+                clear && printf '\033[3J'
                 screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 500
                 screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 500
                 screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 500
@@ -157,7 +157,7 @@ case $Restart in
                 echo -e "======================================"
                 ;;
                 x)
-                clear
+                clear && printf '\033[3J'
                 menu
                 ;;
         esac

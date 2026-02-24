@@ -110,14 +110,14 @@ if [[ $sisa_hari -lt 0 ]]; then
 else
     echo $sisa_hari > /etc/${Auther}/license-remaining-active-days.db
 fi
-clear
+clear && printf '\033[3J'
 
 function backup(){
-clear
+clear && printf '\033[3J'
 IP=$(curl -sS ipv4.icanhazip.com);
 date=$(date +"%Y-%m-%d")
 
-clear
+clear && printf '\033[3J'
 echo -e "[ ${GREEN}INFO${NC} ] Create password for database"
 read -rp "Enter Token (Contact Admin) : " -e token
 read -rp "Enter Name File Your Backup  : " -e NameUser
@@ -291,7 +291,7 @@ echo
 read -n 1 -s -r -p "Press any key to back on menu"
 menu
 }
-clear
+clear && printf '\033[3J'
 echo -e "${BICyan} ┌─────────────────────────────────────────────────────┐${NC}"
 echo -e "       ${BIWhite}${UWhite}Backup / Restore ${NC}"
 echo -e ""
@@ -305,10 +305,10 @@ echo ""
 read -p " Select menu : " opt
 echo -e ""
 case $opt in
-1) clear ; backup ;;
-#2) clear ; bckp ;;
-2) clear ; restore;;
-0) clear ; menu ;;
+1) clear && printf '\033[3J' ; backup ;;
+#2) clear && printf '\033[3J' ; bckp ;;
+2) clear && printf '\033[3J' ; restore;;
+0) clear && printf '\033[3J' ; menu ;;
 x) exit ;;
 *) echo -e "" ; echo "Press any key to back on menu" ; sleep 1 ; menu ;;
 esac

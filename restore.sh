@@ -27,7 +27,7 @@ green='\e[0;32m'
 purple='\e[0;35m'
 orange='\e[0;33m'
 NC='\e[0m'
-clear
+clear && printf '\033[3J'
 echo ""
 echo -e   "  \e[$line═══════════════════════════════════════════════════════\e[m"
 echo -e   "  \e[$back_text            \e[30m[\e[$box RESTORE SSH & XRAY ACCOUNT \e[30m ]\e[1m            \e[m"
@@ -73,4 +73,4 @@ systemctl restart xray@trojan.service
 service cron restart
 sleep 5
 system
-clear
+clear && printf '\033[3J'

@@ -62,7 +62,7 @@ export IP=$( curl -s https://ipinfo.io/ip/ )
 # // Exporting Network Interface
 export NETWORK_IFACE="$(ip route show to default | awk '{print $5}')"
 
-clear
+clear && printf '\033[3J'
 Green_font_prefix="\033[32m"
 Red_font_prefix="\033[31m"
 Green_background_prefix="\033[42;37m"
@@ -79,14 +79,14 @@ apt install gnupg gnupg1 gnupg2 -y
 wget http://www.webmin.com/jcameron-key.asc
 apt-key add jcameron-key.asc
 echo " Mulai Install Webmin"
-clear
+clear && printf '\033[3J'
 sleep 0.5
 apt update > /dev/null 2>&1
 apt install webmin -y
 sed -i 's/ssl=1/ssl=0/g' /etc/webmin/miniserv.conf
 /etc/init.d/webmin restart
 rm -f /root/jcameron-key.asc
-clear
+clear && printf '\033[3J'
 echo ""
 echo " Berhasil Install Webmin"
 echo " $IP:10000"
@@ -96,7 +96,7 @@ echo " Mulai Webmin"
 sleep 0.5
 service webmin restart > /dev/null 2>&1
 echo " Mulai Uninstall Webmin"
-clear
+clear && printf '\033[3J'
 echo ""
 echo " Berhasil Restart Webmin"
 }
@@ -105,10 +105,10 @@ echo " Menghapus Repositori Webmin"
 rm -f /etc/apt/sources.list.d/webmin.list
 apt update > /dev/null 2>&1
 echo " Mulai Uninstall Webmin"
-clear
+clear && printf '\033[3J'
 sleep 0.5
 apt autoremove --purge webmin -y > /dev/null 2>&1
-clear
+clear && printf '\033[3J'
 echo ""
 echo " Berhasil Uninstall Webmin"
 }
@@ -117,7 +117,7 @@ sts="${Info}"
 else
 sts="${Error}"
 fi
-clear
+clear && printf '\033[3J'
 echo -e " ==============================" | lolcat
 echo -e "           Webmin Menu         "
 echo -e " ==============================" | lolcat
@@ -135,7 +135,7 @@ restart
 elif [[ "$num" = "3" ]]; then
 uninstall
 else
-clear
+clear && printf '\033[3J'
 echo "Masukkan Angka Yang Ada!"
 menu
 fi

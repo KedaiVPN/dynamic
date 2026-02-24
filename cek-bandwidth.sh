@@ -73,7 +73,7 @@ white='\x1b[37m'
 bold='\033[1m'
 off='\x1b[m'
 
-clear
+clear && printf '\033[3J'
 echo -e ""
 echo -e "${cyan}======================================${off}"
 echo -e        "           BANDWITH MONITOR " | lolcat

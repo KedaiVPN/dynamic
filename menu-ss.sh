@@ -65,10 +65,10 @@ export IP=$( curl -s https://ipinfo.io/ip/ )
 export NETWORK_IFACE="$(ip route show to default | awk '{print $5}')"
 
 
-clear
+clear && printf '\033[3J'
 
 function cekws() {
-clear
+clear && printf '\033[3J'
 echo -n > /tmp/other.txt
 data=( `cat /etc/xray/config.json | grep '###' | cut -d ' ' -f 2 | sort | uniq`);
 echo "-------------------------------";
@@ -112,10 +112,10 @@ read -n 1 -s -r -p "Press any key to back on menu"
 menu
 }
 function renewws(){
-clear
+clear && printf '\033[3J'
 NUMBER_OF_CLIENTS=$(grep -c -E "^### " "/etc/xray/config.json")
 	if [[ ${NUMBER_OF_CLIENTS} == '0' ]]; then
-		clear
+		clear && printf '\033[3J'
         echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
         echo -e "\\E[0;41;36m            Renew Sodosok            \E[0m"
         echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
@@ -128,7 +128,7 @@ NUMBER_OF_CLIENTS=$(grep -c -E "^### " "/etc/xray/config.json")
         menu
 	fi
 
-	clear
+	clear && printf '\033[3J'
 	echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
     echo -e "\\E[0;41;36m            Renew Sodosok            \E[0m"
     echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
@@ -151,7 +151,7 @@ NUMBER_OF_CLIENTS=$(grep -c -E "^### " "/etc/xray/config.json")
     exp4=`date -d "$exp3 days" +"%Y-%m-%d"`
     sed -i "/### $user/c\### $user $exp4" /etc/xray/config.json
     systemctl restart xray > /dev/null 2>&1
-    clear
+    clear && printf '\033[3J'
     echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
     echo " Sodosok Account Was Successfully Renewed"
     echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
@@ -166,7 +166,7 @@ NUMBER_OF_CLIENTS=$(grep -c -E "^### " "/etc/xray/config.json")
   fi
 }
 function delws() {
-clear
+clear && printf '\033[3J'
 NUMBER_OF_CLIENTS=$(grep -c -E "^#sswg " "/etc/xray/config.json")
 	if [[ ${NUMBER_OF_CLIENTS} == '0' ]]; then
 		echo ""
@@ -174,7 +174,7 @@ NUMBER_OF_CLIENTS=$(grep -c -E "^#sswg " "/etc/xray/config.json")
 		exit 1
 	fi
 
-	clear
+	clear && printf '\033[3J'
 	echo ""
 	echo " Select the existing client you want to remove"
 	echo " Press CTRL+C to return"
@@ -194,7 +194,7 @@ sed -i "/^#sswg $user $exp/,/^},{/d" /etc/xray/config.json
 sed -i "/^#ssw $user $exp/,/^},{/d" /etc/xray/config.json
 rm -f /etc/xray/vmess-$user-tls.json /etc/xray/vmess-$user-nontls.json
 systemctl restart xray.service
-clear
+clear && printf '\033[3J'
 echo ""
 echo "==============================="
 echo "  XRAYS/Sodosok Account Deleted  "
@@ -208,7 +208,7 @@ echo "Script Mod By NevermoreSSH"
     
     menu
 }
-clear
+clear && printf '\033[3J'
 echo -e "${BICyan} ┌─────────────────────────────────────────────────────┐${NC}"
 echo -e "       ${BIWhite}${UWhite}Sodosok${NC}"
 echo -e ""
@@ -222,11 +222,11 @@ echo ""
 read -p " Select menu : " opt
 echo -e ""
 case $opt in
-1) clear ; add-ssws ;;
-2) clear ; delws ;;
-3) clear ; renewws;;
-4) clear ; cekws ;;
-0) clear ; menu ;;
+1) clear && printf '\033[3J' ; add-ssws ;;
+2) clear && printf '\033[3J' ; delws ;;
+3) clear && printf '\033[3J' ; renewws;;
+4) clear && printf '\033[3J' ; cekws ;;
+0) clear && printf '\033[3J' ; menu ;;
 x) exit ;;
 *) echo -e "" ; echo "Press any key to back on menu" ; sleep 1 ; menu ;;
 esac

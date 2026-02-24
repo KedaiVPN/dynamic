@@ -10,7 +10,7 @@ B='\033[0;36m'
 G='\033[0;32m'
 NC='\e[0m'
 N='\e[0m'
-clear
+clear && printf '\033[3J'
 echo -e "\e[36m╒════════════════════════════════════════════╕\033[0m"
 echo -e " \E[0;47;30m                 DNS CHANGER                \E[0m"
 echo -e "\e[36m╘════════════════════════════════════════════╛\033[0m
@@ -35,7 +35,7 @@ read -p "Select From Options [ 1 - 5 ] :  " dns
 echo -e ""
 case $dns in
 1)
-clear
+clear && printf '\033[3J'
 echo -e "\033[1;37mTemporary DNS - Back To Default DNS After Rebooting VPS\033[0m"
 echo ""
 read -p "Please Insert DNS : " dns1
@@ -43,7 +43,7 @@ if [ -z $dns1 ]; then
 echo ""
 echo "Please Insert DNS !"
 sleep 1
-clear
+clear && printf '\033[3J'
 dns
 fi
 rm /etc/resolv.conf
@@ -56,18 +56,18 @@ echo -e "\e[032;1mDNS $dns1 sucessfully insert in VPS\e[0m"
 echo ""
 cat /etc/resolv.conf
 sleep 1
-clear
+clear && printf '\033[3J'
 dns
 ;;
 2)
-clear
+clear && printf '\033[3J'
 echo ""
 read -p "Please Insert DNS : " dns2
 if [ -z $dns2 ]; then
 echo ""
 echo "Please Insert DNS !"
 sleep 1
-clear
+clear && printf '\033[3J'
 dns
 fi
 rm /etc/resolv.conf
@@ -83,11 +83,11 @@ echo -e "\e[032;1mDNS $dns2 sucessfully insert in VPS\e[0m"
 echo ""
 cat /etc/resolvconf/resolv.conf.d/head
 sleep 1
-clear
+clear && printf '\033[3J'
 dns
 ;;
 3)
-clear
+clear && printf '\033[3J'
 echo ""
 read -p "Reset To Default DNS [Y/N]: " -e answer
 if [ "$answer" = 'y' ] || [ "$answer" = 'Y' ]; then
@@ -105,20 +105,20 @@ echo -e "[ ${G}INFO${NC} ] Operation Cancelled By User"
 sleep 1
 fi
 fi
-clear
+clear && printf '\033[3J'
 dns
 ;;
 4)
-clear
+clear && printf '\033[3J'
 apt install resolvconf
 ;;
 5)
-clear
+clear && printf '\033[3J'
 menu
 ;;
 *)
 echo "Please enter an correct number"
-clear
+clear && printf '\033[3J'
 dns
 ;;
 esac

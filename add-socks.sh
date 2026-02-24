@@ -62,9 +62,9 @@ export IP=$( curl -s https://ipinfo.io/ip/ )
 # // Exporting Network Interface
 export NETWORK_IFACE="$(ip route show to default | awk '{print $5}')"
 
-clear
+clear && printf '\033[3J'
 sspwd=$(cat /etc/xray/passwd)
-clear
+clear && printf '\033[3J'
 source /var/lib/scrz-prem/ipvps.conf
 if [[ "$IP" = "" ]]; then
 domain=$(cat /etc/xray/domain)
@@ -83,7 +83,7 @@ echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━�
 		CLIENT_EXISTS=$(grep -w $user /etc/xray/config.json | wc -l)
 
 		if [[ ${CLIENT_EXISTS} == '1' ]]; then
-clear
+clear && printf '\033[3J'
             echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
             echo -e "\\E[0;41;36m      Add Socks  Ws/Grpc Account      \E[0m"
             echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
@@ -336,7 +336,7 @@ cat > /home/vps/public_html/socksgrpc-$user.txt <<-END
 END
 systemctl restart xray > /dev/null 2>&1
 service cron restart > /dev/null 2>&1
-clear
+clear && printf '\033[3J'
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
 echo -e "\\E[0;41;36m        Socks WS/GRPC Account      \E[0m" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log

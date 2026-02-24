@@ -65,9 +65,9 @@ export NETWORK_IFACE="$(ip route show to default | awk '{print $5}')"
 
 # // Validate Result ( 1 )
 touch
-clear
+clear && printf '\033[3J'
 function deltrgo(){
-clear
+clear && printf '\033[3J'
 NUMBER_OF_CLIENTS=$(grep -c -E "^### " "/etc/trojan-go/akun.conf")
 	if [[ ${NUMBER_OF_CLIENTS} == '0' ]]; then
 		echo ""
@@ -95,7 +95,7 @@ sed -i "/^### $user $exp/d" /etc/trojan-go/akun.conf
 sed -i '/^,"'"$user"'"$/d' /etc/trojan-go/config.json
 systemctl restart trojan-go.service
 service cron restart
-clear
+clear && printf '\033[3J'
 echo ""
 echo "============================"
 echo "  TrojanGo Account Deleted  "
@@ -109,7 +109,7 @@ read -n 1 -s -r -p "Press any key to back on menu"
 menu
 }
 function cektrgo(){
-clear
+clear && printf '\033[3J'
 echo -n > /tmp/other.txt
 data=( `cat /etc/trojan-go/akun.conf | grep '^###' | cut -d ' ' -f 2`);
 echo "------------------------------------";
@@ -155,16 +155,16 @@ read -n 1 -s -r -p "Press any key to back on menu"
 menu
 }
 function renewtrgo(){
-clear
+clear && printf '\033[3J'
 NUMBER_OF_CLIENTS=$(grep -c -E "^### " "/etc/trojan-go/akun.conf")
 	if [[ ${NUMBER_OF_CLIENTS} == '0' ]]; then
-		clear
+		clear && printf '\033[3J'
 		echo ""
 		echo "You have no existing clients!"
 		exit 1
 	fi
 
-	clear
+	clear && printf '\033[3J'
 	echo ""
 	echo "Select the existing client you want to renew"
 	echo " Press CTRL+C to return"
@@ -187,7 +187,7 @@ exp2=$(( (d1 - d2) / 86400 ))
 exp3=$(($exp2 + $masaaktif))
 exp4=`date -d "$exp3 days" +"%Y-%m-%d"`
 sed -i "s/### $user $exp/### $user $exp4/g" /etc/trojan-go/akun.conf
-clear
+clear && printf '\033[3J'
 echo ""
 echo "============================"
 echo "  TrojanGo Account Renewed  "
@@ -200,7 +200,7 @@ read -n 1 -s -r -p "Press any key to back on menu"
 
 menu
 }
-clear 
+clear && printf '\033[3J'
 echo -e "\e[33mттттттттттттттттттттттттттттттттттт\033[0m"
 echo -e "\E[0;100;33m      тЂ TROJAN Go MENU тЂ          \E[0m"
 echo -e "\e[33mттттттттттттттттттттттттттттттттттт\033[0m"
@@ -219,12 +219,12 @@ echo -e ""
 read -p " Select menu : " opt
 echo -e ""
 case $opt in
-1) clear ; add-trgo ;;
-#2) clear ; trialtrojango ;;
-2) clear ; renewtrgo ;;
-3) clear ; deltrgo ;;
-4) clear ; cektrgo ;;
-0) clear ; menu ;;
+1) clear && printf '\033[3J' ; add-trgo ;;
+#2) clear && printf '\033[3J' ; trialtrojango ;;
+2) clear && printf '\033[3J' ; renewtrgo ;;
+3) clear && printf '\033[3J' ; deltrgo ;;
+4) clear && printf '\033[3J' ; cektrgo ;;
+0) clear && printf '\033[3J' ; menu ;;
 x) exit ;;
 *) echo -e "" ; echo "Press any key to back on menu" ; sleep 1 ; menu ;;
 esac

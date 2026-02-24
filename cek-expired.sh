@@ -12,7 +12,7 @@ NC='\033[0m'
 TRASH_DB="/etc/expired-users-trash.db"
 EXP_DB="/etc/expired-users.db"
 
-clear
+clear && printf '\033[3J'
 echo -e "${BLUE}=========================================================${NC}"
 echo -e "${YELLOW}      DAFTAR USER SUDAH EXPIRED (TRASH / BISA DI-RESTORE)      ${NC}"
 echo -e "${BLUE}=========================================================${NC}"

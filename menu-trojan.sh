@@ -65,10 +65,10 @@ export IP=$( curl -s https://ipinfo.io/ip/ )
 export NETWORK_IFACE="$(ip route show to default | awk '{print $5}')"
 
 
-clear
+clear && printf '\033[3J'
 
 function cekws() {
-clear
+clear && printf '\033[3J'
 echo -n > /tmp/other.txt
 data=( `cat /etc/xray/config.json | grep '#tr' | cut -d ' ' -f 2 | sort | uniq`);
 echo "-------------------------------";
@@ -111,7 +111,7 @@ read -n 1 -s -r -p "Press any key to back on menu"
 menu
 }
 function detailws() {
-clear
+clear && printf '\033[3J'
 NUMBER_OF_CLIENTS=$(grep -c -E "^#trg " "/etc/xray/config.json")
 	if [[ ${NUMBER_OF_CLIENTS} == '0' ]]; then
 		echo ""
@@ -121,7 +121,7 @@ NUMBER_OF_CLIENTS=$(grep -c -E "^#trg " "/etc/xray/config.json")
 		menu
 	fi
 
-clear
+clear && printf '\033[3J'
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 echo -e "\\E[0;41;36m       Detail Trojan Account      \E[0m"
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
@@ -133,7 +133,7 @@ if [ -z "$user" ]; then
 menu
 fi
 if [ -f "/home/vps/public_html/trojan-$user.txt" ]; then
-clear
+clear && printf '\033[3J'
 cat "/home/vps/public_html/trojan-$user.txt"
 else
 echo ""
@@ -144,10 +144,10 @@ read -n 1 -s -r -p "Press any key to back on menu"
 menu
 }
 function renewws(){
-clear
+clear && printf '\033[3J'
 NUMBER_OF_CLIENTS=$(grep -c -E "^#trg " "/etc/xray/config.json")
 	if [[ ${NUMBER_OF_CLIENTS} == '0' ]]; then
-		clear
+		clear && printf '\033[3J'
         echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
         echo -e "\\E[0;41;36m            Renew Trojan             \E[0m"
         echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
@@ -160,7 +160,7 @@ NUMBER_OF_CLIENTS=$(grep -c -E "^#trg " "/etc/xray/config.json")
         menu
 	fi
 
-	clear
+	clear && printf '\033[3J'
 	echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
     echo -e "\\E[0;41;36m            Renew Trojan             \E[0m"
     echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
@@ -191,7 +191,7 @@ NUMBER_OF_CLIENTS=$(grep -c -E "^#trg " "/etc/xray/config.json")
     awk -v user="$user" -v exp="$exp4" 'BEGIN{OFS=" "} $1==user{$3=exp} {print}' "$limit_file" > "${limit_file}.tmp" && mv "${limit_file}.tmp" "$limit_file"
     awk -v user="$user" -v exp="$exp4" 'BEGIN{OFS=" "} $1==user{$3=exp} {print}' "$lock_file" > "${lock_file}.tmp" && mv "${lock_file}.tmp" "$lock_file"
     systemctl restart xray > /dev/null 2>&1
-    clear
+    clear && printf '\033[3J'
     echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
     echo " Trojan Account Was Successfully Renewed"
     echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
@@ -206,7 +206,7 @@ NUMBER_OF_CLIENTS=$(grep -c -E "^#trg " "/etc/xray/config.json")
   fi
 }
 function delws() {
-clear
+clear && printf '\033[3J'
 NUMBER_OF_CLIENTS=$(grep -c -E "^#trg " "/etc/xray/config.json")
 	if [[ ${NUMBER_OF_CLIENTS} == '0' ]]; then
 		echo ""
@@ -214,7 +214,7 @@ NUMBER_OF_CLIENTS=$(grep -c -E "^#trg " "/etc/xray/config.json")
 		exit 1
 	fi
 
-	clear
+	clear && printf '\033[3J'
 	echo ""
 	echo " Select the existing client you want to remove"
 	echo " Press CTRL+C to return"
@@ -240,7 +240,7 @@ mkdir -p "$limit_dir"
 touch "$limit_file" "$lock_file"
 sed -i "/^$user /d" "$limit_file" "$lock_file"
 systemctl restart xray.service
-clear
+clear && printf '\033[3J'
 echo ""
 echo "==============================="
 echo "  XRAYS/Trojan Account Deleted  "
@@ -255,7 +255,7 @@ echo "Script Mod By NevermoreSSH"
     menu
 }
 function unlockws() {
-clear
+clear && printf '\033[3J'
 limit_dir="/etc/xray/limit"
 lock_file="${limit_dir}/lock-trojan"
 limit_file="${limit_dir}/trojan"
@@ -307,7 +307,7 @@ sed -i '/#trojanws$/a\#tr '"$user $exp"'\
 sed -i '/#trojangrpc$/a\#trg '"$user $exp"'\
 },{"password": "'""$uuid""'","email": "'""$user""'"' /etc/xray/config.json
 systemctl restart xray >/dev/null 2>&1
-clear
+clear && printf '\033[3J'
 echo ""
 echo "==============================="
 echo "  XRAYS/Trojan Account Unlocked"
@@ -322,7 +322,7 @@ menu
 }
 
 function trialtrojan(){
-    clear
+    clear && printf '\033[3J'
     echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
     echo -e "\E[0;41;36m               TRIAL TROJAN               \E[0m"
     echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
@@ -388,7 +388,7 @@ function trialtrojan(){
     systemctl restart xray > /dev/null 2>&1
 
     # Display
-    clear
+    clear && printf '\033[3J'
     echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
     echo -e "\E[0;41;36m       TRIAL TROJAN ACCOUNT        \E[0m"
     echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
@@ -410,7 +410,7 @@ function trialtrojan(){
     menu
 }
 
-clear
+clear && printf '\033[3J'
 echo -e "${BICyan} ┌─────────────────────────────────────────────────────┐${NC}"
 echo -e "       ${BIWhite}${UWhite}Trojan ${NC}"
 echo -e ""
@@ -427,14 +427,14 @@ echo ""
 read -p " Select menu : " opt
 echo -e ""
 case $opt in
-1) clear ; add-tr ;;
-2) clear ; delws ;;
-3) clear ; renewws;;
-4) clear ; cekws ;;
-5) clear ; unlockws ;;
-6) clear ; detailws ;;
-7) clear ; trialtrojan ;;
-0) clear ; menu ;;
+1) clear && printf '\033[3J' ; add-tr ;;
+2) clear && printf '\033[3J' ; delws ;;
+3) clear && printf '\033[3J' ; renewws;;
+4) clear && printf '\033[3J' ; cekws ;;
+5) clear && printf '\033[3J' ; unlockws ;;
+6) clear && printf '\033[3J' ; detailws ;;
+7) clear && printf '\033[3J' ; trialtrojan ;;
+0) clear && printf '\033[3J' ; menu ;;
 x) exit ;;
 *) echo -e "" ; echo "Press any key to back on menu" ; sleep 1 ; menu ;;
 esac

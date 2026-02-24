@@ -69,7 +69,7 @@ green='\e[0;32m'
 NC='\e[0m'
 MYIP=$(wget -qO- icanhazip.com);
 echo "Checking VPS"
-clear
+clear && printf '\033[3J'
 if [ ! -e /usr/bin/reboot ]; then
 echo '#!/bin/bash' > /usr/bin/reboot
 echo 'tanggal=$(date +"%m-%d-%Y")' >> /usr/bin/reboot

@@ -67,7 +67,7 @@ export NETWORK_IFACE="$(ip route show to default | awk '{print $5}')"
 # // Validate Result ( 1 )
 touch
 
-clear
+clear && printf '\033[3J'
 _APISERVER=127.0.0.1:10085
 _Xray="$(command -v xray)"
 if [[ -z "$_Xray" ]]; then

@@ -6,7 +6,7 @@
 # (C) Copyright 2022
 # =========================================
 
-clear
+clear && printf '\033[3J'
 BIBlack='\033[1;90m'      # Black
 BIRed='\033[1;91m'        # Red
 BIGreen='\033[1;92m'      # Green
@@ -128,7 +128,7 @@ cd
 #systemctl start ws-dropbear >/dev/null 2>&1
 #systemctl restart ws-dropbear >/dev/null 2>&1
 
-clear 
+clear && printf '\033[3J'
 
 # Getting websocket ssl stunnel
 wget -q -O /usr/local/bin/ws-stunnel "https://raw.githubusercontent.com/NevermoreSSH/Blueblue/main/ws-stunnel"
@@ -159,7 +159,7 @@ systemctl enable ws-stunnel >/dev/null 2>&1
 systemctl start ws-stunnel >/dev/null 2>&1
 systemctl restart ws-stunnel >/dev/null 2>&1
 
-clear
+clear && printf '\033[3J'
 
 cat > /etc/systemd/system/rc-local.service <<-END
 [Unit]
@@ -460,7 +460,7 @@ echo -e "[ ${green}INFO$NC ] Install successfully..."
 # Instal DDOS Flate
 rm -fr /usr/local/ddos
 mkdir -p /usr/local/ddos >/dev/null 2>&1
-#clear
+#clear && printf '\033[3J'
 sleep 1
 echo -e "[ ${green}INFO$NC ] Install DOS-Deflate"
 sleep 1
@@ -554,7 +554,7 @@ yellow() { echo -e "\\033[33;1m${*}\\033[0m"; }
 sleep 1
 yellow "SSH & OVPN install successfully"
 sleep 5
-clear
+clear && printf '\033[3J'
 rm -fr /root/key.pem >/dev/null 2>&1
 rm -fr /root/cert.pem >/dev/null 2>&1
 rm -fr /root/ssh-vpn.sh >/dev/null 2>&1�
