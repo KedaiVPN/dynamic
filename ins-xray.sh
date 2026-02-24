@@ -53,18 +53,41 @@ export NETWORK_IFACE="$(ip route show to default | awk '{print $5}')"
 
 
 clear && printf '\033[3J'
-source /var/lib/scrz-prem/ipvps.conf
-if [[ "$IP" = "" ]]; then
-domain=$(cat /etc/xray/domain)
-else
-domain=$IP
+# source /var/lib/scrz-prem/ipvps.conf # This is usually missing on fresh installs
+
+# Fix Domain Detection Logic
+mkdir -p /etc/xray
+domain=""
+
+# Try reading from file first
+if [[ -f /etc/xray/domain ]]; then
+    domain=$(cat /etc/xray/domain)
+fi
+
+# Try reading from ipvps.conf if still empty
+if [[ -z "$domain" ]] && [[ -f /var/lib/scrz-prem/ipvps.conf ]]; then
+    source /var/lib/scrz-prem/ipvps.conf
+    domain=$domain # Usually exported in conf
+fi
+
+# If still empty, ask user
+if [[ -z "$domain" ]]; then
+    echo -e "${EROR} Domain Not Found!"
+    read -p "Please Enter Your Domain: " domain
+    echo "$domain" > /etc/xray/domain
+    echo -e "${OKEY} Domain Set To: $domain"
+fi
+
+if [[ -z "$domain" ]]; then
+    echo -e "${EROR} Domain Is Required! Exiting..."
+    exit 1
 fi
 
 echo -e "[ ${GREEN}INFO${NC} ] Checking... "
 sleep 1
 echo -e "[ ${GREEN}INFO$NC ] Setting ntpdate"
 sleep 1
-domain=$(cat /root/domain)
+# domain=$(cat /root/domain) # Use the verified $domain variable instead
 apt install iptables iptables-persistent -y
 apt install curl socat xz-utils wget apt-transport-https gnupg gnupg2 gnupg1 dnsutils lsb-release -y
 apt install socat cron bash-completion ntpdate -y
@@ -242,19 +265,31 @@ echo -e "[ ${GREEN}INFO${NC} ] Starting renew cert... "
 sleep 2
 echo -e "${OKEY} Starting Generating Certificate"
 ##Generate acme certificate
+# Stop services first to free port 80/443
+systemctl stop nginx
+systemctl stop xray
+
+mkdir -p /root/.acme.sh
 curl https://get.acme.sh | sh
 alias acme.sh=~/.acme.sh/acme.sh
 /root/.acme.sh/acme.sh --upgrade --auto-upgrade
 /root/.acme.sh/acme.sh --set-default-ca --server letsencrypt
 #/root/.acme.sh/acme.sh --issue -d "${domain}" --standalone --keylength ec-2048
-/root/.acme.sh/acme.sh --issue -d "${domain}" --standalone --keylength ec-256
-/root/.acme.sh/acme.sh --install-cert -d "${domain}" --ecc \
---fullchain-file /etc/xray/xray.crt \
---key-file /etc/xray/xray.key
-chown -R nobody:nogroup /etc/xray
-chmod 644 /etc/xray/xray.crt
-chmod 644 /etc/xray/xray.key
-echo -e "${OKEY} Your Domain : $domain"
+if [[ -n "$domain" ]]; then
+    /root/.acme.sh/acme.sh --issue -d "${domain}" --standalone --keylength ec-256 --force
+    /root/.acme.sh/acme.sh --install-cert -d "${domain}" --ecc \
+    --fullchain-file /etc/xray/xray.crt \
+    --key-file /etc/xray/xray.key --force
+
+    chown -R nobody:nogroup /etc/xray
+    chmod 644 /etc/xray/xray.crt
+    chmod 644 /etc/xray/xray.key
+    echo -e "${OKEY} Your Domain : $domain"
+else
+    echo -e "${EROR} Domain Not Found! Certificate generation skipped."
+    # We exit here because Xray won't start without certs
+    exit 1
+fi
 
 # nginx renew ssl
 echo -n '#!/bin/bash
