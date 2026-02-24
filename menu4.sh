@@ -88,37 +88,37 @@ stat=-f7
 fi
 ssh=$(service ssh status | grep active | cut -d ' ' $stat)
 if [ "$ssh" = "active" ]; then
-ressh="${green}ON${NC}"
+ressh="${BIGreen}ON${NC}"
 else
 ressh="${red}OFF${NC}"
 fi
 sshstunel=$(service stunnel5 status | grep active | cut -d ' ' $stat)
 if [ "$sshstunel" = "active" ]; then
-resst="${green}ON${NC}"
+resst="${BIGreen}ON${NC}"
 else
 resst="${red}OFF${NC}"
 fi
 sshws=$(service ws-stunnel status | grep active | cut -d ' ' $stat)
 if [ "$sshws" = "active" ]; then
-ressshws="${green}ON${NC}"
+ressshws="${BIGreen}ON${NC}"
 else
 ressshws="${red}OFF${NC}"
 fi
 ngx=$(service nginx status | grep active | cut -d ' ' $stat)
 if [ "$ngx" = "active" ]; then
-resngx="${green}ON${NC}"
+resngx="${BIGreen}ON${NC}"
 else
 resngx="${red}OFF${NC}"
 fi
 dbr=$(service dropbear status | grep active | cut -d ' ' $stat)
 if [ "$dbr" = "active" ]; then
-resdbr="${green}ON${NC}"
+resdbr="${BIGreen}ON${NC}"
 else
 resdbr="${red}OFF${NC}"
 fi
 v2r=$(service xray status | grep active | cut -d ' ' $stat)
 if [ "$v2r" = "active" ]; then
-resv2r="${green}ON${NC}"
+resv2r="${BIGreen}ON${NC}"
 else
 resv2r="${red}OFF${NC}"
 fi
@@ -285,7 +285,7 @@ echo -e "${BICyan} │  ${BICyan}Daily Bandwidth :  ${BIWhite}$daily_usage ${NC}
 echo -e "${BICyan} │  ${BICyan}Total Bandwidth :  ${BIWhite}$monthly_usage ${NC}"
 echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
 echo -e "      ${BICyan}SSH : $ressh ${BICyan} NGINX : $resngx ${BICyan}  XRAY : $resv2r ${BICyan} TROJAN : $resv2r${NC}"
-echo -e "      ${BICyan}DROPBEAR : $resdbr ${BICyan} SSH-WS : $ressshws ${BICyan} Stunnel : $sshstunel${NC}"
+echo -e "      ${BICyan}DROPBEAR : $resdbr ${BICyan} SSH-WS : $ressshws ${BICyan} Stunnel : $resst${NC}"
 echo -e "${BICyan} ┌────────────────────────────────────────────────────────────┐${NC}"
 echo -e "     ${BICyan}[${BIWhite}01${BICyan}] SSHWS       ${WB}[${GB}${ssh}${WB}]         ${BICyan}[${BIWhite}06${BICyan}] RESTORE EXPIRED USER${NC}"
 echo -e "     ${BICyan}[${BIWhite}02${BICyan}] VMESS       ${WB}[${GB}${vmess}${WB}]         ${BICyan}[${BIWhite}07${BICyan}] USER BANDWIDTH${NC}"
