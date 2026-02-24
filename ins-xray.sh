@@ -157,7 +157,42 @@ apt install -y nginx
 cd
 rm -fr /etc/nginx/sites-enabled/default
 rm -fr /etc/nginx/sites-available/default
-wget -q -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/NevermoreSSH/Blueblue/main/nginx.conf" 
+# wget -q -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/NevermoreSSH/Blueblue/main/nginx.conf"
+# Embed nginx.conf with Proxy Protocol support for Xray frontend
+rm -fr /etc/nginx/nginx.conf
+cat >/etc/nginx/nginx.conf <<EOF
+user www-data;
+worker_processes auto;
+pid /var/run/nginx.pid;
+include /etc/nginx/modules-enabled/*.conf;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log;
+    gzip on;
+
+    # Real IP from Xray (Proxy Protocol)
+    set_real_ip_from 127.0.0.1;
+    real_ip_header proxy_protocol;
+
+    include /etc/nginx/conf.d/*.conf;
+    include /etc/nginx/sites-enabled/*;
+}
+EOF
+
 #mkdir -p /home/vps/public_html
 wget -q -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/NevermoreSSH/Blueblue/main/vps.conf"
 
@@ -198,8 +233,10 @@ echo -e "${OKEY} Your Domain : $domain"
 # nginx renew ssl
 echo -n '#!/bin/bash
 /etc/init.d/nginx stop
+/etc/init.d/xray stop
 "/root/.acme.sh"/acme.sh --cron --home "/root/.acme.sh" &> /root/renew_ssl.log
 /etc/init.d/nginx start
+/etc/init.d/xray start
 ' > /usr/local/bin/ssl_renew.sh
 chmod +x /usr/local/bin/ssl_renew.sh
 if ! grep -q 'ssl_renew.sh' /var/spool/cron/crontabs/root;then (crontab -l;echo "15 03 */3 * * /usr/local/bin/ssl_renew.sh") | crontab;fi
@@ -229,13 +266,16 @@ cat >/etc/nginx/conf.d/xray.conf <<EOF
     server {
              listen 80;
              listen [::]:80;
-             listen 443 ssl http2 reuseport;
-             listen [::]:443 http2 reuseport;	
+             listen 81 proxy_protocol;
+             listen [::]:81 proxy_protocol;
              server_name 127.0.0.1 localhost;
-             ssl_certificate /etc/xray/xray.crt;
-             ssl_certificate_key /etc/xray/xray.key;
-             ssl_ciphers EECDH+CHACHA20:EECDH+CHACHA20-draft:EECDH+ECDSA+AES128:EECDH+aRSA+AES128:RSA+AES128:EECDH+ECDSA+AES256:EECDH+aRSA+AES256:RSA+AES256:EECDH+ECDSA+3DES:EECDH+aRSA+3DES:RSA+3DES:!MD5;
-             ssl_protocols TLSv1.1 TLSv1.2 TLSv1.3;
+
+             # SSL Handled by Xray on 443, falling back to 81
+             # ssl_certificate /etc/xray/xray.crt;
+             # ssl_certificate_key /etc/xray/xray.key;
+             # ssl_ciphers ...
+             # ssl_protocols ...
+
              root /home/vps/public_html;
         }
 EOF
@@ -376,6 +416,46 @@ cat <<EOF> /etc/xray/config.json
     "loglevel": "warning"
   },
   "inbounds": [
+      {
+      "port": 443,
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+             "id": "${uuid}"
+          }
+        ],
+        "decryption": "none",
+        "fallbacks": [
+            {
+                "dest": 81,
+                "xver": 1,
+                "alpn": "h2"
+            },
+            {
+                "dest": 81,
+                "xver": 1,
+                "alpn": "http/1.1"
+            },
+            {
+                "dest": 109,
+                "xver": 0
+            }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "tls",
+        "tlsSettings": {
+          "certificates": [
+            {
+              "certificateFile": "/etc/xray/xray.crt",
+              "keyFile": "/etc/xray/xray.key"
+            }
+          ]
+        }
+      }
+    },
       {
       "listen": "127.0.0.1",
       "port": 10085,
