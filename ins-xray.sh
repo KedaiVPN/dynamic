@@ -250,10 +250,9 @@ http {
     set_real_ip_from 185.11.124.0/22;
     set_real_ip_from 192.230.64.0/18;
 
-    # Critical: Xray (Frontend) -> Nginx (Backend 81) uses Proxy Protocol
-    # We trust localhost (Xray) to send correct IP info via Proxy Protocol
-    set_real_ip_from 127.0.0.1;
-    real_ip_header proxy_protocol;
+    # REMOVED PROXY PROTOCOL from Real IP - Fallback is now standard HTTP
+    # set_real_ip_from 127.0.0.1;
+    # real_ip_header proxy_protocol;
 
     include /etc/nginx/conf.d/*.conf;
     include /etc/nginx/sites-enabled/*;
@@ -386,9 +385,9 @@ cat >/etc/nginx/conf.d/xray.conf <<EOF
     server {
              listen 80;
              listen [::]:80;
-             # Use Proxy Protocol to receive IP from Xray
-             listen 81 proxy_protocol http2;
-             listen [::]:81 proxy_protocol http2;
+             # REMOVED Proxy Protocol for better compatibility
+             listen 81 http2;
+             listen [::]:81 http2;
              server_name 127.0.0.1 localhost;
 
              # Optimization Headers
@@ -548,17 +547,17 @@ cat <<EOF> /etc/xray/config.json
         "fallbacks": [
             {
                 "dest": 81,
-                "xver": 1,
+                "xver": 0,
                 "alpn": "h2"
             },
             {
                 "dest": 81,
-                "xver": 1,
+                "xver": 0,
                 "alpn": "http/1.1"
             },
             {
                 "dest": 81,
-                "xver": 1,
+                "xver": 0,
                 "path": "/"
             },
             {
