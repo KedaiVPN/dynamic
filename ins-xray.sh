@@ -182,32 +182,72 @@ rm -fr /etc/nginx/sites-enabled/default
 rm -fr /etc/nginx/sites-available/default
 # wget -q -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/NevermoreSSH/Blueblue/main/nginx.conf"
 # Embed nginx.conf with Proxy Protocol support for Xray frontend
+# Merging user optimizations
 rm -fr /etc/nginx/nginx.conf
 cat >/etc/nginx/nginx.conf <<EOF
 user www-data;
 worker_processes auto;
+worker_rlimit_nofile 65536;
 pid /var/run/nginx.pid;
 include /etc/nginx/modules-enabled/*.conf;
 
 events {
-    worker_connections 1024;
+    multi_accept on;
+    worker_connections 2048;
 }
 
 http {
+    gzip on;
+    gzip_vary on;
+    gzip_comp_level 5;
+    gzip_types text/plain application/x-javascript text/xml text/css;
+    autoindex on;
     sendfile on;
     tcp_nopush on;
     tcp_nodelay on;
     keepalive_timeout 65;
     types_hash_max_size 2048;
+    server_tokens off;
     include /etc/nginx/mime.types;
     default_type application/octet-stream;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_prefer_server_ciphers on;
+
+    # User Optimization
+    client_max_body_size 32M;
+    client_header_buffer_size 8m;
+    large_client_header_buffers 8 8m;
+    fastcgi_buffer_size 8m;
+    fastcgi_buffers 8 8m;
+    fastcgi_read_timeout 600;
+
     access_log /var/log/nginx/access.log;
     error_log /var/log/nginx/error.log;
-    gzip on;
 
-    # Real IP from Xray (Proxy Protocol)
+    # Real IP Config (Cloudflare & Incapsula)
+    # CloudFlare IPv4
+    set_real_ip_from 199.27.128.0/21;
+    set_real_ip_from 173.245.48.0/20;
+    set_real_ip_from 103.21.244.0/22;
+    set_real_ip_from 103.22.200.0/22;
+    set_real_ip_from 103.31.4.0/22;
+    set_real_ip_from 141.101.64.0/18;
+    set_real_ip_from 108.162.192.0/18;
+    set_real_ip_from 190.93.240.0/20;
+    set_real_ip_from 188.114.96.0/20;
+    set_real_ip_from 197.234.240.0/22;
+    set_real_ip_from 198.41.128.0/17;
+    set_real_ip_from 162.158.0.0/15;
+    set_real_ip_from 104.16.0.0/12;
+    # Incapsula
+    set_real_ip_from 199.83.128.0/21;
+    set_real_ip_from 198.143.32.0/19;
+    set_real_ip_from 149.126.72.0/21;
+    set_real_ip_from 103.28.248.0/22;
+    set_real_ip_from 45.64.64.0/22;
+    set_real_ip_from 185.11.124.0/22;
+    set_real_ip_from 192.230.64.0/18;
+
+    # Critical: Xray (Frontend) -> Nginx (Backend 81) uses Proxy Protocol
+    # We trust localhost (Xray) to send correct IP info via Proxy Protocol
     set_real_ip_from 127.0.0.1;
     real_ip_header proxy_protocol;
 
@@ -321,15 +361,13 @@ cat >/etc/nginx/conf.d/xray.conf <<EOF
     server {
              listen 80;
              listen [::]:80;
+             # Use Proxy Protocol to receive IP from Xray
              listen 81 proxy_protocol;
              listen [::]:81 proxy_protocol;
              server_name 127.0.0.1 localhost;
 
-             # SSL Handled by Xray on 443, falling back to 81
-             # ssl_certificate /etc/xray/xray.crt;
-             # ssl_certificate_key /etc/xray/xray.key;
-             # ssl_ciphers ...
-             # ssl_protocols ...
+             # Optimization Headers
+             add_header X-XSS-Protection "1; mode=block";
 
              root /home/vps/public_html;
         }
