@@ -109,7 +109,7 @@ rm -fr /home/vps/public_html
 mkdir -p /var/log/xray
 #mkdir -p /var/log/trojan
 mkdir -p /home/vps/public_html
-chown www-data.www-data /var/log/xray
+# chown www-data.www-data /var/log/xray # Moved to after touch
 chown www-data.www-data /etc/xray
 chmod +x /var/log/xray
 #chmod +x /var/log/trojan
@@ -129,6 +129,10 @@ mkdir -p /etc/xray/limit
 touch /etc/xray/limit/vmess /etc/xray/limit/vless /etc/xray/limit/trojan
 touch /etc/xray/limit/lock-vmess /etc/xray/limit/lock-vless /etc/xray/limit/lock-trojan
 touch /etc/xray/limit/usage-vmess /etc/xray/limit/usage-vless /etc/xray/limit/usage-trojan
+
+# FIX PERMISSIONS: Ensure www-data owns all logs we just created
+chown -R www-data:www-data /var/log/xray
+chmod -R 755 /var/log/xray
 
 # Install Wondershaper
 cd /root/
