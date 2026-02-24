@@ -260,7 +260,8 @@ http {
 EOF
 
 #mkdir -p /home/vps/public_html
-wget -q -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/NevermoreSSH/Blueblue/main/vps.conf"
+#wget -q -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/NevermoreSSH/Blueblue/main/vps.conf"
+rm -f /etc/nginx/conf.d/vps.conf
 
 # Install Xray #
 #==========#
@@ -373,12 +374,14 @@ sed -i 's/Vless TLS         : .*/Vless TLS         : 443/g' /root/log-install.tx
 sed -i 's/Vless None TLS    : .*/Vless None TLS    : 80/g' /root/log-install.txt
 sed -i 's/Trojan .*         : .*/Trojan WS         : 443/g' /root/log-install.txt
 
-# nginx xray.conf - Using User's Structure but listening on 81 (Backend)
+# nginx xray.conf - Using User's Structure but listening on 81 (Backend) and 80 (Frontend non-TLS)
 rm -fr /etc/nginx/conf.d/xray.conf
 cat >/etc/nginx/conf.d/xray.conf <<EOF
 server {
     listen 81 http2;
     listen [::]:81 http2;
+    listen 80;
+    listen [::]:80;
     server_name 127.0.0.1 localhost $domain;
     
     # User Optimization
@@ -393,6 +396,18 @@ server {
     add_header X-XSS-Protection "1; mode=block";
 
     root /home/vps/public_html;
+
+    location / {
+        index  index.html index.htm index.php;
+        try_files \$uri \$uri/ /index.php?\$args;
+    }
+
+    location ~ \.php$ {
+        include /etc/nginx/fastcgi_params;
+        fastcgi_pass  127.0.0.1:9000;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+    }
 
     location ~ /vless {
         if (\$http_upgrade != "Websocket") {
