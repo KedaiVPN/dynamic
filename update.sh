@@ -33,7 +33,7 @@ wget -q -O /usr/bin/usernew "${REPO}/usernew.sh" && chmod +x /usr/bin/usernew
 #wget -q -O /usr/bin/xp "${REPO}/xp.sh" && chmod +x /usr/bin/xp
 #wget -q -O /usr/bin/cek-expired "${REPO}/cek-expired.sh" && chmod +x /usr/bin/cek-expired
 #wget -q -O /usr/bin/menu "${REPO}/menu4.sh" && chmod +x /usr/bin/menu
-#wget -q -O /usr/bin/menu-ssh "${REPO}/menu-ssh.sh" && chmod +x /usr/bin/menu-ssh
+wget -q -O /usr/bin/menu-ssh "${REPO}/menu-ssh.sh" && chmod +x /usr/bin/menu-ssh
 
 # Download setup.sh terbaru
 #wget -q -O /usr/bin/setup.sh "${REPO}/setup.sh" && chmod +x /usr/bin/setup.sh
@@ -53,7 +53,7 @@ files_to_fix=(
     #"/usr/bin/xp"
     #"/usr/bin/cek-expired"
     #"/usr/bin/menu"
-    #"/usr/bin/menu-ssh"
+    "/usr/bin/menu-ssh"
     #"/usr/bin/setup.sh"
 )
 
