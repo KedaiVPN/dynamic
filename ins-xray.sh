@@ -100,7 +100,7 @@ systemctl enable chrony && systemctl restart chrony
 timedatectl set-timezone Asia/Jakarta
 #chronyc sourcestats -v
 #chronyc tracking -v
-apt install curl pwgen openssl netcat cron unzip haproxy -y
+apt install curl pwgen openssl netcat cron unzip haproxy python2 -y
 
 # Make Folder & Log XRay & Log Trojan
 rm -fr /var/log/xray
@@ -436,6 +436,58 @@ if [ -f /etc/default/dropbear ]; then
 
     # Restart Dropbear
     /etc/init.d/dropbear restart
+fi
+
+# Ensure ws-stunnel is running on port 10015
+if [ -f /usr/local/bin/ws-stunnel ]; then
+    cat > /etc/systemd/system/ws-stunnel.service << END
+[Unit]
+Description=SSH Websocket Tunnel
+Documentation=https://github.com/KedaiVPN
+After=network.target nss-lookup.target
+
+[Service]
+Type=simple
+User=root
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
+NoNewPrivileges=true
+ExecStart=/usr/bin/python2 -O /usr/local/bin/ws-stunnel 10015
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+END
+
+    systemctl daemon-reload
+    systemctl enable ws-stunnel
+    systemctl restart ws-stunnel
+else
+    # Try to download if missing (fallback)
+    wget -q -O /usr/local/bin/ws-stunnel "https://raw.githubusercontent.com/NevermoreSSH/Blueblue/main/ws-stunnel"
+    chmod +x /usr/local/bin/ws-stunnel
+
+    cat > /etc/systemd/system/ws-stunnel.service << END
+[Unit]
+Description=SSH Websocket Tunnel
+Documentation=https://github.com/KedaiVPN
+After=network.target nss-lookup.target
+
+[Service]
+Type=simple
+User=root
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
+NoNewPrivileges=true
+ExecStart=/usr/bin/python2 -O /usr/local/bin/ws-stunnel 10015
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+END
+    systemctl daemon-reload
+    systemctl enable ws-stunnel
+    systemctl restart ws-stunnel
 fi
 
 # nginx renew ssl
