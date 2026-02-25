@@ -599,7 +599,6 @@ server {
     }
 }
 EOF
-
 #pw sodosok
 openssl rand -base64 16 > /etc/xray/passwd
 bijikk=$(openssl rand -base64 16 )
