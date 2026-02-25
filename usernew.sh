@@ -179,6 +179,7 @@ echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━�
 echo -e "UDP:" | tee -a /etc/log-create-user.log
 echo -e "$domen:1-65535@$Login:$Pass" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
+echo -e "          limit ip: ${limitlogin}device" | tee -a /etc/log-create-user.log
 echo -e "       Expired On : $expe2" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
 
@@ -206,6 +207,7 @@ echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━�
 echo -e "UDP:" | tee -a /etc/log-create-user.log
 echo -e "$domen:1-65535@$Login:$Pass" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
+echo -e "          limit ip: ${limitlogin}device" | tee -a /etc/log-create-user.log
 echo -e "       Expired On : $expe2" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
 fi
