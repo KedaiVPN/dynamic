@@ -100,7 +100,7 @@ systemctl enable chrony && systemctl restart chrony
 timedatectl set-timezone Asia/Jakarta
 #chronyc sourcestats -v
 #chronyc tracking -v
-apt install curl pwgen openssl netcat cron unzip -y
+apt install curl pwgen openssl netcat cron unzip haproxy -y
 
 # Make Folder & Log XRay & Log Trojan
 rm -fr /var/log/xray
@@ -179,6 +179,74 @@ install_ssl(){
     fi
 }
 
+# Install HAProxy Config
+rm -fr /etc/haproxy/haproxy.cfg
+cat >/etc/haproxy/haproxy.cfg <<EOF
+global
+    log /dev/log    local0
+    log /dev/log    local1 notice
+    chroot /var/lib/haproxy
+    stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
+    stats timeout 30s
+    user haproxy
+    group haproxy
+    daemon
+
+defaults
+    log     global
+    mode    http
+    option  httplog
+    option  dontlognull
+    timeout connect 5000
+    timeout client  50000
+    timeout server  50000
+    errorfile 400 /etc/haproxy/errors/400.http
+    errorfile 403 /etc/haproxy/errors/403.http
+    errorfile 408 /etc/haproxy/errors/408.http
+    errorfile 500 /etc/haproxy/errors/500.http
+    errorfile 502 /etc/haproxy/errors/502.http
+    errorfile 503 /etc/haproxy/errors/503.http
+    errorfile 504 /etc/haproxy/errors/504.http
+
+frontend http_frontend
+    bind *:80
+    mode http
+
+    # Check for WebSocket upgrade header
+    acl is_websocket hdr(Upgrade) -i websocket
+    use_backend bk_ws if is_websocket
+
+    # Default to SSH/Dropbear if not WS
+    default_backend bk_ssh_ws
+
+frontend https_frontend
+    bind *:443 ssl crt /etc/xray/xray.pem alpn h2,http/1.1
+    mode http
+
+    # Identify WebSocket
+    acl is_websocket hdr(Upgrade) -i websocket
+    use_backend bk_ws if is_websocket
+
+    # Identify gRPC (h2)
+    acl is_grpc ssl_fc_alpn -i h2
+    use_backend bk_grpc if is_grpc
+
+    # Default to SSH/Dropbear over SSL if neither
+    default_backend bk_ssh_ws
+
+backend bk_ws
+    mode http
+    server nginx_ws 127.0.0.1:1010 send-proxy
+
+backend bk_grpc
+    mode http
+    server nginx_grpc 127.0.0.1:1013
+
+backend bk_ssh_ws
+    mode http
+    server dropbear_ws 127.0.0.1:10015 # Using internal SSH WS port on Nginx fallback
+EOF
+
 # install nginx
 apt install -y nginx
 cd
@@ -253,6 +321,10 @@ http {
     # REMOVED PROXY PROTOCOL from Real IP - Fallback is now standard HTTP
     # set_real_ip_from 127.0.0.1;
     # real_ip_header proxy_protocol;
+
+    # HAProxy sends PROXY protocol
+    set_real_ip_from 127.0.0.1;
+    real_ip_header proxy_protocol;
 
     include /etc/nginx/conf.d/*.conf;
     include /etc/nginx/sites-enabled/*;
@@ -374,16 +446,13 @@ sed -i 's/Vless TLS         : .*/Vless TLS         : 443/g' /root/log-install.tx
 sed -i 's/Vless None TLS    : .*/Vless None TLS    : 80/g' /root/log-install.txt
 sed -i 's/Trojan .*         : .*/Trojan WS         : 443/g' /root/log-install.txt
 
-# nginx xray.conf - Using User's Structure but listening on 81 (Backend) and 80 (Frontend non-TLS)
+# nginx xray.conf - Behind HAProxy
 rm -fr /etc/nginx/conf.d/xray.conf
 cat >/etc/nginx/conf.d/xray.conf <<EOF
 server {
-    listen 81 http2;
-    listen [::]:81 http2;
-    listen 80;
-    listen [::]:80;
+    listen 127.0.0.1:1010 proxy_protocol http2;
     server_name 127.0.0.1 localhost $domain;
-    
+
     # User Optimization
     client_body_buffer_size 200K;
     client_header_buffer_size 2k;
@@ -391,15 +460,18 @@ server {
     large_client_header_buffers 3 1k;
     client_header_timeout 360s;
     keepalive_timeout 360s;
-    add_header X-HTTP-LEVEL-HEADER 1;
-    add_header X-ANOTHER-HTTP-LEVEL-HEADER 1;
-    add_header X-XSS-Protection "1; mode=block";
 
     root /home/vps/public_html;
 
     location / {
-        index  index.html index.htm index.php;
-        try_files \$uri \$uri/ /index.php?\$args;
+        proxy_redirect off;
+        proxy_pass http://127.0.0.1:10015;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     }
 
     location ~ \.php$ {
@@ -409,6 +481,7 @@ server {
         fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
     }
 
+    # WebSocket Locations
     location ~ /vless {
         if (\$http_upgrade != "Websocket") {
             rewrite /(.*) /vless break;
@@ -464,7 +537,13 @@ server {
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     }
+}
 
+server {
+    listen 127.0.0.1:1013 http2;
+    server_name 127.0.0.1 localhost $domain;
+
+    # gRPC Locations
     location ^~ /vless-grpc {
         proxy_redirect off;
         grpc_set_header Host \$host;
@@ -507,7 +586,7 @@ pelerr=$(cat /etc/xray/passwd)
 # set uuid xray
 uuid=$(cat /proc/sys/kernel/random/uuid)
 
-# xray config
+# xray config - Simplified Backend Only
 cat <<EOF> /etc/xray/config.json
 {
   "log" : {
@@ -516,75 +595,6 @@ cat <<EOF> /etc/xray/config.json
     "loglevel": "warning"
   },
   "inbounds": [
-      {
-      "port": 443,
-      "protocol": "vless",
-      "settings": {
-        "clients": [
-          {
-             "id": "${uuid}"
-          }
-        ],
-        "decryption": "none",
-        "fallbacks": [
-            {
-                "dest": 81,
-                "xver": 0,
-                "path": "/vless"
-            },
-            {
-                "dest": 81,
-                "xver": 0,
-                "path": "/vmess"
-            },
-            {
-                "dest": 81,
-                "xver": 0,
-                "path": "/trojan-ws"
-            },
-            {
-                "dest": 81,
-                "xver": 0,
-                "path": "/ss-ws"
-            },
-            {
-                "dest": 81,
-                "xver": 0,
-                "alpn": "h2"
-            },
-            {
-                "dest": 81,
-                "xver": 0,
-                "alpn": "http/1.1"
-            },
-            {
-                "dest": 81,
-                "xver": 0,
-                "path": "/"
-            },
-            {
-                "dest": 109,
-                "xver": 0
-            }
-        ]
-      },
-      "streamSettings": {
-        "network": "tcp",
-        "security": "tls",
-        "tlsSettings": {
-          "certificates": [
-            {
-              "certificateFile": "/etc/xray/xray.crt",
-              "keyFile": "/etc/xray/xray.key"
-            }
-          ],
-          "alpn": [
-            "h2",
-            "http/1.1"
-          ]
-        }
-      }
-    },
       {
       "listen": "127.0.0.1",
       "port": 10085,
@@ -596,7 +606,7 @@ cat <<EOF> /etc/xray/config.json
     },
    {
      "listen": "127.0.0.1",
-     "port": $vless,
+     "port": 10001,
      "protocol": "vless",
       "settings": {
           "decryption":"none",
@@ -616,7 +626,7 @@ cat <<EOF> /etc/xray/config.json
      },
      {
      "listen": "127.0.0.1",
-     "port": $vmess,
+     "port": 10002,
      "protocol": "vmess",
       "settings": {
             "clients": [
@@ -636,7 +646,7 @@ cat <<EOF> /etc/xray/config.json
      },
      {
      "listen": "127.0.0.1",
-     "port": $trojanws,
+     "port": 10003,
      "protocol": "trojan",
       "settings": {
           "decryption":"none",		
@@ -657,7 +667,7 @@ cat <<EOF> /etc/xray/config.json
      },
     {
          "listen": "127.0.0.1",
-        "port": $ssws,
+        "port": 10004,
         "protocol": "shadowsocks",
         "settings": {
            "clients": [
@@ -678,7 +688,7 @@ cat <<EOF> /etc/xray/config.json
      },	
       {
         "listen": "127.0.0.1",
-        "port": $vlessgrpc,
+        "port": 10005,
         "protocol": "vless",
         "settings": {
          "decryption":"none",
@@ -698,7 +708,7 @@ cat <<EOF> /etc/xray/config.json
      },
      {
       "listen": "127.0.0.1",
-      "port": $vmessgrpc,
+      "port": 10006,
      "protocol": "vmess",
       "settings": {
             "clients": [
@@ -718,7 +728,7 @@ cat <<EOF> /etc/xray/config.json
      },
      {
         "listen": "127.0.0.1",
-        "port": $trojangrpc,
+        "port": 10007,
         "protocol": "trojan",
         "settings": {
           "decryption":"none",
@@ -738,7 +748,7 @@ cat <<EOF> /etc/xray/config.json
    },
    {
     "listen": "127.0.0.1",
-    "port": $ssgrpc,
+    "port": 10008,
     "protocol": "shadowsocks",
     "settings": {
         "clients": [
@@ -869,16 +879,23 @@ systemctl daemon-reload >/dev/null 2>&1
 systemctl enable nginx >/dev/null 2>&1
 systemctl start nginx >/dev/null 2>&1
 systemctl restart nginx >/dev/null 2>&1
+echo -e "[ ${GREEN}ok${NC} ] Enable & Start & Restart & HAProxy"
+systemctl daemon-reload >/dev/null 2>&1
+systemctl enable haproxy >/dev/null 2>&1
+systemctl start haproxy >/dev/null 2>&1
+systemctl restart haproxy >/dev/null 2>&1
+
 # Restart All Service
 echo -e "$yell[SERVICE]$NC Restart All Service"
 sleep 1
 chown -R www-data:www-data /home/vps/public_html
-# Enable & Restart & Xray & Trojan & Nginx
+# Enable & Restart & Xray & Trojan & Nginx & HAProxy
 sleep 1
-echo -e "[ ${GREEN}ok${NC} ] Restart & Xray & Nginx"
+echo -e "[ ${GREEN}ok${NC} ] Restart & Xray & Nginx & HAProxy"
 systemctl daemon-reload >/dev/null 2>&1
 systemctl restart xray >/dev/null 2>&1
 systemctl restart nginx >/dev/null 2>&1
+systemctl restart haproxy >/dev/null 2>&1
 
 # Output the NEW UUID and Ports
 echo ""
