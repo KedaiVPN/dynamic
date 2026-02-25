@@ -182,69 +182,83 @@ install_ssl(){
 # Install HAProxy Config
 rm -fr /etc/haproxy/haproxy.cfg
 cat >/etc/haproxy/haproxy.cfg <<EOF
+# CFG LOADBALANCER NEWBIE STORE [ \$domain ]
 global
-    log /dev/log    local0
-    log /dev/log    local1 notice
-    chroot /var/lib/haproxy
     stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
-    stats timeout 30s
+    stats timeout 1d
+
+    log /dev/log local0
+    log /dev/log local1 notice
+    log /dev/log local0 info
+
+    tune.h2.initial-window-size 2147483647
+    tune.ssl.default-dh-param 2048
+
+    pidfile /run/haproxy.pid
+    chroot /var/lib/haproxy
+
     user haproxy
     group haproxy
     daemon
 
+    ssl-default-bind-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
+    ssl-default-bind-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
+    ssl-default-bind-options no-sslv3 no-tlsv10 no-tlsv11
+
+    ca-base /etc/ssl/certs
+    crt-base /etc/ssl/private
+
 defaults
-    log     global
-    mode    http
-    option  httplog
-    option  dontlognull
-    timeout connect 5000
-    timeout client  50000
-    timeout server  50000
-    errorfile 400 /etc/haproxy/errors/400.http
-    errorfile 403 /etc/haproxy/errors/403.http
-    errorfile 408 /etc/haproxy/errors/408.http
-    errorfile 500 /etc/haproxy/errors/500.http
-    errorfile 502 /etc/haproxy/errors/502.http
-    errorfile 503 /etc/haproxy/errors/503.http
-    errorfile 504 /etc/haproxy/errors/504.http
+    log global
+    mode tcp
+    option tcplog
+    option httplog
+    option dontlognull
+    timeout connect 60s
+    timeout client  300s
+    timeout server  300s
 
 frontend http_frontend
-    bind *:80
-    mode http
+    mode tcp
+    bind *:80 tfo
+    bind *:8080 tfo
+    bind *:8880 tfo
+    bind *:2080 tfo
+    bind *:2082 tfo
 
-    # Check for WebSocket upgrade header
+    tcp-request inspect-delay 500ms
+    tcp-request content accept if HTTP
     acl is_websocket hdr(Upgrade) -i websocket
-    use_backend bk_ws if is_websocket
 
-    # Default to SSH/Dropbear if not WS
-    default_backend bk_ssh_ws
+    use_backend ws_backend if is_websocket
+    default_backend dropbear_backend
 
 frontend https_frontend
-    bind *:443 ssl crt /etc/xray/xray.pem alpn h2,http/1.1
-    mode http
+    bind *:443 ssl crt /etc/xray/xray.pem tfo alpn h2,http/1.1
+    mode tcp
+    log global
+    option tcplog
+    tcp-request inspect-delay 500ms
+    tcp-request content accept if { req.ssl_hello_type 1 }
 
-    # Identify WebSocket
-    acl is_websocket hdr(Upgrade) -i websocket
-    use_backend bk_ws if is_websocket
+    acl is_websocket_ssl hdr(Upgrade) -i websocket
+    acl is_http2 ssl_fc_alpn -i h2
 
-    # Identify gRPC (h2)
-    acl is_grpc ssl_fc_alpn -i h2
-    use_backend bk_grpc if is_grpc
+    use_backend ws_backend if is_websocket_ssl
+    use_backend grpc_backend if is_http2
+    default_backend dropbear_backend
 
-    # Default to SSH/Dropbear over SSL if neither
-    default_backend bk_ssh_ws
+backend dropbear_backend
+    mode tcp
+    server dropbear_server 127.0.0.1:58080 check
 
-backend bk_ws
-    mode http
-    server nginx_ws 127.0.0.1:1010 send-proxy
+backend ws_backend
+    mode tcp
+    server ws_server 127.0.0.1:1010 check send-proxy
 
-backend bk_grpc
-    mode http
-    server nginx_grpc 127.0.0.1:1013 send-proxy
-
-backend bk_ssh_ws
-    mode http
-    server dropbear_ws 127.0.0.1:10015 # Using internal SSH WS port on Nginx fallback
+backend grpc_backend
+    mode tcp
+    server grpc_server 127.0.0.1:1013 check send-proxy
 EOF
 
 # install nginx
@@ -261,7 +275,6 @@ user www-data;
 worker_processes auto;
 worker_rlimit_nofile 65536;
 pid /var/run/nginx.pid;
-include /etc/nginx/modules-enabled/*.conf;
 
 events {
     multi_accept on;
@@ -274,7 +287,6 @@ http {
     gzip_comp_level 5;
     gzip_types text/plain application/x-javascript text/xml text/css;
     autoindex on;
-    sendfile on;
     tcp_nopush on;
     tcp_nodelay on;
     keepalive_timeout 65;
@@ -282,19 +294,15 @@ http {
     server_tokens off;
     include /etc/nginx/mime.types;
     default_type application/octet-stream;
-    
-    # User Optimization
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log;
     client_max_body_size 32M;
     client_header_buffer_size 8m;
     large_client_header_buffers 8 8m;
     fastcgi_buffer_size 8m;
     fastcgi_buffers 8 8m;
     fastcgi_read_timeout 600;
-
-    access_log /var/log/nginx/access.log;
-    error_log /var/log/nginx/error.log;
     
-    # Real IP Config (Cloudflare & Incapsula)
     # CloudFlare IPv4
     set_real_ip_from 199.27.128.0/21;
     set_real_ip_from 173.245.48.0/20;
@@ -309,6 +317,7 @@ http {
     set_real_ip_from 198.41.128.0/17;
     set_real_ip_from 162.158.0.0/15;
     set_real_ip_from 104.16.0.0/12;
+
     # Incapsula
     set_real_ip_from 199.83.128.0/21;
     set_real_ip_from 198.143.32.0/19;
@@ -318,16 +327,9 @@ http {
     set_real_ip_from 185.11.124.0/22;
     set_real_ip_from 192.230.64.0/18;
     
-    # REMOVED PROXY PROTOCOL from Real IP - Fallback is now standard HTTP
-    # set_real_ip_from 127.0.0.1;
-    # real_ip_header proxy_protocol;
-
-    # HAProxy sends PROXY protocol
-    set_real_ip_from 127.0.0.1;
-    real_ip_header proxy_protocol;
+    real_ip_header CF-Connecting-IP;
 
     include /etc/nginx/conf.d/*.conf;
-    include /etc/nginx/sites-enabled/*;
 }
 EOF
 
@@ -419,6 +421,21 @@ else
     echo -e "${EROR} Domain Not Found! Certificate generation skipped."
     # We exit here because Xray won't start without certs
     exit 1
+fi
+
+# Configure Dropbear to listen on port 58080 (for HAProxy)
+if [ -f /etc/default/dropbear ]; then
+    # Backup
+    cp /etc/default/dropbear /etc/default/dropbear.bak
+
+    # Check if 58080 is already present
+    if ! grep -q "58080" /etc/default/dropbear; then
+        # Append -p 58080 to DROPBEAR_EXTRA_ARGS
+        sed -i 's/DROPBEAR_EXTRA_ARGS="/DROPBEAR_EXTRA_ARGS="-p 58080 /g' /etc/default/dropbear
+    fi
+
+    # Restart Dropbear
+    /etc/init.d/dropbear restart
 fi
 
 # nginx renew ssl
