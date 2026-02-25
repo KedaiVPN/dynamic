@@ -153,45 +153,33 @@ Payload WSS: GET wss://BUG.COM/ HTTP/1.1[crlf]Host: $domain[crlf]Upgrade: websoc
 
 END
 
+expe1=`date -d "$masaaktif days" +"%b %d, %Y"`
+expe2=`date -d "$masaaktif days" +"%d %b %Y"`
+
 if [[ ! -z "${PID}" ]]; then
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
 echo -e "\E[0;41;36m            SSH Account            \E[0m" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
 echo -e "Username : $Login" | tee -a /etc/log-create-user.log
 echo -e "Password : $Pass" | tee -a /etc/log-create-user.log
-echo -e "Expired On : $exp" | tee -a /etc/log-create-user.log
+echo -e "Expired On : $expe1" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
-echo -e "IP Address : $IP" | tee -a /etc/log-create-user.log
 echo -e "Host : $domen" | tee -a /etc/log-create-user.log
-#echo -e "NS Host : $nameserver" | tee -a /etc/log-create-user.log
-#echo -e "Pubkey : $pubkey" | tee -a /etc/log-create-user.log
-echo -e "OpenSSH : $opensh" | tee -a /etc/log-create-user.log
-echo -e "Dropbear : $db" | tee -a /etc/log-create-user.log
-#echo -e "SlowDNS : 22,53,5300,80,443" | tee -a /etc/log-create-user.log
-#echo -e "UDP Custom : 1-65535" | tee -a /etc/log-create-user.log
 echo -e "SSH-WS : $portsshws" | tee -a /etc/log-create-user.log
 echo -e "SSH-SSL-WS : $wsssl" | tee -a /etc/log-create-user.log
-echo -e "SSL/TLS : $ssl" | tee -a /etc/log-create-user.log
+echo -e "SSL/TLS :  $ssl" | tee -a /etc/log-create-user.log
 echo -e "UDPGW : 7100-7300" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
-echo -e "Link SSH Config : http://${domain}:81/ssh-$Login.txt" | tee -a /etc/log-create-user.log
+echo -e "SSH TLS:" | tee -a /etc/log-create-user.log
+echo -e "$domen:$wsssl@$Login:$Pass" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
-echo -e "Payload WS" | tee -a /etc/log-create-user.log
-echo -e "
-GET / [protocol][crlf]Host: [host][crlf]Connection: Keep-Alive[crlf]Connection: Upgrade[crlf]Upgrade: websocket[crlf][crlf]
-" | tee -a /etc/log-create-user.log
+echo -e "SSH NO TLS:" | tee -a /etc/log-create-user.log
+echo -e "$domen:$portsshws@$Login:$Pass" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
-echo -e "
-GET wss://bug.com/ [protocol][crlf]Host: [host][crlf]Connection: Keep-Alive[crlf]Connection: Upgrade[crlf]Upgrade: websocket[crlf][crlf]
-" | tee -a /etc/log-create-user.log
+echo -e "UDP:" | tee -a /etc/log-create-user.log
+echo -e "$domen:1-65535@$Login:$Pass" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
-echo -e "
-GET / [protocol][crlf]Host: $domen[crlf]Connection: Keep-Alive[crlf]Connection: Upgrade[crlf]Upgrade: websocket[crlf][crlf]
-" | tee -a /etc/log-create-user.log
-echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
-echo -e "
-GET wss://bug.com/ [protocol][crlf]Host: $domen[crlf]Connection: Keep-Alive[crlf]Connection: Upgrade[crlf]Upgrade: websocket[crlf][crlf]
-" | tee -a /etc/log-create-user.log
+echo -e "       Expired On : $expe2" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
 
 else
@@ -201,39 +189,24 @@ echo -e "\E[0;41;36m            SSH Account            \E[0m" | tee -a /etc/log-
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
 echo -e "Username : $Login" | tee -a /etc/log-create-user.log
 echo -e "Password : $Pass" | tee -a /etc/log-create-user.log
-echo -e "Expired On : $exp" | tee -a /etc/log-create-user.log
+echo -e "Expired On : $expe1" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
-echo -e "IP Address : $IP" | tee -a /etc/log-create-user.log
 echo -e "Host : $domen" | tee -a /etc/log-create-user.log
-#echo -e "NS Host : $nameserver" | tee -a /etc/log-create-user.log
-#echo -e "Pubkey : $pubkey" | tee -a /etc/log-create-user.log
-echo -e "OpenSSH : $opensh" | tee -a /etc/log-create-user.log
-echo -e "Dropbear : $db" | tee -a /etc/log-create-user.log
-#echo -e "SlowDNS : 22,53,5300,80,443" | tee -a /etc/log-create-user.log
-#echo -e "UDP Custom : 1-65535" | tee -a /etc/log-create-user.log
 echo -e "SSH-WS : $portsshws" | tee -a /etc/log-create-user.log
 echo -e "SSH-SSL-WS : $wsssl" | tee -a /etc/log-create-user.log
-echo -e "SSL/TLS : $ssl" | tee -a /etc/log-create-user.log
+echo -e "SSL/TLS :  $ssl" | tee -a /etc/log-create-user.log
 echo -e "UDPGW : 7100-7300" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
-echo -e "Link SSH Config : http://${domain}:81/ssh-$Login.txt" | tee -a /etc/log-create-user.log
+echo -e "SSH TLS:" | tee -a /etc/log-create-user.log
+echo -e "$domen:$wsssl@$Login:$Pass" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
-echo -e "Payload WS" | tee -a /etc/log-create-user.log
-echo -e "
-GET / [protocol][crlf]Host: [host][crlf]Connection: Keep-Alive[crlf]Connection: Upgrade[crlf]Upgrade: websocket[crlf][crlf]
-" | tee -a /etc/log-create-user.log
+echo -e "SSH NO TLS:" | tee -a /etc/log-create-user.log
+echo -e "$domen:$portsshws@$Login:$Pass" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
-echo -e "
-GET wss://bug.com/ [protocol][crlf]Host: [host][crlf]Connection: Keep-Alive[crlf]Connection: Upgrade[crlf]Upgrade: websocket[crlf][crlf]
-" | tee -a /etc/log-create-user.log
+echo -e "UDP:" | tee -a /etc/log-create-user.log
+echo -e "$domen:1-65535@$Login:$Pass" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
-echo -e "
-GET / [protocol][crlf]Host: $domen[crlf]Connection: Keep-Alive[crlf]Connection: Upgrade[crlf]Upgrade: websocket[crlf][crlf]
-" | tee -a /etc/log-create-user.log
-echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
-echo -e "
-GET wss://bug.com/ [protocol][crlf]Host: $domen[crlf]Connection: Keep-Alive[crlf]Connection: Upgrade[crlf]Upgrade: websocket[crlf][crlf]
-" | tee -a /etc/log-create-user.log
+echo -e "       Expired On : $expe2" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
 fi
 echo "" | tee -a /etc/log-create-user.log
