@@ -18,6 +18,10 @@ ln -fs /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
 # Pastikan URL ini sesuai dengan raw repository Anda
 REPO="https://raw.githubusercontent.com/KedaiVPN/dynamic/main"
 
+# Install Dependencies (HAProxy)
+echo -e "[ ${GREEN}INFO${NC} ] Menginstall HAProxy..."
+apt install haproxy -y
+
 echo -e "[ ${GREEN}INFO${NC} ] Mendownload script terbaru..."
 wget -q -O /usr/bin/add-host "${REPO}/add-host.sh" && chmod +x /usr/bin/add-host
 wget -q -O /usr/bin/ins-xray "${REPO}/ins-xray.sh" && chmod +x /usr/bin/ins-xray
@@ -83,11 +87,11 @@ echo "* * * * * root xp" >> /etc/crontab
 service cron restart
 
 # 6. Auto-Repair Xray & Nginx Config (SSH SNI Fix)
-echo -e "[ ${GREEN}INFO${NC} ] Menjalankan perbaikan sistem (SSH SNI Fix)..."
+echo -e "[ ${GREEN}INFO${NC} ] Menjalankan perbaikan sistem (HAProxy/Xray/Nginx)..."
 /usr/bin/ins-xray
 
 echo -e "[ ${GREEN}INFO${NC} ] Update Selesai!"
 echo -e "[ ${GREEN}INFO${NC} ] Fitur Auto-Delete presisi (10 menit) sudah aktif."
 echo -e "[ ${GREEN}INFO${NC} ] Timezone server sekarang: $(date)"
-echo -e "[ ${GREEN}INFO${NC} ] Xray Frontend & Nginx Backend telah dikonfigurasi."
+echo -e "[ ${GREEN}INFO${NC} ] HAProxy Frontend & Xray/Nginx Backend telah dikonfigurasi."
 echo -e "[ ${GREEN}INFO${NC} ] Menu utama telah diperbarui. Ketik 'menu' untuk melihat tampilan baru."

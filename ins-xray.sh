@@ -240,7 +240,7 @@ backend bk_ws
 
 backend bk_grpc
     mode http
-    server nginx_grpc 127.0.0.1:1013
+    server nginx_grpc 127.0.0.1:1013 send-proxy
 
 backend bk_ssh_ws
     mode http
@@ -409,6 +409,11 @@ if [[ -n "$domain" ]]; then
     chown -R nobody:nogroup /etc/xray
     chmod 644 /etc/xray/xray.crt
     chmod 644 /etc/xray/xray.key
+
+    # HAProxy requires combined PEM
+    cat /etc/xray/xray.crt /etc/xray/xray.key > /etc/xray/xray.pem
+    chmod 644 /etc/xray/xray.pem
+
     echo -e "${OKEY} Your Domain : $domain"
 else
     echo -e "${EROR} Domain Not Found! Certificate generation skipped."
@@ -450,7 +455,7 @@ sed -i 's/Trojan .*         : .*/Trojan WS         : 443/g' /root/log-install.tx
 rm -fr /etc/nginx/conf.d/xray.conf
 cat >/etc/nginx/conf.d/xray.conf <<EOF
 server {
-    listen 127.0.0.1:1010 proxy_protocol http2;
+    listen 127.0.0.1:1010 proxy_protocol;
     server_name 127.0.0.1 localhost $domain;
 
     # User Optimization
@@ -540,7 +545,7 @@ server {
 }
 
 server {
-    listen 127.0.0.1:1013 http2;
+    listen 127.0.0.1:1013 proxy_protocol http2;
     server_name 127.0.0.1 localhost $domain;
 
     # gRPC Locations
