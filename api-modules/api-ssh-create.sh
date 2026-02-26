@@ -2,20 +2,24 @@
 # API Module: SSH Create
 # Args: user pass exp_days quota iplimit
 
-user="$1"
+raw_user="$1"
 pass="$2"
 exp_days="$3"
 quota="$4"
 iplimit="$5"
 
-if [[ -z "$user" || -z "$pass" || -z "$exp_days" ]]; then
+if [[ -z "$raw_user" || -z "$pass" || -z "$exp_days" ]]; then
   echo '{"status": "error", "message": "Missing required arguments"}'
   exit 1
 fi
 
+# Apply Format: UserSSH(3 Random Chars)
+rand_suffix=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 3)
+user="${raw_user}SSH${rand_suffix}"
+
 # Check if user exists
 if id "$user" >/dev/null 2>&1; then
-  echo '{"status": "error", "message": "User already exists"}'
+  echo '{"status": "error", "message": "User already exists (collision)"}'
   exit 1
 fi
 
