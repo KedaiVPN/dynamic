@@ -208,6 +208,7 @@ wget -q -O /usr/bin/update "https://raw.githubusercontent.com/KedaiVPN/dynamic/m
 wget -q -O /usr/bin/dns "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/dns.sh"
 wget -q -O /usr/bin/netf "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/netf.sh"
 wget -q -O /usr/bin/bbr "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/bbr.sh"
+wget -q -O /usr/bin/install-api "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/install-api.sh" && chmod +x /usr/bin/install-api && /usr/bin/install-api
 chmod +x /usr/bin/add-ws
 chmod +x /usr/bin/add-ssws
 chmod +x /usr/bin/add-socks
