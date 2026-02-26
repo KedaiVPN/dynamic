@@ -37,37 +37,39 @@ echo -e "[ ${GREEN}INFO${NC} ] Mendownload script terbaru..."
 #wget -q -O /usr/bin/install-api "${REPO}/install-api.sh" && chmod +x /usr/bin/install-api && /usr/bin/install-api
 
 # --- UPDATE API MODULES ONLY ---
-echo -e "[ ${GREEN}INFO${NC} ] Updating API Modules (Xray Create Fix)..."
+echo -e "[ ${GREEN}INFO${NC} ] Updating API Modules..."
 mkdir -p /usr/local/bin/api-modules
 
-# Strategy: Download to temp -> Verify -> Replace
-TMP_FILE="/tmp/api-xray-create.sh"
-TARGET_FILE="/usr/local/bin/api-modules/api-xray-create.sh"
+update_api_module() {
+    local script_name="$1"
+    local verify_string="$2"
+    local tmp_file="/tmp/${script_name}"
+    local target_file="/usr/local/bin/api-modules/${script_name}"
 
-# Download with cache buster
-wget -q -O "$TMP_FILE" "${REPO}/api-modules/api-xray-create.sh?v=$(date +%s)"
+    echo -e "[ ${GREEN}INFO${NC} ] Updating ${script_name}..."
+    wget -q -O "$tmp_file" "${REPO}/api-modules/${script_name}?v=$(date +%s)"
 
-# Verification
-if [ -f "$TMP_FILE" ] && grep -q "grpc_link" "$TMP_FILE"; then
-    echo -e "[ ${GREEN}OK${NC} ] New script downloaded and verified."
-    
-    # Remove old file first to avoid permission/overwrite issues
-    rm -f "$TARGET_FILE"
-    
-    # Move new file
-    mv "$TMP_FILE" "$TARGET_FILE"
-    chmod +x "$TARGET_FILE"
-    
-    echo -e "[ ${GREEN}INFO${NC} ] Restarting API Service..."
-    systemctl restart api-backend
-    echo -e "[ ${GREEN}OK${NC} ] API Service restarted."
-else
-    echo -e "[ ${RED}ERROR${NC} ] Download failed or verification failed!"
-    echo -e "[ ${RED}ERROR${NC} ] The new script was not applied. Please check your connection."
-    rm -f "$TMP_FILE"
-fi
+    if [ -f "$tmp_file" ] && grep -q "$verify_string" "$tmp_file"; then
+        echo -e "[ ${GREEN}OK${NC} ] ${script_name} downloaded and verified."
+        rm -f "$target_file"
+        mv "$tmp_file" "$target_file"
+        chmod +x "$target_file"
+    else
+        echo -e "[ ${RED}ERROR${NC} ] Failed to update ${script_name}!"
+        rm -f "$tmp_file"
+    fi
+}
 
-echo -e "[ ${GREEN}INFO${NC} ] API Xray Create Module Update Process Completed."
+# Update API Create Module
+update_api_module "api-xray-create.sh" "grpc_link"
+
+# Update API Trial Module
+update_api_module "api-xray-trial.sh" "grpc_link"
+
+echo -e "[ ${GREEN}INFO${NC} ] Restarting API Service..."
+systemctl restart api-backend
+echo -e "[ ${GREEN}OK${NC} ] API Service restarted."
+echo -e "[ ${GREEN}INFO${NC} ] API Xray Create & Trial Modules Update Completed."
 
 # Download setup.sh terbaru
 #wget -q -O /usr/bin/setup.sh "${REPO}/setup.sh" && chmod +x /usr/bin/setup.sh
