@@ -4,15 +4,34 @@
 # Protocol: vmess, vless, trojan
 
 protocol="$1"
-user="$2"
+raw_user="$2"
 exp_days="$3"
 quota="$4"
 iplimit="$5"
 
-if [[ -z "$protocol" || -z "$user" || -z "$exp_days" ]]; then
+if [[ -z "$protocol" || -z "$raw_user" || -z "$exp_days" ]]; then
   echo '{"status": "error", "message": "Missing required arguments"}'
   exit 1
 fi
+
+# Apply Format: User(PROTOCOL)(3 Random Chars)
+rand_suffix=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 3)
+
+case $protocol in
+  vmess)
+    user="${raw_user}VM${rand_suffix}"
+    ;;
+  vless)
+    user="${raw_user}VL${rand_suffix}"
+    ;;
+  trojan)
+    user="${raw_user}TR${rand_suffix}"
+    ;;
+  *)
+    echo '{"status": "error", "message": "Invalid protocol"}'
+    exit 1
+    ;;
+esac
 
 # Check if user exists
 if grep -q "\"email\": \"$user\"" /etc/xray/config.json; then
