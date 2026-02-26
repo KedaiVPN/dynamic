@@ -27,14 +27,47 @@ echo -e "[ ${GREEN}INFO${NC} ] Mendownload script terbaru..."
 #wget -q -O /usr/bin/ins-xray "${REPO}/ins-xray.sh" && chmod +x /usr/bin/ins-xray
 #wget -q -O /usr/bin/add-ws "${REPO}/add-ws.sh" && chmod +x /usr/bin/add-ws
 #wget -q -O /usr/bin/add-vless "${REPO}/add-vless.sh" && chmod +x /usr/bin/add-vless
-wget -q -O /usr/bin/add-tr "${REPO}/add-tr.sh" && chmod +x /usr/bin/add-tr
+#wget -q -O /usr/bin/add-tr "${REPO}/add-tr.sh" && chmod +x /usr/bin/add-tr
 #wget -q -O /usr/bin/add-ssws "${REPO}/add-ssws.sh" && chmod +x /usr/bin/add-ssws
-wget -q -O /usr/bin/usernew "${REPO}/usernew.sh" && chmod +x /usr/bin/usernew
+#wget -q -O /usr/bin/usernew "${REPO}/usernew.sh" && chmod +x /usr/bin/usernew
 #wget -q -O /usr/bin/xp "${REPO}/xp.sh" && chmod +x /usr/bin/xp
 #wget -q -O /usr/bin/cek-expired "${REPO}/cek-expired.sh" && chmod +x /usr/bin/cek-expired
-wget -q -O /usr/bin/menu "${REPO}/menu4.sh" && chmod +x /usr/bin/menu
-wget -q -O /usr/bin/menu-ssh "${REPO}/menu-ssh.sh" && chmod +x /usr/bin/menu-ssh
-wget -q -O /usr/bin/install-api "${REPO}/install-api.sh" && chmod +x /usr/bin/install-api && /usr/bin/install-api
+#wget -q -O /usr/bin/menu "${REPO}/menu4.sh" && chmod +x /usr/bin/menu
+#wget -q -O /usr/bin/menu-ssh "${REPO}/menu-ssh.sh" && chmod +x /usr/bin/menu-ssh
+#wget -q -O /usr/bin/install-api "${REPO}/install-api.sh" && chmod +x /usr/bin/install-api && /usr/bin/install-api
+
+# --- UPDATE API MODULES ONLY ---
+echo -e "[ ${GREEN}INFO${NC} ] Updating API Modules (Xray Create Fix)..."
+mkdir -p /usr/local/bin/api-modules
+
+# Strategy: Download to temp -> Verify -> Replace
+TMP_FILE="/tmp/api-xray-create.sh"
+TARGET_FILE="/usr/local/bin/api-modules/api-xray-create.sh"
+
+# Download with cache buster
+wget -q -O "$TMP_FILE" "${REPO}/api-modules/api-xray-create.sh?v=$(date +%s)"
+
+# Verification
+if [ -f "$TMP_FILE" ] && grep -q "grpc_link" "$TMP_FILE"; then
+    echo -e "[ ${GREEN}OK${NC} ] New script downloaded and verified."
+    
+    # Remove old file first to avoid permission/overwrite issues
+    rm -f "$TARGET_FILE"
+    
+    # Move new file
+    mv "$TMP_FILE" "$TARGET_FILE"
+    chmod +x "$TARGET_FILE"
+    
+    echo -e "[ ${GREEN}INFO${NC} ] Restarting API Service..."
+    systemctl restart api-backend
+    echo -e "[ ${GREEN}OK${NC} ] API Service restarted."
+else
+    echo -e "[ ${RED}ERROR${NC} ] Download failed or verification failed!"
+    echo -e "[ ${RED}ERROR${NC} ] The new script was not applied. Please check your connection."
+    rm -f "$TMP_FILE"
+fi
+
+echo -e "[ ${GREEN}INFO${NC} ] API Xray Create Module Update Process Completed."
 
 # Download setup.sh terbaru
 #wget -q -O /usr/bin/setup.sh "${REPO}/setup.sh" && chmod +x /usr/bin/setup.sh
@@ -48,13 +81,13 @@ files_to_fix=(
     #"/usr/bin/ins-xray"
     #"/usr/bin/add-ws"
     #"/usr/bin/add-vless"
-    "/usr/bin/add-tr"
+    #"/usr/bin/add-tr"
     #"/usr/bin/add-ssws"
-    "/usr/bin/usernew"
+    #"/usr/bin/usernew"
     #"/usr/bin/xp"
     #"/usr/bin/cek-expired"
-    "/usr/bin/menu"
-    "/usr/bin/menu-ssh"
+    #"/usr/bin/menu"
+    #"/usr/bin/menu-ssh"
     #"/usr/bin/setup.sh"
 )
 
