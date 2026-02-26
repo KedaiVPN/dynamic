@@ -1,0 +1,14 @@
+[Unit]
+Description=API Backend for VPS Manager
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/etc/nevermore-api/node
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

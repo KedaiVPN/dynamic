@@ -212,7 +212,8 @@ echo -e "     ${BICyan}[${BIWhite}06${BICyan}] LIMIT SPEED          ${BICyan}[${
 echo -e "     ${BICyan}[${BIWhite}07${BICyan}] AUTO REBOOT          ${BICyan}[${BIWhite}17${BICyan}] XRAY-CORE MENU${NC}"
 echo -e "     ${BICyan}[${BIWhite}08${BICyan}] REBOOT               ${BICyan}[${BIWhite}18${BICyan}] INSTALL BBRPLUS${NC}"
 echo -e "     ${BICyan}[${BIWhite}09${BICyan}] RESTART              ${BICyan}[${BIWhite}19${BICyan}] SWAPRAM MENU${NC}"
-echo -e "     ${BICyan}[${BIWhite}10${BICyan}] GOTOP (RAM MONITOR)${NC}"
+echo -e "     ${BICyan}[${BIWhite}10${BICyan}] GOTOP (RAM MONITOR)  ${BICyan}[${BIWhite}20${BICyan}] INSTALL BOT TELE${NC}"
+echo -e "                                              ${BICyan}[${BIWhite}21${BICyan}] GENERATE API KEY${NC}"
 echo -e "     ${BICyan}[${BIWhite}x ${BICyan}] BACK TO MENU ${BICyan}${BIYellow}${BICyan}${NC}"
 echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
 echo
@@ -237,6 +238,8 @@ case $opt_feat in
 17) clear && printf '\033[3J' ; wget -q -O /usr/bin/xraychanger "https://raw.githubusercontent.com/NevermoreSSH/Xcore-custompath/main/xraychanger.sh" && chmod +x /usr/bin/xraychanger && xraychanger ;;
 18) clear && printf '\033[3J' ; bbr ;;
 19) clear && printf '\033[3J' ; wget -q -O /usr/bin/swapram "https://raw.githubusercontent.com/NevermoreSSH/swapram/main/swapram.sh" && chmod +x /usr/bin/swapram && swapram ;;
+20) clear && printf '\033[3J' ; /usr/local/bin/api-modules/api-bot-manager.sh ;;
+21) clear && printf '\033[3J' ; /usr/local/bin/api-modules/api-auth-gen.sh ;;
 x) menu ;;
 *) menu ;;
 esac
