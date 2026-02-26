@@ -69,7 +69,7 @@ domain=$(cat /etc/xray/domain)
 else
 domain=$IP
 fi
-tr="$(cat ~/log-install.txt | grep -w "Trojan WS " | cut -d: -f2|sed 's/ //g')"
+tr="$(cat ~/log-install.txt | grep -w "Trojan WS " | cut -d: -f2|sed 's/ //g' | tr -d '\r' | awk 'NR==1')"
 until [[ $user =~ ^[a-zA-Z0-9_]+$ && ${user_EXISTS} == '0' ]]; do
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 echo -e "\E[0;41;36m           TROJAN ACCOUNT          \E[0m"
@@ -156,13 +156,14 @@ echo -e "Limit Bandwidth : ${quota} GB" | tee -a /etc/log-create-user.log
 echo -e "Path : /trojan-ws" | tee -a /etc/log-create-user.log
 echo -e "ServiceName : trojan-grpc" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
-echo -e "Link WS : ${trojanlink1}" | tee -a /etc/log-create-user.log
+echo -e "Link WS : " | tee -a /etc/log-create-user.log
+echo -e "${trojanlink1}" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
-echo -e "Link GO : ${trojanlink2}" | tee -a /etc/log-create-user.log
+echo -e "Link GO : " | tee -a /etc/log-create-user.log
+echo -e "${trojanlink2}" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
-echo -e "Link GRPC : ${trojanlink4}" | tee -a /etc/log-create-user.log
-echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
-echo -e "Link Trojan Config : http://${domain}:81/trojan-$user.txt" | tee -a /etc/log-create-user.log
+echo -e "Link GRPC : " | tee -a /etc/log-create-user.log
+echo -e "${trojanlink4}" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
 echo -e "Expired On : $exp" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log

@@ -27,7 +27,7 @@ echo -e "[ ${GREEN}INFO${NC} ] Mendownload script terbaru..."
 #wget -q -O /usr/bin/ins-xray "${REPO}/ins-xray.sh" && chmod +x /usr/bin/ins-xray
 #wget -q -O /usr/bin/add-ws "${REPO}/add-ws.sh" && chmod +x /usr/bin/add-ws
 #wget -q -O /usr/bin/add-vless "${REPO}/add-vless.sh" && chmod +x /usr/bin/add-vless
-#wget -q -O /usr/bin/add-tr "${REPO}/add-tr.sh" && chmod +x /usr/bin/add-tr
+wget -q -O /usr/bin/add-tr "${REPO}/add-tr.sh" && chmod +x /usr/bin/add-tr
 #wget -q -O /usr/bin/add-ssws "${REPO}/add-ssws.sh" && chmod +x /usr/bin/add-ssws
 wget -q -O /usr/bin/usernew "${REPO}/usernew.sh" && chmod +x /usr/bin/usernew
 #wget -q -O /usr/bin/xp "${REPO}/xp.sh" && chmod +x /usr/bin/xp
@@ -48,7 +48,7 @@ files_to_fix=(
     #"/usr/bin/ins-xray"
     #"/usr/bin/add-ws"
     #"/usr/bin/add-vless"
-    #"/usr/bin/add-tr"
+    "/usr/bin/add-tr"
     #"/usr/bin/add-ssws"
     "/usr/bin/usernew"
     #"/usr/bin/xp"
