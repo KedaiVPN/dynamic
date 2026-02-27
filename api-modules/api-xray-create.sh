@@ -14,8 +14,9 @@ if [[ -z "$protocol" || -z "$raw_user" || -z "$exp_days" ]]; then
   exit 1
 fi
 
-# Apply Format: User(PROTOCOL)(3 Random Chars)
-rand_suffix=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 3)
+# Apply Format: User(PROTOCOL)(3 Random Digits)
+# Changed to numeric only 0-9
+rand_suffix=$(head /dev/urandom | tr -dc 0-9 | head -c 3)
 
 case $protocol in
   vmess)
