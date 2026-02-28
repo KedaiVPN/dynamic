@@ -382,7 +382,7 @@ function trialtrojan(){
 
     trojanlink1="trojan://${uuid}@${domain}:${tr}?path=%2Ftrojan-ws&security=tls&host=${domain}&type=ws&sni=${domain}#TROJAN_WS_${user}"
     trojanlink2="trojan-go://${uuid}@${domain}:${tr}?path=%2Ftrojan-ws&security=tls&host=${domain}&type=ws&sni=${domain}#TROJANGO_${user}"
-    trojanlink4="trojan://${uuid}@${domain}:${tr}?mode=gun&security=tls&type=grpc&serviceName=trojan-grpc&sni=${domain}#TROJAN_GRPC_${user}"
+    trojanlink4="trojan://${uuid}@${domain}:${tr}?security=tls&type=grpc&serviceName=trojan-grpc&sni=${domain}#TROJAN_GRPC_${user}"
 
     # Restart Xray
     systemctl restart xray > /dev/null 2>&1
