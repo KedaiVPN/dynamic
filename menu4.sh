@@ -72,7 +72,7 @@ fi
 
 # // License Checking
 if [ -f /usr/local/bin/cek-lisensi ]; then
-    /usr/local/bin/cek-lisensi
+    /usr/local/bin/cek-lisensi || exit 1
 fi
 
 # // Exporting IP Address
