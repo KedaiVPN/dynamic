@@ -1,319 +1,85 @@
-BIBlack='\033[1;90m'      # Black
-BIRed='\033[1;91m'        # Red
-BIGreen='\033[1;92m'      # Green
-BIYellow='\033[1;93m'     # Yellow
-BIBlue='\033[1;94m'       # Blue
-BIPurple='\033[1;95m'     # Purple
-BICyan='\033[1;96m'       # Cyan
-BIWhite='\033[1;97m'      # White
-UWhite='\033[4;37m'       # White
-On_IPurple='\033[0;105m'  #
-On_IRed='\033[0;101m'
-IBlack='\033[0;90m'       # Black
-IRed='\033[0;91m'         # Red
-IGreen='\033[0;92m'       # Green
-IYellow='\033[0;93m'      # Yellow
-IBlue='\033[0;94m'        # Blue
-IPurple='\033[0;95m'      # Purple
-ICyan='\033[0;96m'        # Cyan
-IWhite='\033[0;97m'       # White
-NC='\e[0m'
-m="\033[0;1;36m"
-y="\033[0;1;37m"
-yy="\033[0;1;32m"
-yl="\033[0;1;33m"
-wh="\033[0m"
-## Foreground
-DEFBOLD='\e[39;1m'
-RB='\e[31;1m'
-GB='\e[32;1m'
-YB='\e[33;1m'
-BB='\e[34;1m'
-MB='\e[35;1m'
-CB='\e[35;1m'
-WB='\e[37;1m'
+#!/bin/bash
+# Script Auto Update untuk Fitur Timezone & Auto-Delete Presisi
+# Created by Jules
 
-# // Export Color & Information
-export RED='\033[0;31m'
-export GREEN='\033[0;32m'
-export YELLOW='\033[0;33m'
-export BLUE='\033[0;34m'
-export PURPLE='\033[0;35m'
-export CYAN='\033[0;36m'
-export LIGHT='\033[0;37m'
-export NC='\033[0m'
+# Warna
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m'
 
-# // Export Banner Status Information
-export EROR="[${RED} EROR ${NC}]"
-export INFO="[${YELLOW} INFO ${NC}]"
-export OKEY="[${GREEN} OKEY ${NC}]"
-export PENDING="[${YELLOW} PENDING ${NC}]"
-export SEND="[${YELLOW} SEND ${NC}]"
-export RECEIVE="[${YELLOW} RECEIVE ${NC}]"
+echo -e "[ ${GREEN}INFO${NC} ] Memulai Update..."
 
-# // Export Align
-export BOLD="\e[1m"
-export WARNING="${RED}\e[5m"
-export UNDERLINE="\e[4m"
+# 1. Update Timezone ke Asia/Jakarta
+echo -e "[ ${GREEN}INFO${NC} ] Mengatur Timezone ke Asia/Jakarta..."
+timedatectl set-timezone Asia/Jakarta
+ln -fs /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
 
-# // Exporting URL Host
-export Server_URL="raw.githubusercontent.com/NevermoreSSH/Blueblue/main/test"
-export Server1_URL="raw.githubusercontent.com/NevermoreSSH/Blueblue/main/limit"
-export Server_Port="443"
-export Server_IP="underfined"
-export Script_Mode="Stable"
-export Auther=".geovpn"
+# 2. Download Script Baru
+# Pastikan URL ini sesuai dengan raw repository Anda
+REPO="https://raw.githubusercontent.com/KedaiVPN/dynamic/main"
 
-# // Root Checking
-if [ "${EUID}" -ne 0 ]; then
-		echo -e "${EROR} Please Run This Script As Root User !"
-		exit 1
-fi
+echo -e "[ ${GREEN}INFO${NC} ] Mendownload script terbaru..."
+wget -q -O /usr/bin/add-vless "${REPO}/add-vless.sh" && chmod +x /usr/bin/add-vless
+wget -q -O /usr/bin/add-tr "${REPO}/add-tr.sh" && chmod +x /usr/bin/add-tr
+wget -q -O /usr/bin/menu-vless "${REPO}/menu-vless.sh" && chmod +x /usr/bin/menu-vless
+wget -q -O /usr/bin/menu-trojan "${REPO}/menu-trojan.sh" && chmod +x /usr/bin/menu-trojan
+wget -q -O /usr/bin/user-xrays "${REPO}/user-xrays.sh" && chmod +x /usr/bin/user-xrays
+wget -q -O /usr/bin/menu "${REPO}/menu4.sh" && chmod +x /usr/bin/menu
 
-# // Exporting IP Address
-export IP=$( curl -s https://ipinfo.io/ip/ )
+# --- UPDATE API MODULES ONLY ---
+echo -e "[ ${GREEN}INFO${NC} ] Updating API Modules..."
+mkdir -p /usr/local/bin/api-modules
 
-# // Exporting Network Interface
-export NETWORK_IFACE="$(ip route show to default | awk '{print $5}')"
+update_api_module() {
+    local script_name="$1"
+    local verify_string="$2"
+    local tmp_file="/tmp/${script_name}"
+    local target_file="/usr/local/bin/api-modules/${script_name}"
 
-# // Clear
-clear && printf '\033[3J'
-clear && printf '\033[3J' && clear && printf '\033[3J' && clear && printf '\033[3J'
-clear && printf '\033[3J';clear && printf '\033[3J';clear && printf '\033[3J'
-cek=$(service ssh status | grep active | cut -d ' ' -f5)
-if [ "$cek" = "active" ]; then
-stat=-f5
-else
-stat=-f7
-fi
-ssh=$(service ssh status | grep active | cut -d ' ' $stat)
-if [ "$ssh" = "active" ]; then
-ressh="${BIGreen}ON${NC}"
-else
-ressh="${red}OFF${NC}"
-fi
-sshstunel=$(service stunnel5 status | grep active | cut -d ' ' $stat)
-if [ "$sshstunel" = "active" ]; then
-resst="${BIGreen}ON${NC}"
-else
-resst="${red}OFF${NC}"
-fi
-sshws=$(service ws-stunnel status | grep active | cut -d ' ' $stat)
-if [ "$sshws" = "active" ]; then
-ressshws="${BIGreen}ON${NC}"
-else
-ressshws="${red}OFF${NC}"
-fi
-ngx=$(service nginx status | grep active | cut -d ' ' $stat)
-if [ "$ngx" = "active" ]; then
-resngx="${BIGreen}ON${NC}"
-else
-resngx="${red}OFF${NC}"
-fi
-dbr=$(service dropbear status | grep active | cut -d ' ' $stat)
-if [ "$dbr" = "active" ]; then
-resdbr="${BIGreen}ON${NC}"
-else
-resdbr="${red}OFF${NC}"
-fi
-v2r=$(service xray status | grep active | cut -d ' ' $stat)
-if [ "$v2r" = "active" ]; then
-resv2r="${BIGreen}ON${NC}"
-else
-resv2r="${red}OFF${NC}"
-fi
-function addhost(){
-clear && printf '\033[3J'
-echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-echo ""
-read -rp "Domain/Host: " -e host
-echo ""
-if [ -z $host ]; then
-echo "????"
-echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-read -n 1 -s -r -p "Press any key to back on menu"
-setting-menu
-else
-rm -fr /etc/xray/domain
-echo "IP=$host" > /var/lib/scrz-prem/ipvps.conf
-echo $host > /etc/xray/domain
-echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-echo "Dont forget to renew gen-ssl"
-echo ""
-read -n 1 -s -r -p "Press any key to back on menu"
-menu
-fi
-}
-function genssl(){
-clear && printf '\033[3J'
-systemctl stop nginx
-systemctl stop xray
-domain=$(cat /var/lib/scrz-prem/ipvps.conf | cut -d'=' -f2)
-Cek=$(lsof -i:80 | cut -d' ' -f1 | awk 'NR==2 {print $1}')
-if [[ ! -z "$Cek" ]]; then
-sleep 1
-echo -e "[ ${red}WARNING${NC} ] Detected port 80 used by $Cek " 
-systemctl stop $Cek
-sleep 2
-echo -e "[ ${green}INFO${NC} ] Processing to stop $Cek " 
-sleep 1
-fi
-echo -e "[ ${green}INFO${NC} ] Starting renew gen-ssl... " 
-sleep 2
-/root/.acme.sh/acme.sh --upgrade
-/root/.acme.sh/acme.sh --upgrade --auto-upgrade
-/root/.acme.sh/acme.sh --set-default-ca --server letsencrypt
-/root/.acme.sh/acme.sh --issue -d $domain --standalone -k ec-256
-~/.acme.sh/acme.sh --installcert -d $domain --fullchainpath /etc/xray/xray.crt --keypath /etc/xray/xray.key --ecc
-echo -e "[ ${green}INFO${NC} ] Renew gen-ssl done... " 
-sleep 2
-echo -e "[ ${green}INFO${NC} ] Starting service $Cek " 
-sleep 2
-echo $domain > /etc/xray/domain
-systemctl start nginx
-systemctl start xray
-echo -e "[ ${green}INFO${NC} ] All finished... " 
-sleep 0.5
-echo ""
-read -n 1 -s -r -p "Press any key to back on menu"
-menu
+    echo -e "[ ${GREEN}INFO${NC} ] Updating ${script_name}..."
+    wget -q -O "$tmp_file" "${REPO}/api-modules/${script_name}?v=$(date +%s)"
+
+    if [ -f "$tmp_file" ] && grep -q "$verify_string" "$tmp_file"; then
+        echo -e "[ ${GREEN}OK${NC} ] ${script_name} downloaded and verified."
+        rm -f "$target_file"
+        mv "$tmp_file" "$target_file"
+        chmod +x "$target_file"
+    else
+        echo -e "[ ${RED}ERROR${NC} ] Failed to update ${script_name}!"
+        rm -f "$tmp_file"
+    fi
 }
 
-function menu_backup_restore(){
-clear && printf '\033[3J'
-echo -e "${BICyan} ┌────────────────────────────────────────────────────────────┐${NC}"
-echo -e "${BICyan} │                  ${BIWhite}${UWhite}BACKUP / RESTORE${NC}"
-echo -e "${BICyan} │"
-echo -e "     ${BICyan}[${BIWhite}01${BICyan}] BACKUP DATA ${BICyan}${BIYellow}${BICyan}${NC}"
-echo -e "     ${BICyan}[${BIWhite}02${BICyan}] RESTORE DATA ${BICyan}${BIYellow}${BICyan}${NC}"
-echo -e "     ${BICyan}[${BIWhite}x ${BICyan}] BACK TO MENU ${BICyan}${BIYellow}${BICyan}${NC}"
-echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
-echo
-read -p " Select menu : " opt_br
-case $opt_br in
-1) clear && printf '\033[3J' ; backup ;;
-2) clear && printf '\033[3J' ; restore ;;
-x) menu ;;
-*) menu ;;
-esac
-}
+# Update API Create Module
+update_api_module "api-xray-create.sh" "grpc_link"
 
-function menu_features(){
-clear && printf '\033[3J'
-echo -e "${BICyan} ┌────────────────────────────────────────────────────────────┐${NC}"
-echo -e "${BICyan} │                  ${BIWhite}${UWhite}ADDITIONAL FEATURES${NC}"
-echo -e "${BICyan} │"
-echo -e "     ${BICyan}[${BIWhite}01${BICyan}] ADD HOST/DOMAIN      ${BICyan}[${BIWhite}11${BICyan}] WEBMIN${NC}"
-echo -e "     ${BICyan}[${BIWhite}02${BICyan}] RENEW CERT           ${BICyan}[${BIWhite}12${BICyan}] INFO SCRIPT${NC}"
-echo -e "     ${BICyan}[${BIWhite}03${BICyan}] EDIT BANNER          ${BICyan}[${BIWhite}13${BICyan}] CLEAR LOG${NC}"
-echo -e "     ${BICyan}[${BIWhite}04${BICyan}] CHECK BANDWIDTH      ${BICyan}[${BIWhite}14${BICyan}] DNS CHANGER${NC}"
-echo -e "     ${BICyan}[${BIWhite}05${BICyan}] SPEEDTEST            ${BICyan}[${BIWhite}15${BICyan}] NETFLIX CHECKER${NC}"
-echo -e "     ${BICyan}[${BIWhite}06${BICyan}] LIMIT SPEED          ${BICyan}[${BIWhite}16${BICyan}] TENDANG${NC}"
-echo -e "     ${BICyan}[${BIWhite}07${BICyan}] AUTO REBOOT          ${BICyan}[${BIWhite}17${BICyan}] XRAY-CORE MENU${NC}"
-echo -e "     ${BICyan}[${BIWhite}08${BICyan}] REBOOT               ${BICyan}[${BIWhite}18${BICyan}] INSTALL BBRPLUS${NC}"
-echo -e "     ${BICyan}[${BIWhite}09${BICyan}] RESTART              ${BICyan}[${BIWhite}19${BICyan}] SWAPRAM MENU${NC}"
-echo -e "     ${BICyan}[${BIWhite}10${BICyan}] GOTOP (RAM MONITOR)  ${BICyan}[${BIWhite}20${BICyan}] INSTALL BOT TELE${NC}"
-echo -e "                                              ${BICyan}[${BIWhite}21${BICyan}] GENERATE API KEY${NC}"
-echo -e "     ${BICyan}[${BIWhite}x ${BICyan}] BACK TO MENU ${BICyan}${BIYellow}${BICyan}${NC}"
-echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
-echo
-read -p " Select menu : " opt_feat
-case $opt_feat in
-1) clear && printf '\033[3J' ; addhost ;;
-2) clear && printf '\033[3J' ; genssl ;;
-3) clear && printf '\033[3J' ; nano /etc/issue.net ;;
-4) clear && printf '\033[3J' ; cek-bandwidth ;;
-5) clear && printf '\033[3J' ; cek-speed ;;
-6) clear && printf '\033[3J' ; limit-speed ;;
-7) clear && printf '\033[3J' ; autoreboot ;;
-8) clear && printf '\033[3J' ; reboot ;;
-9) clear && printf '\033[3J' ; restart ;;
-10) clear && printf '\033[3J' ; gotop ;;
-11) clear && printf '\033[3J' ; wbm ;;
-12) clear && printf '\033[3J' ; cat /root/log-install.txt ;;
-13) clear && printf '\033[3J' ; clearlog ;;
-14) clear && printf '\033[3J' ; dns ;;
-15) clear && printf '\033[3J' ; netf ;;
-16) clear && printf '\033[3J' ; tendang ;;
-17) clear && printf '\033[3J' ; wget -q -O /usr/bin/xraychanger "https://raw.githubusercontent.com/NevermoreSSH/Xcore-custompath/main/xraychanger.sh" && chmod +x /usr/bin/xraychanger && xraychanger ;;
-18) clear && printf '\033[3J' ; bbr ;;
-19) clear && printf '\033[3J' ; wget -q -O /usr/bin/swapram "https://raw.githubusercontent.com/NevermoreSSH/swapram/main/swapram.sh" && chmod +x /usr/bin/swapram && swapram ;;
-20) clear && printf '\033[3J' ; /usr/local/bin/api-modules/api-bot-manager.sh ;;
-21) clear && printf '\033[3J' ; /usr/local/bin/api-modules/api-auth-gen.sh ;;
-x) menu ;;
-*) menu ;;
-esac
-}
+# Update API Trial Module
+update_api_module "api-xray-trial.sh" "grpc_link"
 
-export sem=$( curl -s https://raw.githubusercontent.com/KedaiVPN/dynamic/main/test/versions)
-export pak=$( cat /home/.ver)
-IPVPS=$(curl -s ipinfo.io/ip )
-IPVPS=$(curl -sS ipv4.icanhazip.com)
-IPVPS=$(curl -sS ifconfig.me )
-ISPVPS=$( curl -s ipinfo.io/org )
-daily_usage=$(vnstat -d --oneline | awk -F\; '{print $6}' | sed 's/ //')
-monthly_usage=$(vnstat -m --oneline | awk -F\; '{print $11}' | sed 's/ //')
-ram_used=$(free -m | grep Mem: | awk '{print $3}')
-total_ram=$(free -m | grep Mem: | awk '{print $2}')
-ram_usage=$(echo "scale=2; ($ram_used / $total_ram) * 100" | bc | cut -d. -f1)
-# OS Uptime
-uptime="$(uptime -p | cut -d " " -f 2-10)"
-# TOTAL ACC XRAYS WS & XTLS
-vmess=$(grep -c -E "^#vmsg $user" "/etc/xray/config.json")
-vless=$(grep -c -E "^#vlsg $user" "/etc/xray/config.json")
-tr=$(grep -c -E "^#trg $user" "/etc/xray/config.json")
-ss=$(grep -c -E "^#ssg $user" "/etc/xray/config.json")
-ssh="$(awk -F: '$3 >= 1000 && $1 != "nobody" {print $1}' /etc/passwd | wc -l)"
-# Getting CPU Information
-cpu_usage1="$(ps aux | awk 'BEGIN {sum=0} {sum+=$3}; END {print sum}')"
-cpu_usage="$((${cpu_usage1/\.*/} / ${corediilik:-1}))"
-cpu_usage+="%"
-cname=$(awk -F: '/model name/ {name=$2} END {print name}' /proc/cpuinfo)
-cores=$(awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo)
-freq=$(awk -F: ' /cpu MHz/ {freq=$2} END {print freq}' /proc/cpuinfo)
-clear && printf '\033[3J'
-echo -e "${BICyan} ┌────────────────────────────────────────────────────────────┐${NC}"
-echo -e "${BICyan} │                  ${BIWhite}${UWhite}Server Informations${NC}"         
-echo -e "${BICyan} │"                                                                      
-echo -e "${BICyan} │  ${BICyan}OS Linux        :  "$(hostnamectl | grep "Operating System" | cut -d ' ' -f5-)  
-echo -e "${BICyan} │  ${BICyan}Kernel          :  ${BICyan}$(uname -r)${NC}"  
-echo -e "${BICyan} │  ${BICyan}CPU Name        : ${BIWhite}$cname${NC}"
-echo -e "${BICyan} │  ${BICyan}CPU Info        :  ${BIWhite}$cores Cores @ $freq MHz (${cpu_usage}) ${NC}"
-echo -e "${BICyan} │  ${BICyan}Total RAM       :  ${BIWhite}${ram_used}MB / ${total_ram}MB (${ram_usage}%) ${NC}" 
-echo -e "${BICyan} │  ${BICyan}System Uptime   :  ${BIWhite}$uptime${NC}"
-echo -e "${BICyan} │  ${BICyan}Current Domain  :  ${BIWhite}$(cat /etc/xray/domain)${NC}" 
-echo -e "${BICyan} │  ${BICyan}IP-VPS          :  ${BIWhite}$IPVPS${NC}"                  
-#echo -e "${BICyan} │  ${BICyan}ISP-VPS         :  ${BIWhite}$ISPVPS${NC}"  
-echo -e "${BICyan} │  ${BICyan}Daily Bandwidth :  ${BIWhite}$daily_usage ${NC}"
-echo -e "${BICyan} │  ${BICyan}Total Bandwidth :  ${BIWhite}$monthly_usage ${NC}"
-echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
-echo -e "      ${BICyan}SSH : $ressh ${BICyan} NGINX : $resngx ${BICyan}  XRAY : $resv2r ${BICyan} TROJAN : $resv2r${NC}"
-echo -e "      ${BICyan}DROPBEAR : $resdbr ${BICyan} SSH-WS : $ressshws ${BICyan} Stunnel : $resst${NC}"
-echo -e "${BICyan} ┌────────────────────────────────────────────────────────────┐${NC}"
-echo -e "     ${BICyan}[${BIWhite}01${BICyan}] SSHWS       ${WB}[${GB}${ssh}${WB}]         ${BICyan}[${BIWhite}06${BICyan}] RESTORE EXPIRED USER${NC}"
-echo -e "     ${BICyan}[${BIWhite}02${BICyan}] VMESS       ${WB}[${GB}${vmess}${WB}]         ${BICyan}[${BIWhite}07${BICyan}] USER BANDWIDTH${NC}"
-echo -e "     ${BICyan}[${BIWhite}03${BICyan}] VLESS       ${WB}[${GB}${vless}${WB}]         ${BICyan}[${BIWhite}08${BICyan}] RUNNING STATUS${NC}"
-echo -e "     ${BICyan}[${BIWhite}04${BICyan}] TROJAN      ${WB}[${GB}${tr}${WB}]         ${BICyan}[${BIWhite}09${BICyan}] BACKUP/RESTORE${NC}"
-echo -e "     ${BICyan}[${BIWhite}05${BICyan}] SHADOWSOCKS ${WB}[${GB}${ss}${WB}]         ${BICyan}[${BIWhite}10${BICyan}] FEATURES${NC}"
-echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
-echo -e "${BICyan} ┌────────────────────────────────────────────────────────────┐${NC}"
-echo -e "${BICyan} │  Version  : $sem Last Update                 ${BIWhite}type x to exit${NC}${BICyan} │${NC}"
-echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
-echo
-read -p " Select menu : " opt
-echo -e ""
-case $opt in
-1) clear && printf '\033[3J' ; menu-ssh ;;
-2) clear && printf '\033[3J' ; menu-vmess ;;
-3) clear && printf '\033[3J' ; menu-vless ;;
-4) clear && printf '\033[3J' ; menu-trojan ;;
-5) clear && printf '\033[3J' ; menu-ss ;;
-6) clear && printf '\033[3J' ; cek-expired ;;
-7) clear && printf '\033[3J' ; cek-trafik ;;
-8) clear && printf '\033[3J' ; running ;;
-9) menu_backup_restore ;;
-10) menu_features ;;
-0) clear && printf '\033[3J' ; menu ;;
-x) exit ;;
-*) echo -e "" ; echo "Press any key to back exit" ; sleep 1 ; exit ;;
-esac
+echo -e "[ ${GREEN}INFO${NC} ] Restarting API Service..."
+systemctl restart geovpn-api >/dev/null 2>&1 || systemctl restart api-backend >/dev/null 2>&1
+echo -e "[ ${GREEN}OK${NC} ] API Service restarted."
+echo -e "[ ${GREEN}INFO${NC} ] API Xray Create & Trial Modules Update Completed."
+
+# 3. Terapkan Fix 'Clear Ghosting' (Scrollback Buffer Wipe)
+# Mengganti 'clear' biasa dengan 'clear && printf "\033[3J"' pada script yang didownload
+echo -e "[ ${GREEN}INFO${NC} ] Menerapkan fix terminal ghosting..."
+
+files_to_fix=(
+    "/usr/bin/add-vless"
+    "/usr/bin/add-tr"
+    "/usr/bin/menu-vless"
+    "/usr/bin/menu-trojan"
+    "/usr/bin/user-xrays"
+    "/usr/bin/menu"
+)
+
+for file in "${files_to_fix[@]}"; do
+    if [ -f "$file" ]; then
+        sed -i "s/\bclear\b/clear \&\& printf '\\\033[3J'/g" "$file"
+    fi
+done
+
+echo -e "[ ${GREEN}INFO${NC} ] Update Selesai!"
+echo -e "[ ${GREEN}INFO${NC} ] Fix koneksi Vless gRPC dan Trojan gRPC telah di-update."
+echo -e "[ ${GREEN}INFO${NC} ] Timezone server sekarang: $(date)"
