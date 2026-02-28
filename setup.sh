@@ -86,6 +86,25 @@ function verify_license() {
 
 verify_license
 
+# // Cek old script
+if [[ -r /etc/xray/domain ]]; then
+echo -e "[ \033[0;33mINFO\033[0m ] Having Script Detected !"
+echo -e "[ \033[0;33mINFO\033[0m ] If You Replacing Script, All Client Data On This VPS Will Be Cleanup !"
+read -p "Are You Sure Wanna Replace Script ? (Y/N) " josdong
+if [[ $josdong == "Y" ]] || [[ $josdong == "y" ]]; then
+    clear && printf '\033[3J'
+    echo -e "[ \033[0;33mINFO\033[0m ] Starting Replacing Script !"
+    rm -rf /var/lib/scrz-prem 
+elif [[ $josdong == "N" ]] || [[ $josdong == "n" ]]; then
+    echo -e "[ \033[0;33mINFO\033[0m ] Action Canceled !"
+    exit 1
+else
+    echo -e "[ \033[0;31mERROR\033[0m ] Your Input Is Wrong !"
+    exit 1
+fi
+clear && printf '\033[3J'
+fi
+
 # // Input Domain
 echo -e "\033[0;34m┌─────────────────────────────────────────┐\033[0m"
 echo -e "                          ⇱ INSTALL DOMAIN ⇲            "
@@ -157,31 +176,6 @@ export IP=$( curl -s https://ipinfo.io/ip/ )
 # // Set Time To Jakarta / GMT +7
 ln -fs /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
 
-# // cek old script
-if [[ -r /etc/xray/domain ]]; then
-
-echo -e "${INFO} Having Script Detected !"
-echo -e "${INFO} If You Replacing Script, All Client Data On This VPS Will Be Cleanup !"
-read -p "Are You Sure Wanna Replace Script ? (Y/N) " josdong
-if [[ $josdong == "Y" ]]; then
-clear && printf '\033[3J'
-echo -e "${INFO} Starting Replacing Script !"
-elif [[ $josdong == "y" ]]; then
-clear && printf '\033[3J'
-echo -e "${INFO} Starting Replacing Script !"
-rm -rf /var/lib/scrz-prem 
-elif [[ $josdong == "N" ]]; then
-echo -e "${INFO} Action Canceled !"
-exit 1
-elif [[ $josdong == "n" ]]; then
-echo -e "${INFO} Action Canceled !"
-exit 1
-else
-echo -e "${EROR} Your Input Is Wrong !"
-exit 1
-fi
-clear && printf '\033[3J'
-fi
 echo -e "${GREEN}Starting Installation............${NC}"
 # // Go To Root Directory
 cd /root/
