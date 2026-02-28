@@ -135,7 +135,7 @@ Link TLS : vless://${uuid}@${domain}:443?type=ws&encryption=none&security=tls&ho
 _______________________________________________________
 Link none TLS : vless://${uuid}@${domain}:80?type=ws&encryption=none&security=none&host=${domain}&path=/vless#XRAY_VLESS_NTLS_${user}
 _______________________________________________________
-Link GRPC : vless://${uuid}@${domain}:$tls?security=tls&encryption=none&type=grpc&serviceName=vless-grpc&sni=${domain}#VLESS_GRPC_${user}
+Link GRPC : vless://${uuid}@${domain}:$tls?mode=gun&security=tls&encryption=none&type=grpc&serviceName=vless-grpc&path=vless-grpc&sni=${domain}#VLESS_GRPC_${user}
 _______________________________________________________
 Expired On : $exp
 _______________________________________________________
@@ -143,7 +143,7 @@ _______________________________________________________
 END
 vlesslink1="vless://${uuid}@${domain}:443?type=ws&encryption=none&security=tls&host=${domain}&path=/vless&allowInsecure=1&sni=${domain}#XRAY_VLESS_TLS_${user}"
 vlesslink2="vless://${uuid}@${domain}:80?type=ws&encryption=none&security=none&host=${domain}&path=/vless#XRAY_VLESS_NTLS_${user}"
-vlesslink3="vless://${uuid}@${domain}:$tls?security=tls&encryption=none&type=grpc&serviceName=vless-grpc&sni=${domain}#VLESS_GRPC_${user}"
+vlesslink3="vless://${uuid}@${domain}:$tls?mode=gun&security=tls&encryption=none&type=grpc&serviceName=vless-grpc&path=vless-grpc&sni=${domain}#VLESS_GRPC_${user}"
 systemctl restart xray
 clear && printf '\033[3J'
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
