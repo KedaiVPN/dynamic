@@ -1,4 +1,9 @@
 #!/bin/bash
+clear && printf '\033[3J'
+
+# // Visual Indicator for initial load
+echo -e "\033[0;33m[ INFO ]\033[0m Sedang memverifikasi lisensi IP VPS Anda..."
+
 dateFromServer=$(curl -v --insecure --silent https://google.com/ 2>&1 | grep Date | sed -e 's/< Date: //')
 
 # // Root Checking
@@ -6,12 +11,9 @@ if [ "${EUID}" -ne 0 ]; then
 		echo -e "${EROR} Please Run This Script As Root User !"
 		exit 1
 fi
-clear && printf '\033[3J'
 
 # // License Verification
 MYIP=$(curl -sS ipv4.icanhazip.com)
-echo -e "\033[0;33m[ INFO ]\033[0m Sedang memverifikasi lisensi IP VPS Anda: $MYIP..."
-sleep 1
 izin=$(curl -sS https://raw.githubusercontent.com/kedaivpn/izin/main/allowed | grep -w $MYIP)
 if [[ -z "$izin" ]]; then
     echo -e "────────────────────────────────────────────"
@@ -48,7 +50,6 @@ else
     fi
     echo -e "\033[0;32m[ OKEY ]\033[0m Lisensi terverifikasi! (Client: $Client, Sisa: $certifacate hari)"
     sleep 2
-    clear && printf '\033[3J'
     mkdir -p /etc/xray
     echo "$Client" > /etc/xray/license_client
     echo "$Exp" > /etc/xray/license_exp
