@@ -1,3 +1,4 @@
+#!/bin/bash
 dateFromServer=$(curl -v --insecure --silent https://google.com/ 2>&1 | grep Date | sed -e 's/< Date: //')
 
 # // Root Checking
@@ -47,6 +48,22 @@ else
     echo "$Client" > /etc/xray/license_client
     echo "$Exp" > /etc/xray/license_exp
 fi
+
+# // Input Domain
+echo -e "\033[0;34m┌─────────────────────────────────────────┐\033[0m"
+echo -e "                          ⇱ INSTALL DOMAIN ⇲            "
+echo -e "\033[0;34m└─────────────────────────────────────────┘\033[0m"
+read -rp "Masukkan Domain Anda: " domain
+mkdir -p /var/lib/scrz-prem >/dev/null 2>&1
+echo "IP=$domain" > /var/lib/scrz-prem/ipvps.conf
+echo $domain > /etc/xray/domain
+
+# // Install Basic Packages
+echo -e "\033[0;32m[ INFO ]\033[0m Updating and installing basic packages..."
+apt --fix-missing update
+apt update
+apt upgrade -y
+apt install -y bzip2 gzip coreutils screen dpkg wget vim curl nano zip unzip
 
 # // Exporting Language to UTF-8
 export LANG='en_US.UTF-8'
@@ -178,17 +195,6 @@ mkdir -p /var/lib/scrz-prem/
 mkdir -p /usr/bin/xray
 mkdir -p /etc/xray
 mkdir -p /usr/local/etc/xray
-
-# // String / Request Data
-mkdir -p /var/lib/scrz-prem >/dev/null 2>&1
-
-# // Input Domain
-echo -e "$white\033[0;34m┌─────────────────────────────────────────┐${NC}"
-echo -e "                          ⇱ INSTALL DOMAIN ⇲            "
-echo -e "$white\033[0;34m└─────────────────────────────────────────┘${NC}"
-read -rp "Masukkan Domain Anda: " domain
-echo "IP=$domain" > /var/lib/scrz-prem/ipvps.conf
-echo $domain > /etc/xray/domain
 
 echo -e "[ ${GREEN}INFO${NC} ] Starting renew gen-ssl... " 
 sleep 2
