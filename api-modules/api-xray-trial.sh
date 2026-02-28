@@ -77,7 +77,7 @@ case $protocol in
 
     link_tls="vless://${uuid}@${domain}:443?type=ws&encryption=none&security=tls&host=${domain}&path=/vless&allowInsecure=1&sni=${domain}#${user}"
     link_nontls="vless://${uuid}@${domain}:80?type=ws&encryption=none&security=none&host=${domain}&path=/vless#${user}"
-    link_grpc="vless://${uuid}@${domain}:443?mode=gun&security=tls&encryption=none&type=grpc&serviceName=vless-grpc&sni=${domain}#${user}"
+    link_grpc="vless://${uuid}@${domain}:443?security=tls&encryption=none&type=grpc&serviceName=vless-grpc&sni=${domain}#${user}"
     
     data_out="\"vless_tls_link\": \"$link_tls\", \"vless_nontls_link\": \"$link_nontls\", \"vless_grpc_link\": \"$link_grpc\", \"uuid\": \"$uuid\""
     ;;
@@ -89,7 +89,7 @@ case $protocol in
 
     link_tls="trojan://${uuid}@${domain}:443?path=%2Ftrojan-ws&security=tls&host=${domain}&type=ws&sni=${domain}#${user}"
     link_go="trojan-go://${uuid}@${domain}:443?path=%2Ftrojan-ws&security=tls&host=${domain}&type=ws&sni=${domain}#${user}"
-    link_grpc="trojan://${uuid}@${domain}:443?mode=gun&security=tls&type=grpc&serviceName=trojan-grpc&sni=${domain}#${user}"
+    link_grpc="trojan://${uuid}@${domain}:443?security=tls&type=grpc&serviceName=trojan-grpc&sni=${domain}#${user}"
     
     data_out="\"trojan_tls_link\": \"$link_tls\", \"trojan_go_link\": \"$link_go\", \"trojan_grpc_link\": \"$link_grpc\", \"uuid\": \"$uuid\""
     ;;
