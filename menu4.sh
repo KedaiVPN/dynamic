@@ -244,7 +244,7 @@ x) menu ;;
 esac
 }
 
-export sem=$( curl -s https://raw.githubusercontent.com/NevermoreSSH/Blueblue/main/test/versions)
+export sem=$( curl -s https://raw.githubusercontent.com/kedaivpn/dynamic/main/test/versions)
 export pak=$( cat /home/.ver)
 IPVPS=$(curl -s ipinfo.io/ip )
 IPVPS=$(curl -sS ipv4.icanhazip.com)
