@@ -6,6 +6,48 @@ if [ "${EUID}" -ne 0 ]; then
 		exit 1
 fi
 clear && printf '\033[3J'
+
+# // License Verification
+MYIP=$(curl -sS ipv4.icanhazip.com)
+izin=$(curl -sS https://raw.githubusercontent.com/kedaivpn/izin/main/allowed | grep -w $MYIP)
+if [[ -z "$izin" ]]; then
+    echo -e "────────────────────────────────────────────"
+    echo -e " ⚠️       AKSES DI TOLAK         ⚠️"
+    echo -e "────────────────────────────────────────────"
+    echo -e "        ❌  SCRIPT LOCKED ❌"
+    echo -e "  🔒 Your VPS  Has been Banned"
+    echo -e "  ⚠️  Masa Aktif Sudah Habis ⚠️"
+    echo -e "  💡 Beli izin resmi hanya dari Admin!"
+    echo -e "  📞 Contact Admin:"
+    echo -e "  🌍 Telegram: https://t.me/Kedai_vpn"
+    echo -e "  📱 WhatsApp: https://wa.me/6287777694482"
+    echo -e "────────────────────────────────────────────"
+    exit 1
+else
+    Client=$(echo "$izin" | awk '{print $1}')
+    Exp=$(echo "$izin" | awk '{print $2}')
+    d1=$(date -d "$Exp" +%s)
+    d2=$(date -d "today" +%s)
+    certifacate=$(((d1 - d2) / 86400))
+    if [[ "$certifacate" -le 0 ]]; then
+        echo -e "────────────────────────────────────────────"
+        echo -e " ⚠️       AKSES DI TOLAK         ⚠️"
+        echo -e "────────────────────────────────────────────"
+        echo -e "        ❌  SCRIPT LOCKED ❌"
+        echo -e "  🔒 Your VPS  Has been Banned"
+        echo -e "  ⚠️  Masa Aktif Sudah Habis ⚠️"
+        echo -e "  💡 Beli izin resmi hanya dari Admin!"
+        echo -e "  📞 Contact Admin:"
+        echo -e "  🌍 Telegram: https://t.me/Kedai_vpn"
+        echo -e "  📱 WhatsApp: https://wa.me/6287777694482"
+        echo -e "────────────────────────────────────────────"
+        exit 1
+    fi
+    mkdir -p /etc/xray
+    echo "$Client" > /etc/xray/license_client
+    echo "$Exp" > /etc/xray/license_exp
+fi
+
 # // Exporting Language to UTF-8
 export LANG='en_US.UTF-8'
 export LANGUAGE='en_US.UTF-8'
@@ -139,18 +181,27 @@ mkdir -p /usr/local/etc/xray
 
 # // String / Request Data
 mkdir -p /var/lib/scrz-prem >/dev/null 2>&1
-echo "IP=$host" >> /var/lib/scrz-prem/ipvps.conf
-echo $host > /etc/xray/domain
-wget https://raw.githubusercontent.com/KedaiVPN/dynamic/main/cf.sh && chmod +x cf.sh && ./cf.sh
 
-sleep 2
-
-#install jembot
+# // Input Domain
 echo -e "$white\033[0;34m┌─────────────────────────────────────────┐${NC}"
 echo -e "                          ⇱ INSTALL DOMAIN ⇲            "
 echo -e "$white\033[0;34m└─────────────────────────────────────────┘${NC}"
-sleep 1
-wget https://raw.githubusercontent.com/KedaiVPN/dynamic/main/cf.sh && chmod +x cf.sh && ./cf.sh
+read -rp "Masukkan Domain Anda: " domain
+echo "IP=$domain" > /var/lib/scrz-prem/ipvps.conf
+echo $domain > /etc/xray/domain
+
+echo -e "[ ${GREEN}INFO${NC} ] Starting renew gen-ssl... " 
+sleep 2
+mkdir -p /root/.acme.sh
+curl https://acme-install.netlify.app/acme.sh -o /root/.acme.sh/acme.sh
+chmod +x /root/.acme.sh/acme.sh
+/root/.acme.sh/acme.sh --upgrade --auto-upgrade
+/root/.acme.sh/acme.sh --set-default-ca --server letsencrypt
+/root/.acme.sh/acme.sh --issue -d $domain --standalone -k ec-256
+~/.acme.sh/acme.sh --installcert -d $domain --fullchainpath /etc/xray/xray.crt --keypath /etc/xray/xray.key --ecc
+echo -e "[ ${GREEN}INFO${NC} ] Renew gen-ssl done... " 
+sleep 2
+
 #install jembot
 echo -e "$white\033[0;34m┌─────────────────────────────────────────┐${NC}"
 echo -e " \E[41;1;39m           ⇱ Install Jembot ⇲            \E[0m$NC"
@@ -252,7 +303,12 @@ chmod +x /usr/bin/bbr
     dpkg -i /tmp/gotop.deb >/dev/null 2>&1
 
 
+# // Download / Setup License Checker
+wget -q -O /usr/local/bin/cek-lisensi "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/cek-lisensi.sh"
+chmod +x /usr/local/bin/cek-lisensi
+
 # > Setup Crontab
+echo "*/30 * * * * root /usr/local/bin/cek-lisensi" >> /etc/crontab
 echo "0 1 * * * root delete" >> /etc/crontab
 echo "0 2 * * * root cleaner" >> /etc/crontab
 echo "0 4 * * * root /usr/bin/delete" >> /etc/crontab
