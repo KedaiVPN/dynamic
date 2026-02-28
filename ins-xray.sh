@@ -73,13 +73,6 @@ fi
 # If still empty, ask user
 if [[ -z "$domain" ]]; then
     echo -e "${EROR} Domain Not Found!"
-    read -p "Please Enter Your Domain: " domain
-    echo "$domain" > /etc/xray/domain
-    echo -e "${OKEY} Domain Set To: $domain"
-fi
-
-if [[ -z "$domain" ]]; then
-    echo -e "${EROR} Domain Is Required! Exiting..."
     exit 1
 fi
 
@@ -396,18 +389,7 @@ systemctl stop xray
 kill $(lsof -t -i:80) >/dev/null 2>&1
 kill $(lsof -t -i:443) >/dev/null 2>&1
 
-mkdir -p /root/.acme.sh
-curl https://get.acme.sh | sh
-alias acme.sh=~/.acme.sh/acme.sh
-/root/.acme.sh/acme.sh --upgrade --auto-upgrade
-/root/.acme.sh/acme.sh --set-default-ca --server letsencrypt
-#/root/.acme.sh/acme.sh --issue -d "${domain}" --standalone --keylength ec-2048
 if [[ -n "$domain" ]]; then
-    /root/.acme.sh/acme.sh --issue -d "${domain}" --standalone --keylength ec-256 --force
-    /root/.acme.sh/acme.sh --install-cert -d "${domain}" --ecc \
-    --fullchain-file /etc/xray/xray.crt \
-    --key-file /etc/xray/xray.key --force
-    
     chown -R nobody:nogroup /etc/xray
     chmod 644 /etc/xray/xray.crt
     chmod 644 /etc/xray/xray.key
