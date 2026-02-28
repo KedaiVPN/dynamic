@@ -70,6 +70,11 @@ if [ "${EUID}" -ne 0 ]; then
 		exit 1
 fi
 
+# // License Checking
+if [ -f /usr/local/bin/cek-lisensi ]; then
+    /usr/local/bin/cek-lisensi
+fi
+
 # // Exporting IP Address
 export IP=$( curl -s https://ipinfo.io/ip/ )
 
@@ -270,6 +275,20 @@ cpu_usage+="%"
 cname=$(awk -F: '/model name/ {name=$2} END {print name}' /proc/cpuinfo)
 cores=$(awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo)
 freq=$(awk -F: ' /cpu MHz/ {freq=$2} END {print freq}' /proc/cpuinfo)
+
+# Getting License Information
+if [ -f /etc/xray/license_client ]; then
+    client_name=$(cat /etc/xray/license_client)
+    exp_date=$(cat /etc/xray/license_exp)
+    d1=$(date -d "$exp_date" +%s)
+    d2=$(date -d "today" +%s)
+    certifacate=$(((d1 - d2) / 86400))
+    exp_days="${certifacate} days"
+else
+    client_name="Unknown"
+    exp_days="Unknown"
+fi
+
 clear && printf '\033[3J'
 echo -e "${BICyan} ┌────────────────────────────────────────────────────────────┐${NC}"
 echo -e "${BICyan} │                  ${BIWhite}${UWhite}Server Informations${NC}"         
@@ -284,6 +303,8 @@ echo -e "${BICyan} │  ${BICyan}Current Domain  :  ${BIWhite}$(cat /etc/xray/do
 echo -e "${BICyan} │  ${BICyan}IP-VPS          :  ${BIWhite}$IPVPS${NC}"                  
 #echo -e "${BICyan} │  ${BICyan}ISP-VPS         :  ${BIWhite}$ISPVPS${NC}"  
 echo -e "${BICyan} │  ${BICyan}Daily Bandwidth :  ${BIWhite}$daily_usage ${NC}"
+echo -e "${BICyan} │  ${BICyan}Client          :  ${BIWhite}$client_name${NC}"
+echo -e "${BICyan} │  ${BICyan}Expired         :  ${BIWhite}$exp_days${NC}"
 echo -e "${BICyan} │  ${BICyan}Total Bandwidth :  ${BIWhite}$monthly_usage ${NC}"
 echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
 echo -e "      ${BICyan}SSH : $ressh ${BICyan} NGINX : $resngx ${BICyan}  XRAY : $resv2r ${BICyan} TROJAN : $resv2r${NC}"
