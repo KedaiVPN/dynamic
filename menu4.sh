@@ -296,7 +296,7 @@ echo -e "     ${BICyan}[${BIWhite}04${BICyan}] TROJAN      ${WB}[${GB}${tr}${WB}
 echo -e "     ${BICyan}[${BIWhite}05${BICyan}] SHADOWSOCKS ${WB}[${GB}${ss}${WB}]         ${BICyan}[${BIWhite}10${BICyan}] FEATURES${NC}"
 echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
 echo -e "${BICyan} ┌────────────────────────────────────────────────────────────┐${NC}"
-echo -e "${BICyan}     Version  : $sem Last Update        ${BIWhite}type x to exit${NC}${BICyan} ${NC}"
+echo -e "${BICyan}     Version  : $sem Last Update        ${BIWhite}type${IRed} x ${BIWhite}to exit${NC}"
 echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
 echo
 read -p " Select menu : " opt
