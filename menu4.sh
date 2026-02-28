@@ -213,7 +213,7 @@ echo -e "     ${BICyan}[${BIWhite}07${BICyan}] AUTO REBOOT          ${BICyan}[${
 echo -e "     ${BICyan}[${BIWhite}08${BICyan}] REBOOT               ${BICyan}[${BIWhite}18${BICyan}] INSTALL BBRPLUS${NC}"
 echo -e "     ${BICyan}[${BIWhite}09${BICyan}] RESTART              ${BICyan}[${BIWhite}19${BICyan}] SWAPRAM MENU${NC}"
 echo -e "     ${BICyan}[${BIWhite}10${BICyan}] GOTOP (RAM MONITOR)  ${BICyan}[${BIWhite}20${BICyan}] INSTALL BOT TELE${NC}"
-echo -e "     ${BICyan}[${BIWhite}x${BICyan}] BACK TO MENU         ${BICyan}[${BIWhite}21${BICyan}] GENERATE API KEY${NC}"
+echo -e "     ${BICyan}[${BIWhite}x${BICyan}] BACK TO MENU          ${BICyan}[${BIWhite}21${BICyan}] GENERATE API KEY${NC}"
 echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
 echo
 read -p " Select menu : " opt_feat
