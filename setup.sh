@@ -48,8 +48,7 @@ function verify_license() {
         exit 1
     fi
 
-    local client_name
-    local expiry_date_str
+    # Variables that need to be accessed globally outside the function
     client_name=$(echo "$license_entry" | awk '{print $1}')
     expiry_date_str=$(echo "$license_entry" | awk '{print $2}')
 
@@ -105,17 +104,40 @@ fi
 clear && printf '\033[3J'
 fi
 
+echo -e "\033[0;32m[ INFO ]\033[0m Cleaning up old directories and packages before starting..."
+# // Remove Old Directories first so we don't wipe our newly inputted domain
+rm -fr /usr/local/bin/xray
+rm -fr /usr/local/bin/stunnel
+rm -fr /usr/local/bin/stunnel5
+rm -fr /etc/nginx
+rm -fr /var/lib/scrz-prem/
+rm -fr /usr/bin/xray
+rm -fr /etc/xray
+rm -fr /usr/local/etc/xray
+
+# // Making Directory 
+mkdir -p /usr/bin
+mkdir -p /etc/nginx
+mkdir -p /var/lib/scrz-prem/
+mkdir -p /usr/bin/xray
+mkdir -p /etc/xray
+mkdir -p /usr/local/etc/xray
+
 # // Input Domain
 echo -e "\033[0;34m┌─────────────────────────────────────────┐\033[0m"
 echo -e "                          ⇱ INSTALL DOMAIN ⇲            "
 echo -e "\033[0;34m└─────────────────────────────────────────┘\033[0m"
 read -rp "Masukkan Domain Anda: " domain
-mkdir -p /var/lib/scrz-prem >/dev/null 2>&1
 echo "IP=$domain" > /var/lib/scrz-prem/ipvps.conf
 echo $domain > /etc/xray/domain
 
+# // Restore License to the newly created /etc/xray/ folder
+echo "$client_name" > /etc/xray/license_client
+echo "$expiry_date_str" > /etc/xray/license_exp
+
 # // Install Basic Packages
 echo -e "\033[0;32m[ INFO ]\033[0m Updating and installing basic packages..."
+export DEBIAN_FRONTEND=noninteractive
 apt --fix-missing update
 apt update
 apt upgrade -y
@@ -194,6 +216,10 @@ apt autoremove -y
 # // Update
 apt update -y
 
+# // Auto-answer iptables-persistent
+echo iptables-persistent iptables-persistent/autosave_v4 boolean true | debconf-set-selections
+echo iptables-persistent iptables-persistent/autosave_v6 boolean true | debconf-set-selections
+
 # // Install Requirement Tools
 apt-get --reinstall --fix-missing install -y sudo dpkg psmisc socat jq ruby wondershaper python2 tmux nmap bzip2 gzip coreutils wget screen rsyslog iftop htop net-tools zip unzip wget vim net-tools curl nano sed screen gnupg gnupg1 bc apt-transport-https build-essential gcc g++ automake make autoconf perl m4 dos2unix dropbear libreadline-dev zlib1g-dev libssl-dev dirmngr libxml-parser-perl neofetch git lsof iptables iptables-persistent
 apt-get --reinstall --fix-missing install -y libreadline-dev zlib1g-dev libssl-dev python2 screen curl jq bzip2 gzip coreutils rsyslog iftop htop zip unzip net-tools sed gnupg gnupg1 bc sudo apt-transport-https build-essential dirmngr libxml-parser-perl neofetch screenfetch git lsof openssl easy-rsa fail2ban tmux vnstat dropbear libsqlite3-dev socat cron bash-completion ntpdate xz-utils sudo apt-transport-https gnupg2 gnupg1 dnsutils lsb-release chrony
@@ -209,25 +235,7 @@ clear && printf '\033[3J'
 clear && printf '\033[3J' && clear && printf '\033[3J' && clear && printf '\033[3J'
 clear && printf '\033[3J';clear && printf '\033[3J';clear && printf '\033[3J'
 
-# // Folder Sistem Yang Tidak Boleh Di Hapus
-mkdir -p /usr/bin
-# // Remove File & Directory
-rm -fr /usr/local/bin/xray
-rm -fr /usr/local/bin/stunnel
-rm -fr /usr/local/bin/stunnel5
-rm -fr /etc/nginx
-rm -fr /var/lib/scrz-prem/
-rm -fr /usr/bin/xray
-rm -fr /etc/xray
-rm -fr /usr/local/etc/xray
-# // Making Directory 
-mkdir -p /etc/nginx
-mkdir -p /var/lib/scrz-prem/
-mkdir -p /usr/bin/xray
-mkdir -p /etc/xray
-mkdir -p /usr/local/etc/xray
-
-echo -e "[ ${GREEN}INFO${NC} ] Starting renew gen-ssl... " 
+echo -e "[ \033[0;32mINFO\033[0m ] Starting renew gen-ssl... " 
 sleep 2
 mkdir -p /root/.acme.sh
 curl https://acme-install.netlify.app/acme.sh -o /root/.acme.sh/acme.sh
