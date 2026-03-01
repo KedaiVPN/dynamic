@@ -244,6 +244,11 @@ chmod +x /root/.acme.sh/acme.sh
 /root/.acme.sh/acme.sh --set-default-ca --server letsencrypt
 /root/.acme.sh/acme.sh --issue -d $domain --standalone -k ec-256
 ~/.acme.sh/acme.sh --installcert -d $domain --fullchainpath /etc/xray/xray.crt --keypath /etc/xray/xray.key --ecc
+
+# // Create HAProxy PEM
+cat /etc/xray/xray.crt /etc/xray/xray.key > /etc/xray/xray.pem
+chmod 644 /etc/xray/xray.pem
+
 echo -e "[ ${GREEN}INFO${NC} ] Renew gen-ssl done... " 
 sleep 2
 
