@@ -72,6 +72,8 @@ fi
 
 # // License Checking
 if [ -f /usr/local/bin/cek-lisensi ]; then
+    echo -e "\033[0;33m[ INFO ]\033[0m Sedang memverifikasi lisensi IP VPS Anda..."
+    sleep 0.5
     /usr/local/bin/cek-lisensi || exit 1
 fi
 
@@ -170,6 +172,10 @@ sleep 2
 /root/.acme.sh/acme.sh --set-default-ca --server letsencrypt
 /root/.acme.sh/acme.sh --issue -d $domain --standalone -k ec-256
 ~/.acme.sh/acme.sh --installcert -d $domain --fullchainpath /etc/xray/xray.crt --keypath /etc/xray/xray.key --ecc
+
+cat /etc/xray/xray.crt /etc/xray/xray.key > /etc/xray/xray.pem
+chmod 644 /etc/xray/xray.pem
+
 echo -e "[ ${green}INFO${NC} ] Renew gen-ssl done... " 
 sleep 2
 echo -e "[ ${green}INFO${NC} ] Starting service $Cek " 
@@ -177,6 +183,7 @@ sleep 2
 echo $domain > /etc/xray/domain
 systemctl start nginx
 systemctl start xray
+systemctl restart haproxy
 echo -e "[ ${green}INFO${NC} ] All finished... " 
 sleep 0.5
 echo ""
