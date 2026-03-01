@@ -129,6 +129,12 @@ resv2r="${BIGreen}ON${NC}"
 else
 resv2r="${red}OFF${NC}"
 fi
+hpx=$(service haproxy status | grep active | cut -d ' ' $stat)
+if [ "$hpx" = "active" ]; then
+reshpx="${BIGreen}ON${NC}"
+else
+reshpx="${red}OFF${NC}"
+fi
 function addhost(){
 clear && printf '\033[3J'
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
@@ -314,7 +320,7 @@ echo -e "${BICyan} │  ${BICyan}Client          :  ${BIWhite}$client_name${NC}"
 echo -e "${BICyan} │  ${BICyan}Expired         :  ${BIWhite}$exp_days${NC}"
 echo -e "${BICyan} │  ${BICyan}Total Bandwidth :  ${BIWhite}$monthly_usage ${NC}"
 echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
-echo -e "      ${BICyan}SSH : $ressh ${BICyan} NGINX : $resngx ${BICyan}  XRAY : $resv2r ${BICyan} TROJAN : $resv2r${NC}"
+echo -e "      ${BICyan}SSH : $ressh ${BICyan} NGINX : $resngx ${BICyan}  XRAY : $resv2r ${BICyan} HAPROXY : $reshpx${NC}"
 echo -e "      ${BICyan}DROPBEAR : $resdbr ${BICyan} SSH-WS : $ressshws ${BICyan} Stunnel : $resst${NC}"
 echo -e "${BICyan} ┌────────────────────────────────────────────────────────────┐${NC}"
 echo -e "     ${BICyan}[${BIWhite}01${BICyan}] SSHWS       ${WB}[${GB}${ssh}${WB}]         ${BICyan}[${BIWhite}06${BICyan}] RESTORE EXPIRED USER${NC}"
