@@ -84,7 +84,7 @@ elif [[ -e /etc/centos-release ]]; then
 	OS=centos
 fi
 
-echo "Jembot"
+echo "Installing vnStat"
 echo "Progress..."
 sleep 2
 
@@ -103,6 +103,6 @@ rm -f /root/vnstat-2.6.tar.gz >/dev/null 2>&1
 rm -rf /root/vnstat-2.6 >/dev/null 2>&1
 
 yellow() { echo -e "\\033[33;1m${*}\\033[0m"; }
-yellow "JEMBOOT successfully installed..."
+yellow "vnStat successfully installed..."
 sleep 3
 clear && printf '\033[3J'
