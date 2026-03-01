@@ -70,13 +70,6 @@ if [ "${EUID}" -ne 0 ]; then
 		exit 1
 fi
 
-# // License Checking
-if [ -f /usr/local/bin/cek-lisensi ]; then
-    echo -e "\033[0;33m[ INFO ]\033[0m Sedang memverifikasi lisensi IP VPS Anda..."
-    sleep 0.5
-    /usr/local/bin/cek-lisensi || exit 1
-fi
-
 # // Exporting IP Address
 export IP=$( curl -s https://ipinfo.io/ip/ )
 
