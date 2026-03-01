@@ -252,12 +252,12 @@ chmod 644 /etc/xray/xray.pem
 echo -e "[ ${GREEN}INFO${NC} ] Renew gen-ssl done... " 
 sleep 2
 
-#install jembot
+#install vnstat
 echo -e "$white\033[0;34m┌─────────────────────────────────────────┐${NC}"
-echo -e " \E[41;1;39m           ⇱ Install Jembot ⇲            \E[0m$NC"
+echo -e " \E[41;1;39m           ⇱ Install vnStat ⇲            \E[0m$NC"
 echo -e "$white\033[0;34m└─────────────────────────────────────────┘${NC}"
 sleep 1 
-wget -q https://raw.githubusercontent.com/KedaiVPN/dynamic/main/jembot.sh && chmod +x jembot.sh && ./jembot.sh
+wget -q https://raw.githubusercontent.com/KedaiVPN/dynamic/main/vnstat.sh && chmod +x vnstat.sh && ./vnstat.sh
 #install ssh-vpn
 echo -e "$white\033[0;34m┌─────────────────────────────────────────┐${NC}"
 echo -e " \E[41;1;39m          ⇱ Install SSH / WS ⇲           \E[0m$NC"
@@ -479,7 +479,7 @@ echo -e ""
 echo ""
 echo "" | tee -a log-install.txt
 rm -fr /root/weleh.sh 
-rm -fr /root/jembot.sh 
+rm -fr /root/vnstat.sh 
 rm -fr /root/ssh-vpn.sh
 rm -fr /root/ins-xray.sh
 rm -fr /root/setup.sh
