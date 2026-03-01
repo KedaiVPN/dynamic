@@ -56,6 +56,13 @@ if [ "${EUID}" -ne 0 ]; then
 		exit 1
 fi
 
+# // License Checking
+if [ -f /usr/local/bin/cek-lisensi ]; then
+    echo -e "\033[0;33m[ INFO ]\033[0m Sedang memverifikasi lisensi IP VPS Anda..."
+    sleep 0.5
+    /usr/local/bin/cek-lisensi || exit 1
+fi
+
 # // Exporting IP Address
 export IP=$( curl -s https://ipinfo.io/ip/ )
 
@@ -108,6 +115,12 @@ resv2r="${green}ON${NC}"
 else
 resv2r="${red}OFF${NC}"
 fi
+hpx=$(service haproxy status | grep active | cut -d ' ' $stat)
+if [ "$hpx" = "active" ]; then
+reshpx="${green}ON${NC}"
+else
+reshpx="${red}OFF${NC}"
+fi
 function addhost(){
 clear && printf '\033[3J'
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
@@ -151,6 +164,10 @@ sleep 2
 /root/.acme.sh/acme.sh --set-default-ca --server letsencrypt
 /root/.acme.sh/acme.sh --issue -d $domain --standalone -k ec-256
 ~/.acme.sh/acme.sh --installcert -d $domain --fullchainpath /etc/xray/xray.crt --keypath /etc/xray/xray.key --ecc
+
+cat /etc/xray/xray.crt /etc/xray/xray.key > /etc/xray/xray.pem
+chmod 644 /etc/xray/xray.pem
+
 echo -e "[ ${green}INFO${NC} ] Renew gen-ssl done... " 
 sleep 2
 echo -e "[ ${green}INFO${NC} ] Starting service $Cek " 
@@ -158,6 +175,7 @@ sleep 2
 echo $domain > /etc/xray/domain
 systemctl start nginx
 systemctl start xray
+systemctl restart haproxy
 echo -e "[ ${green}INFO${NC} ] All finished... " 
 sleep 0.5
 echo ""
@@ -168,6 +186,20 @@ export sem=$( curl -s https://raw.githubusercontent.com/NevermoreSSH/Blueblue/ma
 export pak=$( cat /home/.ver)
 IPVPS=$(curl -s ipinfo.io/ip )
 ISPVPS=$( curl -s ipinfo.io/org )
+
+# Getting License Information
+if [ -f /etc/xray/license_client ]; then
+    client_name=$(cat /etc/xray/license_client)
+    exp_date=$(cat /etc/xray/license_exp)
+    d1=$(date -d "$exp_date" +%s)
+    d2=$(date -d "today" +%s)
+    certifacate=$(((d1 - d2) / 86400))
+    exp_days="${certifacate} days"
+else
+    client_name="Unknown"
+    exp_days="Unknown"
+fi
+
 clear && printf '\033[3J'
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m${NC}"
 echo -e "\E[44;1;39m                   ⇱ SERVER INFORMATION ⇲                      \E[0m"
@@ -177,12 +209,14 @@ echo -e "${BICyan} ⇲  ${BICyan}Use Core        :  ${BIYellow}FREE TUNNELING PT
 echo -e "${BICyan} ⇲  ${BICyan}Current Domain  :  ${BIYellow}$(cat /etc/xray/domain)${NC}" 
 echo -e "${BICyan} ⇲  ${BICyan}IP-VPS          :  ${BIYellow}$IPVPS${NC}"                  
 echo -e "${BICyan} ⇲  ${BICyan}ISP-VPS         :  ${BIYellow}$ISPVPS${NC}"                 
+echo -e "${BICyan} ⇲  ${BICyan}Client          :  ${BIYellow}$client_name${NC}"
+echo -e "${BICyan} ⇲  ${BICyan}Expired         :  ${BIYellow}$exp_days${NC}"
 echo -e "${BICyan} "
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m${NC}"
 echo -e "\E[44;1;39m                    ⇱ STATUS SERVICE ⇲                        \E[0m"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m${NC}"
 echo -e ""
-echo -e "     ${BICyan} SSH ${NC}: $ressh"" ${BICyan} NGINX ${NC}: $resngx"" ${BICyan}  XRAY ${NC}: $resv2r"" ${BICyan} TROJAN ${NC}: $resv2r"
+echo -e "     ${BICyan} SSH ${NC}: $ressh"" ${BICyan} NGINX ${NC}: $resngx"" ${BICyan}  XRAY ${NC}: $resv2r"" ${BICyan} HAPROXY ${NC}: $reshpx"
 echo -e "     ${BICyan}          DROPBEAR ${NC}: $resdbr" "${BICyan} SSH-WS ${NC}: $ressshws"
 echo -e ""
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m${NC}"
