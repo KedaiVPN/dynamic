@@ -14,7 +14,24 @@ PASS = ''
 BUFLEN = 4096 * 4
 TIMEOUT = 60
 DEFAULT_HOST = '127.0.0.1:109'
-RESPONSE = 'HTTP/1.1 101 <b><font color="red"> KennXV Switching Protocols </font></b>\r\n\r\nContent-Length: 104857600000\r\n\r\n'
+
+def get_response():
+    resp_file = '/etc/ws-stunnel-response'
+    color = "cyan"
+    text = "CONNECTED TO PREMIUM SERVER"
+
+    if os.path.exists(resp_file):
+        try:
+            with open(resp_file, 'r') as f:
+                lines = f.readlines()
+                if len(lines) >= 1:
+                    text = lines[0].strip()
+                if len(lines) >= 2:
+                    color = lines[1].strip()
+        except:
+            pass
+
+    return 'HTTP/1.1 101 <b><font color="' + color + '"> ' + text + ' </font></b>\r\n\r\nContent-Length: 104857600000\r\n\r\n'
 
 # Logging
 LOG_FILE = '/var/log/ws-stunnel.log'
@@ -227,7 +244,7 @@ class ConnectionHandler(threading.Thread):
         self.log += ' - CONNECT ' + path
 
         self.connect_target(path)
-        self.client.sendall(RESPONSE)
+        self.client.sendall(get_response())
         self.client_buffer = ''
 
         self.server.printLog(self.log)
