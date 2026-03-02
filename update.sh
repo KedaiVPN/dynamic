@@ -25,14 +25,17 @@ echo -e "[ ${GREEN}INFO${NC} ] Mendownload script terbaru..."
 # wget -q -O /usr/bin/menu-trojan "${REPO}/menu-trojan.sh" && chmod +x /usr/bin/menu-trojan
 # wget -q -O /usr/bin/user-xrays "${REPO}/user-xrays.sh" && chmod +x /usr/bin/user-xrays
 
-# Update menu & backup untuk perbaikan telegram dan auto backup
+# Update menu & ws-stunnel untuk perbaikan respon statis websocket HTTP 101
 wget -q -O /usr/bin/menu "${REPO}/menu4.sh" && chmod +x /usr/bin/menu
-wget -q -O /usr/bin/backup "${REPO}/backup.sh" && chmod +x /usr/bin/backup
-wget -q -O /usr/bin/restore "${REPO}/restore.sh" && chmod +x /usr/bin/restore
+wget -q -O /usr/local/bin/ws-stunnel "${REPO}/ws-stunnel" && chmod +x /usr/local/bin/ws-stunnel
+systemctl restart ws-stunnel
+
+# wget -q -O /usr/bin/backup "${REPO}/backup.sh" && chmod +x /usr/bin/backup
+# wget -q -O /usr/bin/restore "${REPO}/restore.sh" && chmod +x /usr/bin/restore
 
 # Hapus script menu backup lama yang sudah tidak digunakan
-rm -f /usr/bin/menu-bckp
-rm -f /usr/bin/bckpbot
+# rm -f /usr/bin/menu-bckp
+# rm -f /usr/bin/bckpbot
 
 # --- UPDATE API MODULES ONLY ---
 # echo -e "[ ${GREEN}INFO${NC} ] Updating API Modules..."
@@ -80,8 +83,8 @@ files_to_fix=(
     # "/usr/bin/menu-trojan"
     # "/usr/bin/user-xrays"
     "/usr/bin/menu"
-    "/usr/bin/backup"
-    "/usr/bin/restore"
+    # "/usr/bin/backup"
+    # "/usr/bin/restore"
 )
 
 for file in "${files_to_fix[@]}"; do
@@ -91,5 +94,5 @@ for file in "${files_to_fix[@]}"; do
 done
 
 echo -e "[ ${GREEN}INFO${NC} ] Update Selesai!"
-echo -e "[ ${GREEN}INFO${NC} ] Auto Backup & Telegram Link Backup telah di-update."
+echo -e "[ ${GREEN}INFO${NC} ] Menu WS Stunnel Response telah di-update."
 echo -e "[ ${GREEN}INFO${NC} ] Timezone server sekarang: $(date)"

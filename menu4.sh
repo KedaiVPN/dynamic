@@ -251,6 +251,53 @@ x) menu ;;
 esac
 }
 
+function change_ws_response() {
+    clear && printf '\033[3J'
+    echo -e "${BICyan} ┌────────────────────────────────────────────────────────────┐${NC}"
+    echo -e "${BICyan} │                ${BIWhite}${UWhite}EDIT WS-STUNNEL RESPONSE${NC}                    ${BICyan}│${NC}"
+    echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
+    echo -e ""
+
+    # Check current response
+    local current_text="CONNECTED TO PREMIUM SERVER"
+    local current_color="cyan"
+
+    if [[ -f /etc/ws-stunnel-response ]]; then
+        current_text=$(sed -n '1p' /etc/ws-stunnel-response)
+        current_color=$(sed -n '2p' /etc/ws-stunnel-response)
+    fi
+
+    echo -e " Current Text : ${BIWhite}$current_text${NC}"
+    echo -e " Current Color: ${BIWhite}$current_color${NC}"
+    echo -e ""
+
+    read -p " Enter new text [Press Enter to keep current]: " new_text
+    if [[ -z "$new_text" ]]; then
+        new_text="$current_text"
+    fi
+
+    echo -e ""
+    echo -e " Supported Colors: red, green, blue, cyan, yellow, magenta, white, black, etc."
+    read -p " Enter new color [Press Enter to keep current]: " new_color
+    if [[ -z "$new_color" ]]; then
+        new_color="$current_color"
+    fi
+
+    # Save to file
+    echo "$new_text" > /etc/ws-stunnel-response
+    echo "$new_color" >> /etc/ws-stunnel-response
+
+    echo -e ""
+    echo -e " ${BGreen}Successfully updated response!${NC}"
+    echo -e " ${BWhite}Restarting ws-stunnel service...${NC}"
+    systemctl restart ws-stunnel
+    sleep 2
+
+    echo -e ""
+    read -n 1 -s -r -p " Press any key to return to features menu..."
+    menu_features
+}
+
 function menu_features(){
 clear && printf '\033[3J'
 echo -e "${BICyan} ┌────────────────────────────────────────────────────────────┐${NC}"
@@ -267,6 +314,7 @@ echo -e "     ${BICyan}[${BIWhite}08${BICyan}] REBOOT               ${BICyan}[${
 echo -e "     ${BICyan}[${BIWhite}09${BICyan}] RESTART              ${BICyan}[${BIWhite}19${BICyan}] SWAPRAM MENU${NC}"
 echo -e "     ${BICyan}[${BIWhite}10${BICyan}] GOTOP (RAM MONITOR)  ${BICyan}[${BIWhite}20${BICyan}] INSTALL BOT TELE${NC}"
 echo -e "     ${BICyan}[${BIWhite}x${BICyan}] BACK TO MENU          ${BICyan}[${BIWhite}21${BICyan}] GENERATE API KEY${NC}"
+echo -e "     ${BICyan}[${BIWhite}22${BICyan}] EDIT WS RESPONSE${NC}"
 echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
 echo
 read -p " Select menu : " opt_feat
@@ -292,6 +340,7 @@ case $opt_feat in
 19) clear && printf '\033[3J' ; wget -q -O /usr/bin/swapram "https://raw.githubusercontent.com/NevermoreSSH/swapram/main/swapram.sh" && chmod +x /usr/bin/swapram && swapram ;;
 20) clear && printf '\033[3J' ; /usr/local/bin/api-modules/api-bot-manager.sh ;;
 21) clear && printf '\033[3J' ; /usr/local/bin/api-modules/api-auth-gen.sh ;;
+22) clear && printf '\033[3J' ; change_ws_response ;;
 x) menu ;;
 *) menu ;;
 esac
