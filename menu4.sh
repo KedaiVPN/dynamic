@@ -190,6 +190,46 @@ read -n 1 -s -r -p "Press any key to back on menu"
 menu
 }
 
+function autobackup(){
+clear && printf '\033[3J'
+echo -e "${BICyan} ┌────────────────────────────────────────────────────────────┐${NC}"
+echo -e "${BICyan} │                  ${BIWhite}${UWhite}AUTO BACKUP DATA${NC}"
+echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
+echo -e " ${BIYellow}Masukkan angka dalam hitungan jam untuk menjalankan auto backup.${NC}"
+echo -e " ${BIWhite}Contoh:${NC}"
+echo -e "  - Ketik ${BIGreen}1${NC} untuk backup setiap 1 jam."
+echo -e "  - Ketik ${BIGreen}12${NC} untuk backup setiap 12 jam."
+echo -e "  - Ketik ${BIRed}0${NC} untuk mematikan auto backup."
+echo -e " ${BICyan}────────────────────────────────────────────────────────────${NC}"
+read -rp " Masukkan pilihan (Jam) : " input_jam
+
+if [[ ! $input_jam =~ ^[0-9]+$ ]]; then
+    echo -e " ${BIRed}[ ERROR ] Input harus berupa angka!${NC}"
+    sleep 2
+    menu_backup_restore
+    return
+fi
+
+if [[ $input_jam -eq 0 ]]; then
+    rm -f /etc/cron.d/autobackup
+    service cron restart > /dev/null 2>&1
+    service cron reload > /dev/null 2>&1
+    echo -e " ${BIGreen}[ INFO ] Auto Backup berhasil DIMATIKAN.${NC}"
+else
+    cat > /etc/cron.d/autobackup <<-END
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+0 */$input_jam * * * root /usr/bin/backup > /dev/null 2>&1
+END
+    service cron restart > /dev/null 2>&1
+    service cron reload > /dev/null 2>&1
+    echo -e " ${BIGreen}[ INFO ] Auto Backup berhasil DISET setiap $input_jam Jam.${NC}"
+fi
+echo ""
+read -n 1 -s -r -p "Tekan tombol apapun untuk kembali ke menu"
+menu_backup_restore
+}
+
 function menu_backup_restore(){
 clear && printf '\033[3J'
 echo -e "${BICyan} ┌────────────────────────────────────────────────────────────┐${NC}"
@@ -197,6 +237,7 @@ echo -e "${BICyan} │                  ${BIWhite}${UWhite}BACKUP / RESTORE${NC}
 echo -e "${BICyan} │"
 echo -e "     ${BICyan}[${BIWhite}01${BICyan}] BACKUP DATA ${BICyan}${BIYellow}${BICyan}${NC}"
 echo -e "     ${BICyan}[${BIWhite}02${BICyan}] RESTORE DATA ${BICyan}${BIYellow}${BICyan}${NC}"
+echo -e "     ${BICyan}[${BIWhite}03${BICyan}] AUTO BACKUP ${BICyan}${BIYellow}${BICyan}${NC}"
 echo -e "     ${BICyan}[${BIWhite}x ${BICyan}] BACK TO MENU ${BICyan}${BIYellow}${BICyan}${NC}"
 echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
 echo
@@ -204,6 +245,7 @@ read -p " Select menu : " opt_br
 case $opt_br in
 1) clear && printf '\033[3J' ; backup ;;
 2) clear && printf '\033[3J' ; restore ;;
+3) clear && printf '\033[3J' ; autobackup ;;
 x) menu ;;
 *) menu ;;
 esac
