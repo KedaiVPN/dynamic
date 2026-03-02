@@ -45,6 +45,32 @@ rclone copy /root/$IP-$date-$domain-blueblue.zip dr:backup/
 url=$(rclone link dr:backup/$IP-$date-$domain-blueblue.zip)
 id=(`echo $url | grep '^https' | cut -d'=' -f2`)
 link="https://drive.google.com/u/4/uc?id=${id}&export=download"
+
+# Send notification to Telegram if configured
+if [ -f "/etc/nevermore-api/bot.conf" ]; then
+    BOT_TOKEN=$(grep -w "BOT_TOKEN" /etc/nevermore-api/bot.conf | cut -d'=' -f2)
+    CHAT_ID=$(grep -w "CHAT_ID" /etc/nevermore-api/bot.conf | cut -d'=' -f2)
+
+    if [ -n "$BOT_TOKEN" ] && [ -n "$CHAT_ID" ]; then
+        msg="◇━━━━━━━━━━━━━━◇
+ 🔄Detail Backup VPS🔄
+◇━━━━━━━━━━━━━━◇
+IP VPS  : $IP
+DOMAIN  : $domain
+Tanggal : $date
+◇━━━━━━━━━━━━━━◇
+Link Backup   :
+\`$link\`
+◇━━━━━━━━━━━━━━◇
+Silahkan copy Link dan restore di VPS baru"
+
+        curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
+            -d chat_id="${CHAT_ID}" \
+            -d text="${msg}" \
+            -d parse_mode="Markdown" > /dev/null
+    fi
+fi
+
 clear && printf '\033[3J'
 echo -e "\033[1;37mVPS Data Backup By NevermoreSSH\033[0m
 \033[1;37mTelegram : https://t.me/todfix667 / @NevermoreSSH\033[0m"

@@ -298,8 +298,6 @@ wget -q -O /usr/bin/menu-ss "https://raw.githubusercontent.com/KedaiVPN/dynamic/
 wget -q -O /usr/bin/menu-trojan "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/menu-trojan.sh"
 wget -q -O /usr/bin/menu-trgo "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/menu-trgo.sh"
 wget -q -O /usr/bin/menu-ssh "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/menu-ssh.sh"
-wget -q -O /usr/bin/menu-bckp "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/menu-bckp-telegram.sh"
-wget -q -O /usr/bin/menu-bckp "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/menu-bckp-github.sh"
 wget -q -O /usr/bin/bckp "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/bckpbot.sh"
 wget -q -O /usr/bin/usernew "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/usernew.sh"
 wget -q -O /usr/bin/menu "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/menu4.sh"
@@ -335,7 +333,6 @@ chmod +x /usr/bin/menu-socks
 chmod +x /usr/bin/menu-trojan
 chmod +x /usr/bin/menu-trgo
 chmod +x /usr/bin/menu-ssh
-chmod +x /usr/bin/menu-bckp
 chmod +x /usr/bin/menu
 chmod +x /usr/bin/bckp
 chmod +x /usr/bin/wbm
