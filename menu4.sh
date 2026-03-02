@@ -303,18 +303,18 @@ clear && printf '\033[3J'
 echo -e "${BICyan} ┌────────────────────────────────────────────────────────────┐${NC}"
 echo -e "${BICyan} │                  ${BIWhite}${UWhite}ADDITIONAL FEATURES${NC}"
 echo -e "${BICyan} │"
-echo -e "     ${BICyan}[${BIWhite}01${BICyan}] ADD HOST/DOMAIN      ${BICyan}[${BIWhite}11${BICyan}] WEBMIN${NC}"
-echo -e "     ${BICyan}[${BIWhite}02${BICyan}] RENEW CERT           ${BICyan}[${BIWhite}12${BICyan}] INFO SCRIPT${NC}"
-echo -e "     ${BICyan}[${BIWhite}03${BICyan}] EDIT BANNER          ${BICyan}[${BIWhite}13${BICyan}] CLEAR LOG${NC}"
-echo -e "     ${BICyan}[${BIWhite}04${BICyan}] CHECK BANDWIDTH      ${BICyan}[${BIWhite}14${BICyan}] DNS CHANGER${NC}"
-echo -e "     ${BICyan}[${BIWhite}05${BICyan}] SPEEDTEST            ${BICyan}[${BIWhite}15${BICyan}] NETFLIX CHECKER${NC}"
-echo -e "     ${BICyan}[${BIWhite}06${BICyan}] LIMIT SPEED          ${BICyan}[${BIWhite}16${BICyan}] TENDANG${NC}"
-echo -e "     ${BICyan}[${BIWhite}07${BICyan}] AUTO REBOOT          ${BICyan}[${BIWhite}17${BICyan}] XRAY-CORE MENU${NC}"
-echo -e "     ${BICyan}[${BIWhite}08${BICyan}] REBOOT               ${BICyan}[${BIWhite}18${BICyan}] INSTALL BBRPLUS${NC}"
-echo -e "     ${BICyan}[${BIWhite}09${BICyan}] RESTART              ${BICyan}[${BIWhite}19${BICyan}] SWAPRAM MENU${NC}"
-echo -e "     ${BICyan}[${BIWhite}10${BICyan}] GOTOP (RAM MONITOR)  ${BICyan}[${BIWhite}20${BICyan}] INSTALL BOT TELE${NC}"
-echo -e "     ${BICyan}[${BIWhite}x${BICyan}] BACK TO MENU          ${BICyan}[${BIWhite}21${BICyan}] GENERATE API KEY${NC}"
-echo -e "     ${BICyan}[${BIWhite}22${BICyan}] EDIT WS RESPONSE${NC}"
+echo -e "     ${BICyan}[${BIWhite}01${BICyan}] ADD HOST/DOMAIN      ${BICyan}[${BIWhite}13${BICyan}] WEBMIN${NC}"
+echo -e "     ${BICyan}[${BIWhite}02${BICyan}] RENEW CERT           ${BICyan}[${BIWhite}14${BICyan}] INFO SCRIPT${NC}"
+echo -e "     ${BICyan}[${BIWhite}03${BICyan}] EDIT BANNER          ${BICyan}[${BIWhite}15${BICyan}] CLEAR LOG${NC}"
+echo -e "     ${BICyan}[${BIWhite}04${BICyan}] CHECK BANDWIDTH      ${BICyan}[${BIWhite}16${BICyan}] DNS CHANGER${NC}"
+echo -e "     ${BICyan}[${BIWhite}05${BICyan}] SPEEDTEST            ${BICyan}[${BIWhite}17${BICyan}] NETFLIX CHECKER${NC}"
+echo -e "     ${BICyan}[${BIWhite}06${BICyan}] LIMIT SPEED          ${BICyan}[${BIWhite}18${BICyan}] TENDANG${NC}"
+echo -e "     ${BICyan}[${BIWhite}07${BICyan}] AUTO REBOOT          ${BICyan}[${BIWhite}19${BICyan}] XRAY-CORE MENU${NC}"
+echo -e "     ${BICyan}[${BIWhite}08${BICyan}] REBOOT               ${BICyan}[${BIWhite}20${BICyan}] INSTALL BBRPLUS${NC}"
+echo -e "     ${BICyan}[${BIWhite}09${BICyan}] RESTART              ${BICyan}[${BIWhite}21${BICyan}] SWAPRAM MENU${NC}"
+echo -e "     ${BICyan}[${BIWhite}10${BICyan}] GOTOP (RAM MONITOR)  ${BICyan}[${BIWhite}22${BICyan}] INSTALL BOT TELE${NC}"
+echo -e "     ${BICyan}[${BIWhite}11${BICyan}] GENERATE API KEY     ${BICyan}[${BIWhite}x${BICyan}] BACK TO MENU${NC}"
+echo -e "     ${BICyan}[${BIWhite}12${BICyan}] EDIT WS RESPONSE${NC}"
 echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
 echo
 read -p " Select menu : " opt_feat
@@ -329,18 +329,18 @@ case $opt_feat in
 8) clear && printf '\033[3J' ; reboot ;;
 9) clear && printf '\033[3J' ; restart ;;
 10) clear && printf '\033[3J' ; gotop ;;
-11) clear && printf '\033[3J' ; wbm ;;
-12) clear && printf '\033[3J' ; cat /root/log-install.txt ;;
-13) clear && printf '\033[3J' ; clearlog ;;
-14) clear && printf '\033[3J' ; dns ;;
-15) clear && printf '\033[3J' ; netf ;;
-16) clear && printf '\033[3J' ; tendang ;;
-17) clear && printf '\033[3J' ; wget -q -O /usr/bin/xraychanger "https://raw.githubusercontent.com/NevermoreSSH/Xcore-custompath/main/xraychanger.sh" && chmod +x /usr/bin/xraychanger && xraychanger ;;
-18) clear && printf '\033[3J' ; bbr ;;
-19) clear && printf '\033[3J' ; wget -q -O /usr/bin/swapram "https://raw.githubusercontent.com/NevermoreSSH/swapram/main/swapram.sh" && chmod +x /usr/bin/swapram && swapram ;;
-20) clear && printf '\033[3J' ; /usr/local/bin/api-modules/api-bot-manager.sh ;;
-21) clear && printf '\033[3J' ; /usr/local/bin/api-modules/api-auth-gen.sh ;;
-22) clear && printf '\033[3J' ; change_ws_response ;;
+11) clear && printf '\033[3J' ; /usr/local/bin/api-modules/api-bot-manager.sh ;;
+12) clear && printf '\033[3J' ; change_ws_response ;;
+13) clear && printf '\033[3J' ; wbm ;;
+14) clear && printf '\033[3J' ; cat /root/log-install.txt ;;
+15) clear && printf '\033[3J' ; clearlog ;;
+16) clear && printf '\033[3J' ; dns ;;
+17) clear && printf '\033[3J' ; netf ;;
+18) clear && printf '\033[3J' ; tendang ;;
+19) clear && printf '\033[3J' ; wget -q -O /usr/bin/xraychanger "https://raw.githubusercontent.com/NevermoreSSH/Xcore-custompath/main/xraychanger.sh" && chmod +x /usr/bin/xraychanger && xraychanger ;;
+20) clear && printf '\033[3J' ; bbr ;;
+21) clear && printf '\033[3J' ; wget -q -O /usr/bin/swapram "https://raw.githubusercontent.com/NevermoreSSH/swapram/main/swapram.sh" && chmod +x /usr/bin/swapram && swapram ;;
+22) clear && printf '\033[3J' ; /usr/local/bin/api-modules/api-auth-gen.sh ;;
 x) menu ;;
 *) menu ;;
 esac
