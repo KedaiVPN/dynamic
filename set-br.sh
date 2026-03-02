@@ -1,11 +1,11 @@
 #!/bin/bash
 # =========================================
 # Quick Setup | Script Setup Manager
-# Edition : Stable Edition V1.0
-# Auther  : NevermoreSSH
-# (C) Copyright 2022
+# Edition : Stable Edition V3.0.7
+# Auther  : KedaiSSH
+# (C) Copyright 2026
 # =========================================
-export Server_URL="raw.githubusercontent.com/NevermoreSSH/Blueblue/main"
+export Server_URL="raw.githubusercontent.com/KedaiVPN/dynamic/main"
 
 clear && printf '\033[3J'
 dateFromServer=$(curl -v --insecure --silent https://google.com/ 2>&1 | grep Date | sed -e 's/< Date: //')
