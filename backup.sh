@@ -63,7 +63,17 @@ fi
 
 # Send notification to Telegram if configured
 if [ -n "$BOT_TOKEN" ] && [ -n "$CHAT_ID" ]; then
-    msg="◇━━━━━━━━━━━━━━◇%0A 🔄Detail Backup VPS🔄%0A◇━━━━━━━━━━━━━━◇%0AIP VPS  : $IP%0ADOMAIN  : $domain%0ATanggal : $date%0A◇━━━━━━━━━━━━━━◇%0ALink Backup   : %0A<code>$link</code>%0A◇━━━━━━━━━━━━━━◇%0ASilahkan copy Link dan restore di VPS baru"
+    msg="◇━━━━━━━━━━━━━━◇
+ 🔄Detail Backup VPS🔄
+◇━━━━━━━━━━━━━━◇
+IP VPS  : $IP
+DOMAIN  : $domain
+Tanggal : $date
+◇━━━━━━━━━━━━━━◇
+Link Backup   :
+<code>$link</code>
+◇━━━━━━━━━━━━━━◇
+Silahkan copy Link dan restore di VPS baru"
 
     curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
         -d chat_id="$CHAT_ID" \
