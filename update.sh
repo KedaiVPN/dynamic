@@ -28,6 +28,7 @@ echo -e "[ ${GREEN}INFO${NC} ] Mendownload script terbaru..."
 # Update menu & backup untuk perbaikan telegram dan auto backup
 wget -q -O /usr/bin/menu "${REPO}/menu4.sh" && chmod +x /usr/bin/menu
 wget -q -O /usr/bin/backup "${REPO}/backup.sh" && chmod +x /usr/bin/backup
+wget -q -O /usr/bin/restore "${REPO}/restore.sh" && chmod +x /usr/bin/restore
 
 # Hapus script menu backup lama yang sudah tidak digunakan
 rm -f /usr/bin/menu-bckp
@@ -80,6 +81,7 @@ files_to_fix=(
     # "/usr/bin/user-xrays"
     "/usr/bin/menu"
     "/usr/bin/backup"
+    "/usr/bin/restore"
 )
 
 for file in "${files_to_fix[@]}"; do
