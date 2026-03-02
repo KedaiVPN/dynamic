@@ -70,6 +70,7 @@ systemctl restart xray@trojanws.service
 systemctl restart xray@trnone.service
 systemctl restart xray@xtrojan.service
 systemctl restart xray@trojan.service
+systemctl restart haproxy
 service cron restart
 sleep 5
 system
