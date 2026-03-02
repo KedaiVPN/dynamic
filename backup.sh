@@ -46,29 +46,29 @@ url=$(rclone link dr:backup/$IP-$date-$domain-blueblue.zip)
 id=(`echo $url | grep '^https' | cut -d'=' -f2`)
 link="https://drive.google.com/u/4/uc?id=${id}&export=download"
 
-# Send notification to Telegram if configured
+# Get Telegram Bot Credentials
+BOT_TOKEN=""
+CHAT_ID=""
+
 if [ -f "/etc/nevermore-api/bot.conf" ]; then
     BOT_TOKEN=$(grep -w "BOT_TOKEN" /etc/nevermore-api/bot.conf | cut -d'=' -f2)
     CHAT_ID=$(grep -w "CHAT_ID" /etc/nevermore-api/bot.conf | cut -d'=' -f2)
+elif [ -f "/root/botapi.conf" ]; then
+    BOT_TOKEN=$(grep -w "toket" /root/botapi.conf | cut -d'=' -f2)
+    CHAT_ID=$(grep -w "chat_idc" /root/botapi.conf | cut -d'=' -f2)
+elif [ -f "/etc/geovpn/telegram.conf" ]; then
+    BOT_TOKEN=$(grep -w "TOKEN" /etc/geovpn/telegram.conf | cut -d'=' -f2)
+    CHAT_ID=$(grep -w "CHAT_ID" /etc/geovpn/telegram.conf | cut -d'=' -f2)
+fi
 
-    if [ -n "$BOT_TOKEN" ] && [ -n "$CHAT_ID" ]; then
-        msg="◇━━━━━━━━━━━━━━◇
- 🔄Detail Backup VPS🔄
-◇━━━━━━━━━━━━━━◇
-IP VPS  : $IP
-DOMAIN  : $domain
-Tanggal : $date
-◇━━━━━━━━━━━━━━◇
-Link Backup   :
-\`$link\`
-◇━━━━━━━━━━━━━━◇
-Silahkan copy Link dan restore di VPS baru"
+# Send notification to Telegram if configured
+if [ -n "$BOT_TOKEN" ] && [ -n "$CHAT_ID" ]; then
+    msg="◇━━━━━━━━━━━━━━◇%0A 🔄Detail Backup VPS🔄%0A◇━━━━━━━━━━━━━━◇%0AIP VPS  : $IP%0ADOMAIN  : $domain%0ATanggal : $date%0A◇━━━━━━━━━━━━━━◇%0ALink Backup   : %0A<code>$link</code>%0A◇━━━━━━━━━━━━━━◇%0ASilahkan copy Link dan restore di VPS baru"
 
-        curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
-            -d chat_id="${CHAT_ID}" \
-            -d text="${msg}" \
-            -d parse_mode="Markdown" > /dev/null
-    fi
+    curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+        -d chat_id="$CHAT_ID" \
+        --data-urlencode text="$msg" \
+        -d parse_mode="HTML" > /dev/null
 fi
 
 clear && printf '\033[3J'
