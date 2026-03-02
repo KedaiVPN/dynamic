@@ -252,7 +252,7 @@ case $opt in
 7) clear && printf '\033[3J' ; autoreboot ;;
 8) clear && printf '\033[3J' ; reboot ;;
 9) clear && printf '\033[3J' ; restart ;;
-10) clear && printf '\033[3J' ; menu-bckp ;;
+10) clear && printf '\033[3J' ; backup ;;
 11) clear && printf '\033[3J' ; addhost ;;
 12) clear && printf '\033[3J' ; genssl ;;
 13) clear && printf '\033[3J' ; nano /etc/issue.net ;;
