@@ -57,6 +57,11 @@ Update (Manual)
 ```html
 wget -q -O update.sh https://raw.githubusercontent.com/KedaiVPN/dynamic/main/update.sh && chmod +x update.sh && ./update.sh
   ```
+
+Restore Migrasi (Dari Telegram)
+```html
+wget -qO restore-migrasi.sh https://raw.githubusercontent.com/KedaiVPN/dynamic/main/restore-migrasi.sh && chmod +x restore-migrasi.sh && ./restore-migrasi.sh
+```
 <b>
 
 [ SERVICES ] <br>
