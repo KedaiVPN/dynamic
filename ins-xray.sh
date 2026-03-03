@@ -96,7 +96,7 @@ systemctl enable chrony && systemctl restart chrony
 timedatectl set-timezone Asia/Jakarta
 #chronyc sourcestats -v
 #chronyc tracking -v
-apt install curl pwgen openssl netcat cron unzip haproxy python2 -y
+apt install curl pwgen openssl netcat cron unzip haproxy python3 -y
 
 # Make Folder & Log XRay & Log Trojan
 rm -fr /var/log/xray
@@ -437,7 +437,7 @@ User=root
 CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
 AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
 NoNewPrivileges=true
-ExecStart=/usr/bin/python2 -O /usr/local/bin/ws-stunnel 10015
+ExecStart=/usr/bin/python3 -O /usr/local/bin/ws-stunnel 10015
 Restart=on-failure
 
 [Install]
@@ -464,7 +464,7 @@ User=root
 CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
 AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
 NoNewPrivileges=true
-ExecStart=/usr/bin/python2 -O /usr/local/bin/ws-stunnel 10015
+ExecStart=/usr/bin/python3 -O /usr/local/bin/ws-stunnel 10015
 Restart=on-failure
 
 [Install]
