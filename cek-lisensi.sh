@@ -19,7 +19,7 @@ function disable_services() {
     # Stop all related services
     systemctl stop nginx
     systemctl stop xray
-    systemctl stop stunnel5
+    systemctl stop stunnel4
     systemctl stop dropbear
     systemctl stop ws-stunnel
     systemctl stop cron
@@ -27,7 +27,7 @@ function disable_services() {
     # Disable them so they don't restart on boot
     systemctl disable nginx
     systemctl disable xray
-    systemctl disable stunnel5
+    systemctl disable stunnel4
     systemctl disable dropbear
     systemctl disable ws-stunnel
     systemctl disable cron
