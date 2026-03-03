@@ -413,7 +413,7 @@ echo -e "    ${BICyan}[${BIWhite}03${BICyan}]${BIWhite} VLESS         ${BICyan}|
 echo -e "    ${BICyan}[${BIWhite}04${BICyan}]${BIWhite} TROJAN        ${BICyan}||         [${BIWhite}09${BICyan}]${BIWhite} BACKUP/RESTORE${NC}"
 echo -e "    ${BICyan}[${BIWhite}05${BICyan}]${BIWhite} SHADOWSOCK    ${BICyan}||         [${BIWhite}10${BICyan}]${BIWhite} FEATURES${NC}"
 echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
-echo -e "      ${BIWhite}SSH:${BICyan}[${BIWhite}${ssh}${BICyan}]   ${BIWhite}VMESS:${BICyan}[${BIWhite}${vmess}${BICyan}]   ${BIWhite}VLESS:${BICyan}[${BIWhite}${vless}${BICyan}]   ${BIWhite}TROJAN:${BICyan}[${BIWhite}${tr}${BICyan}]   ${BIWhite}SS:${BICyan}[${BIWhite}${ss}${BICyan}]${NC}"
+echo -e "      ${BIWhite}SSH:${BICyan}[${BIGreen}${ssh}${BICyan}]   ${BIWhite}VMESS:${BICyan}[${BIGreen}${vmess}${BICyan}]   ${BIWhite}VLESS:${BICyan}[${BIGreen}${vless}${BICyan}]   ${BIWhite}TROJAN:${BICyan}[${BIGreen}${tr}${BICyan}]   ${BIWhite}SS:${BICyan}[${BIGreen}${ss}${BICyan}]${NC}"
 echo -e "${BICyan} ┌────────────────────────────────────────────────────────────┐${NC}"
 echo -e "     ${BIWhite}Version  :  ${BIGreen}$sem ${BIWhite}Last Update        type ${BIRed}x ${BIWhite}to exit${NC}"
 echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
