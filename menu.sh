@@ -85,7 +85,7 @@ ressh="${green}ON${NC}"
 else
 ressh="${red}OFF${NC}"
 fi
-sshstunel=$(service stunnel5 status | grep active | cut -d ' ' $stat)
+sshstunel=$(service stunnel4 status | grep active | cut -d ' ' $stat)
 if [ "$sshstunel" = "active" ]; then
 resst="${green}ON${NC}"
 else
@@ -115,8 +115,8 @@ resv2r="${green}ON${NC}"
 else
 resv2r="${red}OFF${NC}"
 fi
-hpx=$(service haproxy status | grep active | cut -d ' ' $stat)
-if [ "$hpx" = "active" ]; then
+hpx=$(systemctl status haproxy | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
+if [ "$hpx" = "running" ]; then
 reshpx="${green}ON${NC}"
 else
 reshpx="${red}OFF${NC}"

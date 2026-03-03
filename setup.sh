@@ -108,7 +108,7 @@ echo -e "\033[0;32m[ INFO ]\033[0m Cleaning up old directories and packages befo
 # // Remove Old Directories first so we don't wipe our newly inputted domain
 rm -fr /usr/local/bin/xray
 rm -fr /usr/local/bin/stunnel
-rm -fr /usr/local/bin/stunnel5
+rm -fr /usr/local/bin/stunnel4
 rm -fr /etc/nginx
 rm -fr /var/lib/scrz-prem/
 rm -fr /usr/bin/xray

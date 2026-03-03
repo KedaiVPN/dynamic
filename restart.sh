@@ -88,7 +88,7 @@ case $Restart in
                 systemctl restart xray.service >/dev/null 2>&1
                 /etc/init.d/ssh restart
                 /etc/init.d/dropbear restart
-                /etc/init.d/stunnel5 restart
+                /etc/init.d/stunnel4 restart
                 /etc/init.d/fail2ban restart
                 /etc/init.d/cron restart
                 /etc/init.d/nginx restart
@@ -125,7 +125,7 @@ case $Restart in
                 ;;
                 4)
                 clear && printf '\033[3J'
-                /etc/init.d/stunnel5 restart
+                /etc/init.d/stunnel4 restart
                 echo -e ""
                 echo -e "======================================"
                 echo -e ""
