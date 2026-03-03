@@ -27,8 +27,8 @@ echo -e "[ ${GREEN}INFO${NC} ] Mendownload script terbaru..."
 
 # Update menu & ws-stunnel untuk perbaikan respon statis websocket HTTP 101
 wget -q -O /usr/bin/menu "${REPO}/menu4.sh" && chmod +x /usr/bin/menu
-wget -q -O /usr/local/bin/ws-stunnel "${REPO}/ws-stunnel" && chmod +x /usr/local/bin/ws-stunnel
-systemctl restart ws-stunnel
+# wget -q -O /usr/local/bin/ws-stunnel "${REPO}/ws-stunnel" && chmod +x /usr/local/bin/ws-stunnel
+# systemctl restart ws-stunnel
 
 # wget -q -O /usr/bin/backup "${REPO}/backup.sh" && chmod +x /usr/bin/backup
 # wget -q -O /usr/bin/restore "${REPO}/restore.sh" && chmod +x /usr/bin/restore
@@ -94,5 +94,5 @@ for file in "${files_to_fix[@]}"; do
 done
 
 echo -e "[ ${GREEN}INFO${NC} ] Update Selesai!"
-echo -e "[ ${GREEN}INFO${NC} ] Menu WS Stunnel Response telah di-update."
+echo -e "[ ${GREEN}INFO${NC} ] Menu Footer Layout telah di-update."
 echo -e "[ ${GREEN}INFO${NC} ] Timezone server sekarang: $(date)"
