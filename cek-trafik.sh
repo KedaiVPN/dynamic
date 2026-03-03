@@ -146,17 +146,18 @@ update_usage_record() {
 print_header() {
   local title="$1"
   # Panjang border: tepat 58 karakter '═'
-  echo -e "${IRed} ╔══════════════════════════════════════════════════════════╗${NC}"
-
+  echo -e "${red} ╔══════════════════════════════════════════════════════════╗${NC}"
+  
   if [ "$title" == "VMESS USERS" ] || [ "$title" == "VLESS USERS" ]; then
-    echo -e "${IRed} ║                     ${white}> $title <                      ${IRed}║${NC}"
+    echo -e "${red} ║                     ${white}> $title <                      ${red}║${NC}"
   else
-    echo -e "${IRed} ║                    ${white}> $title <                     ${IRed}║${NC}"
+    echo -e "${red} ║                    ${white}> $title <                     ${red}║${NC}"
   fi
-
-  echo -e "${IRed} ╠══════════════════════════════════════════════════════════╣${NC}"
-  printf "${IRed} ║     ${white}%-21s %-11s %-11s %-9s ${red}║${NC}\n" "USER" "USED(GB)" "LIMIT(GB)" "STATUS"
-  echo -e "${IRed} ╠══════════════════════════════════════════════════════════╣${NC}"
+  
+  echo -e "${red} ╠══════════════════════════════════════════════════════════╣${NC}"
+  # Total frame: 5 (kiri) + 21 + 1 + 9 + 1 + 10 + 1 + 9 + 1 (kanan) = 58
+  printf "${red} ║     ${white}%-21s %-9s %-10s %-9s ${red}║${NC}\n" "USER" "USED(GB)" "LIMIT(GB)" "STATUS"
+  echo -e "${red} ╠══════════════════════════════════════════════════════════╣${NC}"
 }
 
 print_protocol() {
@@ -191,15 +192,15 @@ print_protocol() {
     if grep -q -E "^${user} " "$lock_file"; then
       status="LOCKED"
     fi
-    # Hapus border samping, padding kiri 7 spasi disesuaikan dengan header ("     ") ditambah offset
-    printf "       ${white}%-21s %-11s %-11s %-9s${NC}\n" "$user" "$used_display" "$limit_display" "$status"
+    # Hapus border samping (garis merah ║ dan spasinya), total padding kiri: 7 spasi ("       ") agar tepat di bawah "USER"
+    printf "       ${white}%-21s %-9s %-10s %-9s${NC}\n" "$user" "$used_display" "$limit_display" "$status"
   done < "$file"
 
   if [[ "$has_data" -eq 0 ]]; then
     # Hapus border samping
     printf "               ${white}%-40s${NC}\n" "No users found."
   fi
-  echo -e "${IRed} ╚══════════════════════════════════════════════════════════╝${NC}"
+  echo -e "${red} ╚══════════════════════════════════════════════════════════╝${NC}"
 }
 
 if [[ ! -x "$_Xray" ]]; then
