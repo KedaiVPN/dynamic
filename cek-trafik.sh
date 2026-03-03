@@ -146,9 +146,10 @@ update_usage_record() {
 print_header() {
   local title="$1"
   echo -e "${red} ╔═════════════════════════════════════════════════════╗${NC}"
-  printf "${red} ║ %-51s ${red}║${NC}\n" "                ${white}> $title <                "
+  # Cukup gunakan spasi biasa dan cetak warna di luar fungsi panjang karakter
+  echo -e "${red} ║                   ${white}> $title <                   ${red}║${NC}"
   echo -e "${red} ╠═════════════════════════════════════════════════════╣${NC}"
-  printf "${red} ║ ${white}    %-12s %-14s %-14s %-5s ${red}║${NC}\n" "USER" "USED(GB)" "LIMIT(GB)" "STATUS"
+  echo -e "${red} ║     ${white}USER         USED(GB)       LIMIT(GB)      STATUS ${red}║${NC}"
   echo -e "${red} ╠═════════════════════════════════════════════════════╣${NC}"
 }
 
@@ -184,11 +185,13 @@ print_protocol() {
     if grep -q -E "^${user} " "$lock_file"; then
       status="LOCKED"
     fi
-    printf "${red} ║ ${white}    %-12s %-14s %-14s %-5s ${red}║${NC}\n" "$user" "$used_display" "$limit_display" "$status"
+    # Hapus border samping
+    printf "       ${white}%-12s %-14s %-14s %-10s${NC}\n" "$user" "$used_display" "$limit_display" "$status"
   done < "$file"
 
   if [[ "$has_data" -eq 0 ]]; then
-    printf "${red} ║ ${white}        %-43s ${red}║${NC}\n" "No users found."
+    # Hapus border samping
+    printf "               ${white}%-40s${NC}\n" "No users found."
   fi
   echo -e "${red} ╚═════════════════════════════════════════════════════╝${NC}"
 }
