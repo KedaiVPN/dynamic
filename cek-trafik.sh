@@ -156,7 +156,7 @@ print_header() {
   
   echo -e "${IRed} ╠══════════════════════════════════════════════════════════╣${NC}"
   # Total frame: 5 (kiri) + 21 + 1 + 9 + 1 + 10 + 1 + 9 + 1 (kanan) = 58
-  printf "${IRed} ║     ${white}%-21s %-9s %-10s %-9s ${IRed}║${NC}\n" "USER" "USED(GB)" "LIMIT(GB)" "STATUS"
+  printf "${IRed} ║     ${IYellow}%-21s %-9s %-10s %-9s ${IRed}║${NC}\n" "USER" "USED(GB)" "LIMIT(GB)" "STATUS"
   echo -e "${IRed} ╠══════════════════════════════════════════════════════════╣${NC}"
 }
 
