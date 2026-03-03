@@ -33,6 +33,7 @@ wget -q -O /usr/bin/menu-vless "${REPO}/menu-vless.sh" && chmod +x /usr/bin/menu
 wget -q -O /usr/bin/menu-trojan "${REPO}/menu-trojan.sh" && chmod +x /usr/bin/menu-trojan
 wget -q -O /usr/bin/menu-ss "${REPO}/menu-ss.sh" && chmod +x /usr/bin/menu-ss
 wget -q -O /usr/bin/cek-trafik "${REPO}/cek-trafik.sh" && chmod +x /usr/bin/cek-trafik
+wget -q -O /usr/bin/cek-expired "${REPO}/cek-expired.sh" && chmod +x /usr/bin/cek-expired
 # wget -q -O /usr/local/bin/ws-stunnel "${REPO}/ws-stunnel" && chmod +x /usr/local/bin/ws-stunnel
 # systemctl restart ws-stunnel
 
@@ -91,6 +92,7 @@ files_to_fix=(
     "/usr/bin/menu-vmess"
     "/usr/bin/menu-ss"
     "/usr/bin/cek-trafik"
+    "/usr/bin/cek-expired"
     # "/usr/bin/user-xrays"
     "/usr/bin/menu"
     # "/usr/bin/backup"
