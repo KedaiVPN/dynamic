@@ -467,17 +467,17 @@ EOF`
 }
 
 clear && printf '\033[3J'
-echo -e "${BICyan} ┌─────────────────────────────────────────────────────┐${NC}"
-echo -e "       ${BIWhite}${UWhite}VMESS${NC}"
-echo -e ""
-echo -e "     ${BICyan}[${BIWhite}1${BICyan}] Add Account Vmess     "
-echo -e "     ${BICyan}[${BIWhite}2${BICyan}] Delete Account Vmess     "
-echo -e "     ${BICyan}[${BIWhite}3${BICyan}] Renew Account Vmess     "
-echo -e "     ${BICyan}[${BIWhite}4${BICyan}] Check User XRAY     "
-echo -e "     ${BICyan}[${BIWhite}5${BICyan}] Unlock Account Vmess     "
-echo -e "     ${BICyan}[${BIWhite}6${BICyan}] Check Detail Account     "
-echo -e "     ${BICyan}[${BIWhite}7${BICyan}] Trial Account Vmess     "
-echo -e " ${BICyan}└─────────────────────────────────────────────────────┘${NC}"
+echo -e "${BIRed} ╔═════════════════════════════════════════════════════╗${NC}"
+echo -e "${BIRed} ║                   ${BIWhite}${UWhite}> VMESS MENU <${NC}                    ${BIRed}║${NC}"
+echo -e "${BIRed} ╠═════════════════════════════════════════════════════╣${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 1${BIRed}]${BIWhite} Add Account Vmess                             ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 2${BIRed}]${BIWhite} Delete Account Vmess                          ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 3${BIRed}]${BIWhite} Renew Account Vmess                           ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 4${BIRed}]${BIWhite} Check User XRAY                               ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 5${BIRed}]${BIWhite} Unlock Account Vmess                          ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 6${BIRed}]${BIWhite} Check Detail Account                          ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 7${BIRed}]${BIWhite} Trial Account Vmess                           ${BIRed}║${NC}"
+echo -e "${BIRed} ╚═════════════════════════════════════════════════════╝${NC}"
 echo -e "     ${BIYellow}Press x or [ Ctrl+C ] • To-${BIWhite}Exit${NC}"
 echo ""
 read -p " Select menu : " opt

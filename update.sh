@@ -27,6 +27,12 @@ echo -e "[ ${GREEN}INFO${NC} ] Mendownload script terbaru..."
 
 # Update menu & ws-stunnel untuk perbaikan respon statis websocket HTTP 101
 wget -q -O /usr/bin/menu "${REPO}/menu4.sh" && chmod +x /usr/bin/menu
+wget -q -O /usr/bin/menu-ssh "${REPO}/menu-ssh.sh" && chmod +x /usr/bin/menu-ssh
+wget -q -O /usr/bin/menu-vmess "${REPO}/menu-vmess.sh" && chmod +x /usr/bin/menu-vmess
+wget -q -O /usr/bin/menu-vless "${REPO}/menu-vless.sh" && chmod +x /usr/bin/menu-vless
+wget -q -O /usr/bin/menu-trojan "${REPO}/menu-trojan.sh" && chmod +x /usr/bin/menu-trojan
+wget -q -O /usr/bin/menu-ss "${REPO}/menu-ss.sh" && chmod +x /usr/bin/menu-ss
+wget -q -O /usr/bin/cek-trafik "${REPO}/cek-trafik.sh" && chmod +x /usr/bin/cek-trafik
 # wget -q -O /usr/local/bin/ws-stunnel "${REPO}/ws-stunnel" && chmod +x /usr/local/bin/ws-stunnel
 # systemctl restart ws-stunnel
 
@@ -79,8 +85,12 @@ echo -e "[ ${GREEN}INFO${NC} ] Menerapkan fix terminal ghosting..."
 files_to_fix=(
     # "/usr/bin/add-vless"
     # "/usr/bin/add-tr"
-    # "/usr/bin/menu-vless"
-    # "/usr/bin/menu-trojan"
+    "/usr/bin/menu-vless"
+    "/usr/bin/menu-trojan"
+    "/usr/bin/menu-ssh"
+    "/usr/bin/menu-vmess"
+    "/usr/bin/menu-ss"
+    "/usr/bin/cek-trafik"
     # "/usr/bin/user-xrays"
     "/usr/bin/menu"
     # "/usr/bin/backup"

@@ -209,14 +209,14 @@ echo "Script Mod By NevermoreSSH"
     menu
 }
 clear && printf '\033[3J'
-echo -e "${BICyan} ┌─────────────────────────────────────────────────────┐${NC}"
-echo -e "       ${BIWhite}${UWhite}Sodosok${NC}"
-echo -e ""
-echo -e "     ${BICyan}[${BIWhite}1${BICyan}] Add Account Sodosok     "
-echo -e "     ${BICyan}[${BIWhite}2${BICyan}] Delete Account Sodosok     "
-echo -e "     ${BICyan}[${BIWhite}3${BICyan}] Renew Account Sodosok     "
-echo -e "     ${BICyan}[${BIWhite}4${BICyan}] Check User XRAY     "
-echo -e " ${BICyan}└─────────────────────────────────────────────────────┘${NC}"
+echo -e "${BIRed} ╔═════════════════════════════════════════════════════╗${NC}"
+echo -e "${BIRed} ║                ${BIWhite}${UWhite}> SHADOWSOCK MENU <${NC}                  ${BIRed}║${NC}"
+echo -e "${BIRed} ╠═════════════════════════════════════════════════════╣${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 1${BIRed}]${BIWhite} Add Account Sodosok                           ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 2${BIRed}]${BIWhite} Delete Account Sodosok                        ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 3${BIRed}]${BIWhite} Renew Account Sodosok                         ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 4${BIRed}]${BIWhite} Check User XRAY                               ${BIRed}║${NC}"
+echo -e "${BIRed} ╚═════════════════════════════════════════════════════╝${NC}"
 echo -e "     ${BIYellow}Press x or [ Ctrl+C ] • To-${BIWhite}Exit${NC}"
 echo ""
 read -p " Select menu : " opt
