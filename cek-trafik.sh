@@ -146,17 +146,17 @@ update_usage_record() {
 print_header() {
   local title="$1"
   # Panjang border: tepat 58 karakter '═'
-  echo -e "${red} ╔══════════════════════════════════════════════════════════╗${NC}"
+  echo -e "${IRed} ╔══════════════════════════════════════════════════════════╗${NC}"
 
   if [ "$title" == "VMESS USERS" ] || [ "$title" == "VLESS USERS" ]; then
-    echo -e "${red} ║                     ${white}> $title <                      ${red}║${NC}"
+    echo -e "${IRed} ║                     ${white}> $title <                      ${IRed}║${NC}"
   else
-    echo -e "${red} ║                    ${white}> $title <                     ${red}║${NC}"
+    echo -e "${IRed} ║                    ${white}> $title <                  ${IRed}║${NC}"
   fi
 
-  echo -e "${red} ╠══════════════════════════════════════════════════════════╣${NC}"
-  printf "${red} ║     ${white}%-21s %-11s %-11s %-9s ${red}║${NC}\n" "USER" "USED(GB)" "LIMIT(GB)" "STATUS"
-  echo -e "${red} ╠══════════════════════════════════════════════════════════╣${NC}"
+  echo -e "${IRed} ╠══════════════════════════════════════════════════════════╣${NC}"
+  printf "${IRed} ║     ${white}%-21s %-11s %-11s %-9s ${red}║${NC}\n" "USER" "USED(GB)" "LIMIT(GB)" "STATUS"
+  echo -e "${IRed} ╠══════════════════════════════════════════════════════════╣${NC}"
 }
 
 print_protocol() {
@@ -199,7 +199,7 @@ print_protocol() {
     # Hapus border samping
     printf "               ${white}%-40s${NC}\n" "No users found."
   fi
-  echo -e "${red} ╚══════════════════════════════════════════════════════════╝${NC}"
+  echo -e "${IRed} ╚══════════════════════════════════════════════════════════╝${NC}"
 }
 
 if [[ ! -x "$_Xray" ]]; then
