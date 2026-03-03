@@ -265,10 +265,15 @@ systemctl restart ssh >/dev/null 2>&1
 # install dropbear
 sleep 1
 echo -e "[ ${green}INFO$NC ] Settings Dropbear"
-sed -i 's/NO_START=1/NO_START=0/g' /etc/default/dropbear
-sed -i 's/DROPBEAR_PORT=22/DROPBEAR_PORT=143/g' /etc/default/dropbear
-sed -i 's/DROPBEAR_EXTRA_ARGS=/DROPBEAR_EXTRA_ARGS="-p 109"/g' /etc/default/dropbear
+cat > /etc/default/dropbear <<-END
+NO_START=0
+DROPBEAR_PORT=143
+DROPBEAR_EXTRA_ARGS="-p 109"
+DROPBEAR_BANNER="/etc/issue.net"
+DROPBEAR_RECEIVE_WINDOW=65536
+END
 systemctl daemon-reload >/dev/null 2>&1
+systemctl enable dropbear >/dev/null 2>&1
 systemctl start dropbear >/dev/null 2>&1
 systemctl restart dropbear >/dev/null 2>&1
 cekker=$(cat /etc/shells | grep -w "/bin/false")
@@ -279,24 +284,12 @@ echo "/bin/false" >> /etc/shells
 echo "/usr/sbin/nologin" >> /etc/shells
 fi
 
-# Install Stunnel5
+# Install Stunnel4
 cd /root/
-wget -q "https://raw.githubusercontent.com/NevermoreSSH/Blueblue/main/stunnel5.zip"
-unzip stunnel5.zip
-cd /root/stunnel
-chmod +x configure
-./configure
-make
-make install
-cd /root
-rm -r -f stunnel
-rm -f stunnel5.zip
-rm -fr /etc/stunnel5
-mkdir -p /etc/stunnel5
-chmod 644 /etc/stunnel5
+apt-get install stunnel4 -y
 
-# Download Config Stunnel5
-cat > /etc/stunnel5/stunnel5.conf <<-END
+# Download Config Stunnel4
+cat > /etc/stunnel/stunnel.conf <<-END
 cert = /etc/xray/xray.crt
 key = /etc/xray/xray.key
 client = no
@@ -318,53 +311,12 @@ connect = 127.0.0.1:1194
 
 END
 
-# make a certificate
-#openssl genrsa -out key.pem 2048  >/dev/null 2>&1
-#openssl req -new -x509 -key key.pem -out cert.pem -days 1095 \
-#-subj "/C=$country/ST=$state/L=$locality/O=$organization/OU=$organizationalunit/CN=$commonname/emailAddress=$email"  >/dev/null 2>&1
-#cat key.pem cert.pem >> /etc/stunnel/stunnel.pem
-
-# konfigurasi stunnel
-#echo "ENABLED=1" >> /etc/default/stunnel4
-#sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/stunnel4
-#systemctl daemon-reload >/dev/null 2>&1
-#/etc/init.d/stunnel4 start >/dev/null 2>&1
-#/etc/init.d/stunnel4 restart >/dev/null 2>&1
-
-# Service Stunnel5 systemctl restart stunnel5
-rm -fr /etc/systemd/system/stunnel5.service
-cat > /etc/systemd/system/stunnel5.service << END
-[Unit]
-Description=Stunnel5 Service
-Documentation=https://stunnel.org
-Documentation=https://nekopoi.care
-After=syslog.target network-online.target
-
-[Service]
-ExecStart=/usr/local/bin/stunnel5 /etc/stunnel5/stunnel5.conf
-Type=forking
-
-[Install]
-WantedBy=multi-user.target
-END
-
-# Service Stunnel5 /etc/init.d/stunnel5
-rm -fr /etc/init.d/stunnel5
-wget -q -O /etc/init.d/stunnel5 "https://raw.githubusercontent.com/NevermoreSSH/Blueblue/main/stunnel5.init"
-
-# Ubah Izin Akses
-#chmod 600 /etc/stunnel5/stunnel5.pem
-chmod +x /etc/init.d/stunnel5
-cp -r /usr/local/bin/stunnel /usr/local/bin/stunnel5
-#mv /usr/local/bin/stunnel /usr/local/bin/stunnel5
-
-# Remove File
-rm -r -f /usr/local/share/doc/stunnel/
-rm -r -f /usr/local/etc/stunnel/
-rm -f /usr/local/bin/stunnel
-rm -f /usr/local/bin/stunnel3
-rm -f /usr/local/bin/stunnel4
-#rm -f /usr/local/bin/stunnel5
+# Konfigurasi Stunnel4
+sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/stunnel4
+systemctl daemon-reload >/dev/null 2>&1
+systemctl enable stunnel4 >/dev/null 2>&1
+systemctl start stunnel4 >/dev/null 2>&1
+systemctl restart stunnel4 >/dev/null 2>&1
 
 # banner /etc/issue.net
 sleep 1
@@ -379,11 +331,6 @@ cat> /etc/issue.net << END
 <font color="red"><b>============================</b></font>
 END
 
-# Restart Stunnel5
-systemctl daemon-reload >/dev/null 2>&1
-systemctl enable stunnel5 >/dev/null 2>&1
-systemctl start stunnel5 >/dev/null 2>&1
-systemctl restart stunnel5 >/dev/null 2>&1
 
 # Install bbr
 sleep 1
@@ -537,9 +484,9 @@ echo -e "[ ${green}ok${NC} ] Restarting dropbear"
 /etc/init.d/fail2ban restart >/dev/null 2>&1
 sleep 1
 echo -e "[ ${green}ok${NC} ] Restarting fail2ban"
-/etc/init.d/stunnel5 restart >/dev/null 2>&1
+/etc/init.d/stunnel4 restart >/dev/null 2>&1
 sleep 1
-echo -e "[ ${green}ok${NC} ] Restarting stunnel5"
+echo -e "[ ${green}ok${NC} ] Restarting stunnel4"
 /etc/init.d/vnstat restart >/dev/null 2>&1
 sleep 1
 echo -e "[ ${green}ok${NC} ] Restarting squid "
