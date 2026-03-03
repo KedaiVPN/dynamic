@@ -151,7 +151,7 @@ print_header() {
   if [ "$title" == "VMESS USERS" ] || [ "$title" == "VLESS USERS" ]; then
     echo -e "${IRed} ║                     ${white}> $title <                      ${IRed}║${NC}"
   else
-    echo -e "${IRed} ║                    ${white}> $title <                  ${IRed}║${NC}"
+    echo -e "${IRed} ║                    ${white}> $title <                     ${IRed}║${NC}"
   fi
 
   echo -e "${IRed} ╠══════════════════════════════════════════════════════════╣${NC}"
