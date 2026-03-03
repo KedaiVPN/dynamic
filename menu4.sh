@@ -192,15 +192,15 @@ menu
 
 function autobackup(){
 clear && printf '\033[3J'
-echo -e "${BICyan} ┌────────────────────────────────────────────────────────────┐${NC}"
-echo -e "${BICyan} │                  ${BIWhite}${UWhite}AUTO BACKUP DATA${NC}"
-echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
+echo -e "${BIRed} ╔══════════════════════════════════════════════════════════╗${NC}"
+echo -e "${BIRed} ║                  ${BIWhite}${UWhite}> AUTO BACKUP DATA <${NC}                    ${BIRed}║${NC}"
+echo -e "${BIRed} ╚══════════════════════════════════════════════════════════╝${NC}"
 echo -e " ${BIYellow}Masukkan angka dalam hitungan jam untuk menjalankan auto backup.${NC}"
 echo -e " ${BIWhite}Contoh:${NC}"
 echo -e "  - Ketik ${BIGreen}1${NC} untuk backup setiap 1 jam."
 echo -e "  - Ketik ${BIGreen}12${NC} untuk backup setiap 12 jam."
 echo -e "  - Ketik ${BIRed}0${NC} untuk mematikan auto backup."
-echo -e " ${BICyan}────────────────────────────────────────────────────────────${NC}"
+echo -e " ${BIRed}════════════════════════════════════════════════════════════${NC}"
 read -rp " Masukkan pilihan (Jam) : " input_jam
 
 if [[ ! $input_jam =~ ^[0-9]+$ ]]; then
@@ -232,14 +232,14 @@ menu_backup_restore
 
 function menu_backup_restore(){
 clear && printf '\033[3J'
-echo -e "${BICyan} ┌────────────────────────────────────────────────────────────┐${NC}"
-echo -e "${BICyan} │                  ${BIWhite}${UWhite}BACKUP / RESTORE${NC}"
-echo -e "${BICyan} │"
-echo -e "     ${BICyan}[${BIWhite}01${BICyan}] BACKUP DATA ${BICyan}${BIYellow}${BICyan}${NC}"
-echo -e "     ${BICyan}[${BIWhite}02${BICyan}] RESTORE DATA ${BICyan}${BIYellow}${BICyan}${NC}"
-echo -e "     ${BICyan}[${BIWhite}03${BICyan}] AUTO BACKUP ${BICyan}${BIYellow}${BICyan}${NC}"
-echo -e "     ${BICyan}[${BIWhite}x ${BICyan}] BACK TO MENU ${BICyan}${BIYellow}${BICyan}${NC}"
-echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
+echo -e "${BIRed} ╔══════════════════════════════════════════════════════════╗${NC}"
+echo -e "${BIRed} ║                  ${BIWhite}${UWhite}> BACKUP / RESTORE <${NC}                    ${BIRed}║${NC}"
+echo -e "${BIRed} ╠══════════════════════════════════════════════════════════╣${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}01${BIRed}]${BIWhite} BACKUP DATA                                       ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}02${BIRed}]${BIWhite} RESTORE DATA                                      ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}03${BIRed}]${BIWhite} AUTO BACKUP                                       ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite} x${BIRed}]${BIWhite} BACK TO MENU                                      ${BIRed}║${NC}"
+echo -e "${BIRed} ╚══════════════════════════════════════════════════════════╝${NC}"
 echo
 read -p " Select menu : " opt_br
 case $opt_br in
@@ -253,9 +253,9 @@ esac
 
 function change_ws_response() {
     clear && printf '\033[3J'
-    echo -e "${BICyan} ┌────────────────────────────────────────────────────────────┐${NC}"
-    echo -e "${BICyan} │                ${BIWhite}${UWhite}EDIT WS-STUNNEL RESPONSE${NC}                    ${BICyan}│${NC}"
-    echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
+    echo -e "${BIRed} ╔══════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${BIRed} ║              ${BIWhite}${UWhite}> EDIT WS-STUNNEL RESPONSE <${NC}                ${BIRed}║${NC}"
+    echo -e "${BIRed} ╚══════════════════════════════════════════════════════════╝${NC}"
     echo -e ""
 
     # Check current response
@@ -300,22 +300,22 @@ function change_ws_response() {
 
 function menu_features(){
 clear && printf '\033[3J'
-echo -e "${BICyan} ┌────────────────────────────────────────────────────────────┐${NC}"
-echo -e "${BICyan} │                  ${BIWhite}${UWhite}ADDITIONAL FEATURES${NC}"
-echo -e "${BICyan} │"
-echo -e "     ${BICyan}[${BIWhite}01${BICyan}] ADD HOST/DOMAIN      ${BICyan}[${BIWhite}13${BICyan}] WEBMIN${NC}"
-echo -e "     ${BICyan}[${BIWhite}02${BICyan}] RENEW CERT           ${BICyan}[${BIWhite}14${BICyan}] INFO SCRIPT${NC}"
-echo -e "     ${BICyan}[${BIWhite}03${BICyan}] EDIT BANNER          ${BICyan}[${BIWhite}15${BICyan}] CLEAR LOG${NC}"
-echo -e "     ${BICyan}[${BIWhite}04${BICyan}] CHECK BANDWIDTH      ${BICyan}[${BIWhite}16${BICyan}] DNS CHANGER${NC}"
-echo -e "     ${BICyan}[${BIWhite}05${BICyan}] SPEEDTEST            ${BICyan}[${BIWhite}17${BICyan}] NETFLIX CHECKER${NC}"
-echo -e "     ${BICyan}[${BIWhite}06${BICyan}] LIMIT SPEED          ${BICyan}[${BIWhite}18${BICyan}] TENDANG${NC}"
-echo -e "     ${BICyan}[${BIWhite}07${BICyan}] AUTO REBOOT          ${BICyan}[${BIWhite}19${BICyan}] XRAY-CORE MENU${NC}"
-echo -e "     ${BICyan}[${BIWhite}08${BICyan}] REBOOT               ${BICyan}[${BIWhite}20${BICyan}] INSTALL BBRPLUS${NC}"
-echo -e "     ${BICyan}[${BIWhite}09${BICyan}] RESTART              ${BICyan}[${BIWhite}21${BICyan}] SWAPRAM MENU${NC}"
-echo -e "     ${BICyan}[${BIWhite}10${BICyan}] GOTOP (RAM MONITOR)  ${BICyan}[${BIWhite}22${BICyan}] INSTALL BOT TELE${NC}"
-echo -e "     ${BICyan}[${BIWhite}11${BICyan}] GENERATE API KEY     ${BICyan}[${BIWhite}x${BICyan}] BACK TO MENU${NC}"
-echo -e "     ${BICyan}[${BIWhite}12${BICyan}] EDIT WS RESPONSE${NC}"
-echo -e "${BICyan} └────────────────────────────────────────────────────────────┘${NC}"
+echo -e "${BIRed} ╔══════════════════════════════════════════════════════════╗${NC}"
+echo -e "${BIRed} ║                 ${BIWhite}${UWhite}> ADDITIONAL FEATURES <${NC}                  ${BIRed}║${NC}"
+echo -e "${BIRed} ╠══════════════════════════════════════════════════════════╣${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}01${BIRed}]${BIWhite} ADD HOST/DOMAIN      ${BIRed}[${BIWhite}13${BIRed}]${BIWhite} WEBMIN                ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}02${BIRed}]${BIWhite} RENEW CERT           ${BIRed}[${BIWhite}14${BIRed}]${BIWhite} INFO SCRIPT           ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}03${BIRed}]${BIWhite} EDIT BANNER          ${BIRed}[${BIWhite}15${BIRed}]${BIWhite} CLEAR LOG             ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}04${BIRed}]${BIWhite} CHECK BANDWIDTH      ${BIRed}[${BIWhite}16${BIRed}]${BIWhite} DNS CHANGER           ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}05${BIRed}]${BIWhite} SPEEDTEST            ${BIRed}[${BIWhite}17${BIRed}]${BIWhite} NETFLIX CHECKER       ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}06${BIRed}]${BIWhite} LIMIT SPEED          ${BIRed}[${BIWhite}18${BIRed}]${BIWhite} TENDANG               ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}07${BIRed}]${BIWhite} AUTO REBOOT          ${BIRed}[${BIWhite}19${BIRed}]${BIWhite} XRAY-CORE MENU        ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}08${BIRed}]${BIWhite} REBOOT               ${BIRed}[${BIWhite}20${BIRed}]${BIWhite} INSTALL BBRPLUS       ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}09${BIRed}]${BIWhite} RESTART              ${BIRed}[${BIWhite}21${BIRed}]${BIWhite} SWAPRAM MENU          ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}10${BIRed}]${BIWhite} RAM MONITOR          ${BIRed}[${BIWhite}22${BIRed}]${BIWhite} INSTALL BOT TELE      ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}11${BIRed}]${BIWhite} GENERATE API KEY     ${BIRed}[${BIWhite} x${BIRed}]${BIWhite} BACK TO MENU          ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}12${BIRed}]${BIWhite} EDIT WS RESPONSE                                 ${BIRed}║${NC}"
+echo -e "${BIRed} ╚══════════════════════════════════════════════════════════╝${NC}"
 echo
 read -p " Select menu : " opt_feat
 case $opt_feat in

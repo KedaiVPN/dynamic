@@ -145,11 +145,11 @@ update_usage_record() {
 
 print_header() {
   local title="$1"
-  echo -e "${line_color}──────────────────────────────────────────────────────${NC}"
-  printf "${white}               [ %s ]${NC}\n" "$title"
-  echo -e "${line_color} ─────────────────────────────────────────────────────${NC}"
-  printf "${white}    %-12s %-14s %-14s %-10s${NC}\n" "USER" "USED(GB)" "LIMIT(GB)" "STATUS"
-  echo -e "${line_color} ┌───────────────────────────────────────────────────┐${NC}"
+  echo -e "${red} ╔═════════════════════════════════════════════════════╗${NC}"
+  printf "${red} ║ %-51s ${red}║${NC}\n" "                ${white}> $title <                "
+  echo -e "${red} ╠═════════════════════════════════════════════════════╣${NC}"
+  printf "${red} ║ ${white}    %-12s %-14s %-14s %-5s ${red}║${NC}\n" "USER" "USED(GB)" "LIMIT(GB)" "STATUS"
+  echo -e "${red} ╠═════════════════════════════════════════════════════╣${NC}"
 }
 
 print_protocol() {
@@ -184,12 +184,13 @@ print_protocol() {
     if grep -q -E "^${user} " "$lock_file"; then
       status="LOCKED"
     fi
-    printf "${white}%-20s %-12s %-12s %-10s${NC}\n" "$user" "$used_display" "$limit_display" "$status"
+    printf "${red} ║ ${white}    %-12s %-14s %-14s %-5s ${red}║${NC}\n" "$user" "$used_display" "$limit_display" "$status"
   done < "$file"
 
   if [[ "$has_data" -eq 0 ]]; then
-    echo "No users found."
+    printf "${red} ║ ${white}        %-43s ${red}║${NC}\n" "No users found."
   fi
+  echo -e "${red} ╚═════════════════════════════════════════════════════╝${NC}"
 }
 
 if [[ ! -x "$_Xray" ]]; then

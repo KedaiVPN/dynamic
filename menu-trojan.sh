@@ -411,17 +411,17 @@ function trialtrojan(){
 }
 
 clear && printf '\033[3J'
-echo -e "${BICyan} ┌─────────────────────────────────────────────────────┐${NC}"
-echo -e "       ${BIWhite}${UWhite}Trojan ${NC}"
-echo -e ""
-echo -e "     ${BICyan}[${BIWhite}1${BICyan}] Add Account Trojan      "
-echo -e "     ${BICyan}[${BIWhite}2${BICyan}] Delete Account Trojan      "
-echo -e "     ${BICyan}[${BIWhite}3${BICyan}] Renew Account Trojan      "
-echo -e "     ${BICyan}[${BIWhite}4${BICyan}] Check User XRAY     "
-echo -e "     ${BICyan}[${BIWhite}5${BICyan}] Unlock Account Trojan      "
-echo -e "     ${BICyan}[${BIWhite}6${BICyan}] Check Detail Account     "
-echo -e "     ${BICyan}[${BIWhite}7${BICyan}] Trial Account Trojan     "
-echo -e " ${BICyan}└─────────────────────────────────────────────────────┘${NC}"
+echo -e "${BIRed} ╔═════════════════════════════════════════════════════╗${NC}"
+echo -e "${BIRed} ║                  ${BIWhite}${UWhite}> TROJAN MENU <${NC}                    ${BIRed}║${NC}"
+echo -e "${BIRed} ╠═════════════════════════════════════════════════════╣${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 1${BIRed}]${BIWhite} Add Account Trojan                            ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 2${BIRed}]${BIWhite} Delete Account Trojan                         ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 3${BIRed}]${BIWhite} Renew Account Trojan                          ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 4${BIRed}]${BIWhite} Check User XRAY                               ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 5${BIRed}]${BIWhite} Unlock Account Trojan                         ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 6${BIRed}]${BIWhite} Check Detail Account                          ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 7${BIRed}]${BIWhite} Trial Account Trojan                          ${BIRed}║${NC}"
+echo -e "${BIRed} ╚═════════════════════════════════════════════════════╝${NC}"
 echo -e "     ${BIYellow}Press x or [ Ctrl+C ] • To-${BIWhite}Exit${NC}"
 echo ""
 read -p " Select menu : " opt
