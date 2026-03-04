@@ -46,6 +46,35 @@ wget -q -O /usr/bin/xp "${REPO}/xp.sh" && chmod +x /usr/bin/xp
 
 systemctl restart ws-stunnel >/dev/null 2>&1
 
+# --- HOTFIX: APPLY DROPBEAR, HAPROXY, DAN BANNER FIX PADA SERVER YANG SUDAH JALAN ---
+echo -e "[ ${GREEN}INFO${NC} ] Menerapkan patch Dropbear & HAProxy..."
+# Fix Dropbear
+cat > /etc/default/dropbear <<-END
+NO_START=0
+DROPBEAR_PORT=143
+DROPBEAR_EXTRA_ARGS="-p 109"
+DROPBEAR_BANNER="/etc/issue.net"
+DROPBEAR_RECEIVE_WINDOW=65536
+END
+systemctl daemon-reload >/dev/null 2>&1
+systemctl enable dropbear >/dev/null 2>&1
+systemctl restart dropbear >/dev/null 2>&1
+
+# Fix HAProxy
+DEBIAN_FRONTEND=noninteractive apt-get install -f -y haproxy >/dev/null 2>&1
+mkdir -p /var/lib/haproxy
+systemctl enable haproxy >/dev/null 2>&1
+systemctl restart haproxy >/dev/null 2>&1
+
+# Fix Banner Issue.net (Hapus duplikasi SSHD)
+wget -q -O /etc/issue.net "${REPO}/issue.net"
+chmod +x /etc/issue.net
+sed -i '/Banner \/etc\/issue.net/d' /etc/ssh/sshd_config
+echo "Banner /etc/issue.net" >> /etc/ssh/sshd_config
+systemctl restart ssh >/dev/null 2>&1
+systemctl restart sshd >/dev/null 2>&1
+# --- END HOTFIX ---
+
 # Hapus script menu backup lama yang sudah tidak digunakan
 # rm -f /usr/bin/menu-bckp
 # rm -f /usr/bin/bckpbot
