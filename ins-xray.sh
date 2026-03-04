@@ -96,7 +96,8 @@ systemctl enable chrony && systemctl restart chrony
 timedatectl set-timezone Asia/Jakarta
 #chronyc sourcestats -v
 #chronyc tracking -v
-apt install curl pwgen openssl netcat cron unzip haproxy python3 -y
+apt install curl pwgen openssl netcat cron unzip python3 -y
+DEBIAN_FRONTEND=noninteractive apt-get install -f -y haproxy
 
 # Make Folder & Log XRay & Log Trojan
 rm -fr /var/log/xray
