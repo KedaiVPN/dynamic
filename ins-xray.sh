@@ -193,7 +193,6 @@ global
     tune.ssl.default-dh-param 2048
 
     pidfile /run/haproxy.pid
-    chroot /var/lib/haproxy
 
     user haproxy
     group haproxy
@@ -217,11 +216,11 @@ defaults
 
 frontend http_frontend
     mode tcp
-    bind *:80 tfo
-    bind *:8080 tfo
-    bind *:8880 tfo
-    bind *:2080 tfo
-    bind *:2082 tfo
+    bind *:80
+    bind *:8080
+    bind *:8880
+    bind *:2080
+    bind *:2082
 
     tcp-request inspect-delay 500ms
     tcp-request content accept if HTTP
@@ -231,7 +230,7 @@ frontend http_frontend
     default_backend dropbear_backend
 
 frontend https_frontend
-    bind *:443 ssl crt /etc/xray/xray.pem tfo alpn h2,http/1.1
+    bind *:443 ssl crt /etc/xray/xray.pem alpn h2,http/1.1
     mode tcp
     log global
     option tcplog
