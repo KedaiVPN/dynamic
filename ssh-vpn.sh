@@ -290,6 +290,7 @@ apt-get install stunnel4 -y
 
 # Download Config Stunnel4
 cat > /etc/stunnel/stunnel.conf <<-END
+pid = /var/run/stunnel4.pid
 cert = /etc/xray/xray.crt
 key = /etc/xray/xray.key
 client = no

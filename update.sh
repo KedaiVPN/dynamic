@@ -25,7 +25,7 @@ echo -e "[ ${GREEN}INFO${NC} ] Mendownload script terbaru..."
 # wget -q -O /usr/bin/menu-trojan "${REPO}/menu-trojan.sh" && chmod +x /usr/bin/menu-trojan
 # wget -q -O /usr/bin/user-xrays "${REPO}/user-xrays.sh" && chmod +x /usr/bin/user-xrays
 
-# Update menu & ws-stunnel untuk perbaikan respon statis websocket HTTP 101
+# Update menu & ws-stunnel untuk perbaikan kompatibilitas Ubuntu 22/Debian 12
 wget -q -O /usr/bin/menu "${REPO}/menu4.sh" && chmod +x /usr/bin/menu
 wget -q -O /usr/bin/menu-ssh "${REPO}/menu-ssh.sh" && chmod +x /usr/bin/menu-ssh
 wget -q -O /usr/bin/menu-vmess "${REPO}/menu-vmess.sh" && chmod +x /usr/bin/menu-vmess
@@ -34,11 +34,18 @@ wget -q -O /usr/bin/menu-trojan "${REPO}/menu-trojan.sh" && chmod +x /usr/bin/me
 wget -q -O /usr/bin/menu-ss "${REPO}/menu-ss.sh" && chmod +x /usr/bin/menu-ss
 wget -q -O /usr/bin/cek-trafik "${REPO}/cek-trafik.sh" && chmod +x /usr/bin/cek-trafik
 wget -q -O /usr/bin/cek-expired "${REPO}/cek-expired.sh" && chmod +x /usr/bin/cek-expired
-# wget -q -O /usr/local/bin/ws-stunnel "${REPO}/ws-stunnel" && chmod +x /usr/local/bin/ws-stunnel
-# systemctl restart ws-stunnel
+wget -q -O /usr/bin/menu-vless "${REPO}/menu-vless.sh" && chmod +x /usr/bin/menu-vless
+wget -q -O /usr/bin/menu_asli "${REPO}/menu.sh" && chmod +x /usr/bin/menu_asli
+wget -q -O /usr/bin/running "${REPO}/running.sh" && chmod +x /usr/bin/running
+wget -q -O /usr/bin/restart "${REPO}/restart.sh" && chmod +x /usr/bin/restart
+wget -q -O /usr/local/bin/cek-lisensi "${REPO}/cek-lisensi.sh" && chmod +x /usr/local/bin/cek-lisensi
+wget -q -O /usr/local/bin/ws-stunnel "${REPO}/ws-stunnel" && chmod +x /usr/local/bin/ws-stunnel
+wget -q -O /usr/bin/backup "${REPO}/backup.sh" && chmod +x /usr/bin/backup
+wget -q -O /usr/bin/restore "${REPO}/restore.sh" && chmod +x /usr/bin/restore
+wget -q -O /usr/bin/clearlog "${REPO}/clearlog.sh" && chmod +x /usr/bin/clearlog
+wget -q -O /usr/bin/xp "${REPO}/xp.sh" && chmod +x /usr/bin/xp
 
-# wget -q -O /usr/bin/backup "${REPO}/backup.sh" && chmod +x /usr/bin/backup
-# wget -q -O /usr/bin/restore "${REPO}/restore.sh" && chmod +x /usr/bin/restore
+systemctl restart ws-stunnel >/dev/null 2>&1
 
 # Hapus script menu backup lama yang sudah tidak digunakan
 # rm -f /usr/bin/menu-bckp
@@ -84,8 +91,6 @@ wget -q -O /usr/bin/cek-expired "${REPO}/cek-expired.sh" && chmod +x /usr/bin/ce
 echo -e "[ ${GREEN}INFO${NC} ] Menerapkan fix terminal ghosting..."
 
 files_to_fix=(
-    # "/usr/bin/add-vless"
-    # "/usr/bin/add-tr"
     "/usr/bin/menu-vless"
     "/usr/bin/menu-trojan"
     "/usr/bin/menu-ssh"
@@ -93,10 +98,11 @@ files_to_fix=(
     "/usr/bin/menu-ss"
     "/usr/bin/cek-trafik"
     "/usr/bin/cek-expired"
-    # "/usr/bin/user-xrays"
     "/usr/bin/menu"
-    # "/usr/bin/backup"
-    # "/usr/bin/restore"
+    "/usr/bin/backup"
+    "/usr/bin/restore"
+    "/usr/bin/running"
+    "/usr/bin/restart"
 )
 
 for file in "${files_to_fix[@]}"; do
