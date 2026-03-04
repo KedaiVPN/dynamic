@@ -43,8 +43,8 @@ export WARNING="${RED}\e[5m"
 export UNDERLINE="\e[4m"
 
 # // Exporting URL Host
-export Server_URL="raw.githubusercontent.com/NevermoreSSH/Blueblue/main/test"
-export Server1_URL="raw.githubusercontent.com/NevermoreSSH/Blueblue/main/limit"
+export Server_URL="raw.githubusercontent.com/KedaiVPN/dynamic/main/test"
+export Server1_URL="raw.githubusercontent.com/KedaiVPN/dynamic/main/limit"
 export Server_Port="443"
 export Server_IP="underfined"
 export Script_Mode="Stable"
@@ -182,7 +182,7 @@ echo ""
 read -n 1 -s -r -p "Press any key to back on menu"
 menu
 }
-export sem=$( curl -s https://raw.githubusercontent.com/NevermoreSSH/Blueblue/main/test/versions)
+export sem=$( curl -s https://raw.githubusercontent.com/KedaiVPN/dynamic/main/test/versions)
 export pak=$( cat /home/.ver)
 IPVPS=$(curl -s ipinfo.io/ip )
 ISPVPS=$( curl -s ipinfo.io/org )
@@ -266,7 +266,7 @@ case $opt in
 20) clear && printf '\033[3J' ; cat /root/log-install.txt ;;
 21) clear && printf '\033[3J' ; clearlog ;;
 #99) clear && printf '\033[3J' ; update ;;
-22) clear && printf '\033[3J' ; wget https://raw.githubusercontent.com/NevermoreSSH/Blueblue/main/cf.sh && chmod +x cf.sh && ./cf.sh ;;
+22) clear && printf '\033[3J' ; wget https://raw.githubusercontent.com/KedaiVPN/dynamic/main/cf.sh && chmod +x cf.sh && ./cf.sh ;;
 
 0) clear && printf '\033[3J' ; menu ;;
 x) exit ;;

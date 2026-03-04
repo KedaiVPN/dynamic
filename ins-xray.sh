@@ -29,8 +29,8 @@ export WARNING="${RED}\e[5m"
 export UNDERLINE="\e[4m"
 
 # // Exporting URL Host
-export Server_URL="raw.githubusercontent.com/NevermoreSSH/Blueblue/main/test"
-export Server1_URL="raw.githubusercontent.com/NevermoreSSH/Blueblue/main/limit"
+export Server_URL="raw.githubusercontent.com/KedaiVPN/dynamic/main/test"
+export Server1_URL="raw.githubusercontent.com/KedaiVPN/dynamic/main/limit"
 export Server_Port="443"
 export Server_IP="underfined"
 export Script_Mode="Stable"
@@ -263,7 +263,7 @@ apt install -y nginx
 cd
 rm -fr /etc/nginx/sites-enabled/default
 rm -fr /etc/nginx/sites-available/default
-# wget -q -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/NevermoreSSH/Blueblue/main/nginx.conf" 
+# wget -q -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/nginx.conf"
 # Embed nginx.conf with Proxy Protocol support for Xray frontend
 # Merging user optimizations
 rm -fr /etc/nginx/nginx.conf
@@ -331,7 +331,7 @@ http {
 EOF
 
 #mkdir -p /home/vps/public_html
-#wget -q -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/NevermoreSSH/Blueblue/main/vps.conf"
+#wget -q -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/vps.conf"
 rm -f /etc/nginx/conf.d/vps.conf
 
 # Install Xray #
@@ -450,7 +450,7 @@ END
     systemctl restart ws-stunnel
 else
     # Try to download if missing (fallback)
-    wget -q -O /usr/local/bin/ws-stunnel "https://raw.githubusercontent.com/NevermoreSSH/Blueblue/main/ws-stunnel"
+    wget -q -O /usr/local/bin/ws-stunnel "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/ws-stunnel"
     chmod +x /usr/local/bin/ws-stunnel
 
     cat > /etc/systemd/system/ws-stunnel.service << END
