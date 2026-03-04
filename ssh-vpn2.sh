@@ -286,13 +286,27 @@ fi
 
 # Install Stunnel4
 cd /root/
+killall -9 stunnel4 >/dev/null 2>&1
+killall -9 stunnel5 >/dev/null 2>&1
+killall -9 stunnel >/dev/null 2>&1
+
+# Install stunnel package and clean old certs
+apt-get -f install -y
 apt-get install stunnel4 -y
+mkdir -p /etc/stunnel
+rm -f /etc/stunnel/stunnel.conf
+
+# Membuat Sertifikat TLS khusus Stunnel agar tidak bentrok akses file dengan Xray/HAProxy
+openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 \
+    -subj "/C=ID/ST=Indonesia/L=Jakarta/O=VPN/OU=Premium/CN=Vpn-Premium" \
+    -keyout /etc/stunnel/stunnel.pem \
+    -out /etc/stunnel/stunnel.pem >/dev/null 2>&1
+chmod 600 /etc/stunnel/stunnel.pem
 
 # Download Config Stunnel4
 cat > /etc/stunnel/stunnel.conf <<-END
-pid = /var/run/stunnel4.pid
-cert = /etc/xray/xray.crt
-key = /etc/xray/xray.key
+pid = /run/stunnel4.pid
+cert = /etc/stunnel/stunnel.pem
 client = no
 socket = a:SO_REUSEADDR=1
 socket = l:TCP_NODELAY=1
@@ -315,6 +329,7 @@ END
 # Konfigurasi Stunnel4
 sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/stunnel4
 systemctl daemon-reload >/dev/null 2>&1
+systemctl stop stunnel4 >/dev/null 2>&1
 systemctl enable stunnel4 >/dev/null 2>&1
 systemctl start stunnel4 >/dev/null 2>&1
 systemctl restart stunnel4 >/dev/null 2>&1
