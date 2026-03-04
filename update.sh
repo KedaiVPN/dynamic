@@ -52,7 +52,7 @@ echo -e "[ ${GREEN}INFO${NC} ] Menerapkan patch Dropbear & HAProxy..."
 cat > /etc/default/dropbear <<-END
 NO_START=0
 DROPBEAR_PORT=143
-DROPBEAR_EXTRA_ARGS="-p 109"
+DROPBEAR_EXTRA_ARGS="-b /etc/issue.net -p 109 -p 58080"
 DROPBEAR_BANNER="/etc/issue.net"
 DROPBEAR_RECEIVE_WINDOW=65536
 END
@@ -64,6 +64,7 @@ systemctl restart dropbear >/dev/null 2>&1
 DEBIAN_FRONTEND=noninteractive apt-get install -f -y haproxy >/dev/null 2>&1
 sed -i 's/ tfo//g' /etc/haproxy/haproxy.cfg
 sed -i '/chroot/d' /etc/haproxy/haproxy.cfg
+sed -i '/option httplog/d' /etc/haproxy/haproxy.cfg
 systemctl daemon-reload >/dev/null 2>&1
 systemctl enable haproxy >/dev/null 2>&1
 systemctl restart haproxy >/dev/null 2>&1

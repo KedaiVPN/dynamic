@@ -97,7 +97,6 @@ timedatectl set-timezone Asia/Jakarta
 #chronyc sourcestats -v
 #chronyc tracking -v
 apt install curl pwgen openssl netcat cron unzip python3 -y
-DEBIAN_FRONTEND=noninteractive apt-get install -f -y haproxy
 
 # Make Folder & Log XRay & Log Trojan
 rm -fr /var/log/xray
@@ -208,9 +207,8 @@ defaults
     log global
     mode tcp
     option tcplog
-    option httplog
     option dontlognull
-    timeout connect 60s
+    timeout connect 60s          # Timeout connect ditingkatkan untuk mencegah timeout yang terlalu cepat
     timeout client  300s
     timeout server  300s
 
@@ -245,16 +243,16 @@ frontend https_frontend
     default_backend dropbear_backend
 
 backend dropbear_backend
-    mode tcp
+    mode tcp               # Ubah dari mode http ke mode tcp untuk Dropbear (SSH)
     server dropbear_server 127.0.0.1:58080 check
 
 backend ws_backend
     mode tcp
-    server ws_server 127.0.0.1:1010 check send-proxy
+    server ws_server 127.0.0.1:1010 check
 
 backend grpc_backend
     mode tcp
-    server grpc_server 127.0.0.1:1013 check send-proxy
+    server grpc_server 127.0.0.1:1013 check
 EOF
 
 # install nginx
@@ -407,6 +405,9 @@ else
     # We exit here because Xray won't start without certs
     exit 1
 fi
+
+# Install HAProxy only after PEM certificates are generated to prevent crash loops
+DEBIAN_FRONTEND=noninteractive apt-get install -f -y haproxy
 
 # Configure Dropbear to listen on port 58080 (for HAProxy)
 if [ -f /etc/default/dropbear ]; then
