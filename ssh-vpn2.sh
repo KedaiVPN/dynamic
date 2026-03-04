@@ -265,13 +265,9 @@ systemctl restart ssh >/dev/null 2>&1
 # install dropbear
 sleep 1
 echo -e "[ ${green}INFO$NC ] Settings Dropbear"
-cat > /etc/default/dropbear <<-END
-NO_START=0
-DROPBEAR_PORT=143
-DROPBEAR_EXTRA_ARGS="-p 109"
-DROPBEAR_BANNER="/etc/issue.net"
-DROPBEAR_RECEIVE_WINDOW=65536
-END
+sed -i 's/NO_START=1/NO_START=0/g' /etc/default/dropbear
+sed -i 's/DROPBEAR_PORT=22/DROPBEAR_PORT=143/g' /etc/default/dropbear
+sed -i 's/DROPBEAR_EXTRA_ARGS=/DROPBEAR_EXTRA_ARGS="-p 109"/g' /etc/default/dropbear
 systemctl daemon-reload >/dev/null 2>&1
 systemctl enable dropbear >/dev/null 2>&1
 systemctl start dropbear >/dev/null 2>&1
@@ -333,20 +329,6 @@ systemctl stop stunnel4 >/dev/null 2>&1
 systemctl enable stunnel4 >/dev/null 2>&1
 systemctl start stunnel4 >/dev/null 2>&1
 systemctl restart stunnel4 >/dev/null 2>&1
-
-# banner /etc/issue.net
-sleep 1
-echo -e "[ ${green}INFO$NC ] Settings banner"
-wget -q -O /etc/issue.net "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/issue.net"
-chmod +x /etc/issue.net
-echo "Banner /etc/issue.net" >> /etc/ssh/sshd_config
-sed -i 's@DROPBEAR_BANNER=""@DROPBEAR_BANNER="/etc/issue.net"@g' /etc/default/dropbear
-cat> /etc/issue.net << END
-<font color="red"><b>============================</b></font><br> 
-<font color="white"><b>      PREMIUM SERVICE         </b></font><br> 
-<font color="red"><b>============================</b></font>
-END
-
 
 # Install bbr
 sleep 1
@@ -449,8 +431,15 @@ sleep 1
 echo -e "[ ${green}INFO$NC ] Settings banner"
 wget -q -O /etc/issue.net "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/issue.net"
 chmod +x /etc/issue.net
+
+# Membersihkan konfigurasi banner sshd yang duplikat jika ada
+sed -i '/Banner \/etc\/issue.net/d' /etc/ssh/sshd_config
 echo "Banner /etc/issue.net" >> /etc/ssh/sshd_config
 sed -i 's@DROPBEAR_BANNER=""@DROPBEAR_BANNER="/etc/issue.net"@g' /etc/default/dropbear
+
+systemctl restart ssh
+systemctl restart sshd
+systemctl restart dropbear
 
 # Blokir Torrent
 echo -e "[ ${green}INFO$NC ] Set iptables"
