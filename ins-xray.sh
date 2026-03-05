@@ -248,11 +248,11 @@ backend dropbear_backend
 
 backend ws_backend
     mode tcp
-    server ws_server 127.0.0.1:1010 check
+    server ws_server 127.0.0.1:1010 check send-proxy
 
 backend grpc_backend
     mode tcp
-    server grpc_server 127.0.0.1:1013 check
+    server grpc_server 127.0.0.1:1013 check send-proxy
 EOF
 
 # install nginx
