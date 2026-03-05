@@ -61,7 +61,7 @@ systemctl enable dropbear >/dev/null 2>&1
 systemctl restart dropbear >/dev/null 2>&1
 
 # Fix HAProxy
-DEBIAN_FRONTEND=noninteractive apt-get install -f -y haproxy >/dev/null 2>&1
+DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install -f -y haproxy >/dev/null 2>&1
 sed -i 's/ tfo//g' /etc/haproxy/haproxy.cfg
 sed -i '/chroot/d' /etc/haproxy/haproxy.cfg
 sed -i '/option httplog/d' /etc/haproxy/haproxy.cfg

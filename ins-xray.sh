@@ -408,7 +408,7 @@ else
 fi
 
 # Install HAProxy only after PEM certificates are generated to prevent crash loops
-DEBIAN_FRONTEND=noninteractive apt-get install -f -y haproxy
+DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install -f -y haproxy
 
 # Ensure ws-stunnel is running on port 10015
 if [ -f /usr/local/bin/ws-stunnel ]; then
