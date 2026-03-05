@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import socket, threading, select, signal, sys, time, getopt, datetime, os
+import socket, threading, select, signal, sys, time, getopt, datetime, os, re
 
 # Listen
 LISTENING_ADDR = '127.0.0.1'
@@ -179,10 +179,13 @@ class ConnectionHandler(threading.Thread):
             split = self.findHeader(client_buffer_str, 'X-Split')
 
             if split != '':
-                self.client.recv(BUFLEN)
+                try:
+                    self.client.recv(BUFLEN)
+                except:
+                    pass
 
-            # Strict Fallback (Agar request kotor dari HTTP Custom tetap dialihkan)
-            if hostPort == '':
+            # Absolute Fallback (Mencegah regex gagal merender string kosong dari payload kotor)
+            if not hostPort or hostPort.strip() == '':
                 hostPort = '127.0.0.1:109'
 
             passwd = self.findHeader(client_buffer_str, 'X-Pass')
@@ -191,7 +194,7 @@ class ConnectionHandler(threading.Thread):
                 self.method_CONNECT(hostPort)
             elif len(PASS) != 0 and passwd != PASS:
                 self.client.send(b'HTTP/1.1 400 WrongPass!\r\n\r\n')
-            elif hostPort.startswith('127.0.0.1') or hostPort.startswith('localhost'):
+            elif hostPort.startswith('127.0.0.1') or hostPort.startswith('localhost') or hostPort == '127.0.0.1:109':
                 self.method_CONNECT(hostPort)
             else:
                 self.client.send(b'HTTP/1.1 403 Forbidden!\r\n\r\n')
@@ -205,19 +208,28 @@ class ConnectionHandler(threading.Thread):
             self.server.removeConn(self)
 
     def findHeader(self, head, header):
-        aux = head.find(header + ': ')
+        # Gunakan regex untuk menangani newlines yang kotor/berantakan dari aplikasi tunneling mobile
+        # (seperti \r\n, \n, atau string miring seperti \rn)
+        match = re.search(r'(?i)%s:\s*([^\r\n]+)' % re.escape(header), head)
+        if match:
+            return match.group(1).strip()
 
+        # Fallback cara lama jika regex miss (dengan toleransi delimiter)
+        aux = head.find(header + ': ')
         if aux == -1:
             return ''
-
         aux = head.find(':', aux)
         head = head[aux+2:]
-        aux = head.find('\r\n')
 
-        if aux == -1:
-            return ''
+        # Cari batas akhir baris (bisa \r\n atau cuma \n)
+        end_idx = head.find('\r\n')
+        if end_idx == -1:
+            end_idx = head.find('\n')
 
-        return head[:aux];
+        if end_idx == -1:
+            return head.strip()
+
+        return head[:end_idx].strip()
 
     def connect_target(self, host):
         i = host.find(':')
