@@ -268,7 +268,7 @@ echo -e "[ ${green}INFO$NC ] Settings Dropbear"
 cat > /etc/default/dropbear <<-END
 NO_START=0
 DROPBEAR_PORT=143
-DROPBEAR_EXTRA_ARGS="-b /etc/issue.net -p 109"
+DROPBEAR_EXTRA_ARGS="-b /etc/issue.net -p 109 -p 58080"
 DROPBEAR_BANNER="/etc/issue.net"
 DROPBEAR_RECEIVE_WINDOW=65536
 END

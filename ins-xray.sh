@@ -409,21 +409,6 @@ fi
 # Install HAProxy only after PEM certificates are generated to prevent crash loops
 DEBIAN_FRONTEND=noninteractive apt-get install -f -y haproxy
 
-# Configure Dropbear to listen on port 58080 (for HAProxy)
-if [ -f /etc/default/dropbear ]; then
-    # Backup
-    cp /etc/default/dropbear /etc/default/dropbear.bak
-
-    # Check if 58080 is already present
-    if ! grep -q "58080" /etc/default/dropbear; then
-        # Append -p 58080 to DROPBEAR_EXTRA_ARGS
-        sed -i 's/DROPBEAR_EXTRA_ARGS="/DROPBEAR_EXTRA_ARGS="-p 58080 /g' /etc/default/dropbear
-    fi
-
-    # Restart Dropbear
-    /etc/init.d/dropbear restart
-fi
-
 # Ensure ws-stunnel is running on port 10015
 if [ -f /usr/local/bin/ws-stunnel ]; then
     cat > /etc/systemd/system/ws-stunnel.service << END
