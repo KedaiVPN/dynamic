@@ -69,7 +69,7 @@ sed -i '/option httplog/d' /etc/haproxy/haproxy.cfg
 # Kembalikan send-proxy untuk backend xray agar tidak error 521/400
 sed -i 's/127.0.0.1:1010 check/127.0.0.1:1010 check send-proxy/g' /etc/haproxy/haproxy.cfg
 sed -i 's/127.0.0.1:1013 check/127.0.0.1:1013 check send-proxy/g' /etc/haproxy/haproxy.cfg
-sed -i 's/127.0.0.1:2020 check/127.0.0.1:1013 check send-proxy/g' /etc/haproxy/haproxy.cfg
+sed -i 's/127.0.0.1:2020 check/127.0.0.1:2020 check send-proxy/g' /etc/haproxy/haproxy.cfg
 
 systemctl daemon-reload >/dev/null 2>&1
 systemctl enable haproxy >/dev/null 2>&1
@@ -82,6 +82,119 @@ sed -i '/Banner \/etc\/issue.net/d' /etc/ssh/sshd_config
 echo "Banner /etc/issue.net" >> /etc/ssh/sshd_config
 systemctl restart ssh >/dev/null 2>&1
 systemctl restart sshd >/dev/null 2>&1
+
+# Fix Nginx Xray Routing Proxy (agar Vmess/Vless/Trojan bisa connect dari port 443)
+domain=$(cat /etc/xray/domain)
+cat >/etc/nginx/conf.d/xray.conf <<EOF
+server {
+    listen 127.0.0.1:1010 proxy_protocol;
+    server_name 127.0.0.1 localhost \$domain;
+
+    # User Optimization
+    client_body_buffer_size 200K;
+    client_header_buffer_size 2k;
+    client_max_body_size 10M;
+    large_client_header_buffers 3 1k;
+    client_header_timeout 360s;
+    keepalive_timeout 360s;
+
+    root /home/vps/public_html;
+
+    location / {
+        proxy_redirect off;
+        proxy_pass http://127.0.0.1:10015;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    }
+
+    location /vless {
+        proxy_redirect off;
+        proxy_pass http://127.0.0.1:10001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    }
+
+    location /vmess {
+        proxy_redirect off;
+        proxy_pass http://127.0.0.1:10002;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    }
+
+    location /trojan-ws {
+        proxy_redirect off;
+        proxy_pass http://127.0.0.1:10003;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    }
+
+    location /ss-ws {
+        proxy_redirect off;
+        proxy_pass http://127.0.0.1:10004;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    }
+}
+
+server {
+    listen 127.0.0.1:1013 proxy_protocol http2;
+    server_name 127.0.0.1 localhost \$domain;
+
+    # gRPC Locations
+    location ^~ /vless-grpc {
+        proxy_redirect off;
+        grpc_set_header Host \$host;
+        grpc_pass grpc://127.0.0.1:10005;
+        grpc_set_header X-Real-IP \$remote_addr;
+        grpc_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    }
+
+    location ^~ /vmess-grpc {
+        proxy_redirect off;
+        grpc_set_header Host \$host;
+        grpc_pass grpc://127.0.0.1:10006;
+        grpc_set_header X-Real-IP \$remote_addr;
+        grpc_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    }
+
+    location ^~ /trojan-grpc {
+        proxy_redirect off;
+        grpc_set_header Host \$host;
+        grpc_pass grpc://127.0.0.1:10007;
+        grpc_set_header X-Real-IP \$remote_addr;
+        grpc_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    }
+
+    location ^~ /ss-grpc {
+        proxy_redirect off;
+        grpc_set_header Host \$host;
+        grpc_pass grpc://127.0.0.1:10008;
+        grpc_set_header X-Real-IP \$remote_addr;
+        grpc_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    }
+}
+EOF
+systemctl restart nginx >/dev/null 2>&1
 # --- END HOTFIX ---
 
 # Hapus script menu backup lama yang sudah tidak digunakan
