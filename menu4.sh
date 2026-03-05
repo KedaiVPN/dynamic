@@ -329,7 +329,7 @@ case $opt_feat in
 8) clear && printf '\033[3J' ; reboot ;;
 9) clear && printf '\033[3J' ; restart ;;
 10) clear && printf '\033[3J' ; gotop ;;
-11) clear && printf '\033[3J' ; /usr/local/bin/api-modules/api-bot-manager.sh ;;
+11) clear && printf '\033[3J' ; /usr/local/bin/api-modules/api-auth-gen.sh ;;
 12) clear && printf '\033[3J' ; change_ws_response ;;
 13) clear && printf '\033[3J' ; wbm ;;
 14) clear && printf '\033[3J' ; cat /root/log-install.txt ;;
@@ -340,7 +340,7 @@ case $opt_feat in
 19) clear && printf '\033[3J' ; wget -q -O /usr/bin/xraychanger "https://raw.githubusercontent.com/NevermoreSSH/Xcore-custompath/main/xraychanger.sh" && chmod +x /usr/bin/xraychanger && xraychanger ;;
 20) clear && printf '\033[3J' ; bbr ;;
 21) clear && printf '\033[3J' ; wget -q -O /usr/bin/swapram "https://raw.githubusercontent.com/NevermoreSSH/swapram/main/swapram.sh" && chmod +x /usr/bin/swapram && swapram ;;
-22) clear && printf '\033[3J' ; /usr/local/bin/api-modules/api-auth-gen.sh ;;
+22) clear && printf '\033[3J' ; /usr/local/bin/api-modules/api-bot-manager.sh ;;
 x) menu ;;
 *) menu ;;
 esac
