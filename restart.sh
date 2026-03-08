@@ -73,9 +73,10 @@ echo -e "    [3] Restart Dropbear"
 echo -e "    [4] Restart Stunnel5"
 echo -e "    [5] Restart Nginx"
 echo -e "    [6] Restart Badvpn"
+echo -e "    [7] Restart HAProxy"
 echo -e "    [x] Menu"
 echo -e ""
-read -p "    Select From Options [1-6 or x] :  " Restart
+read -p "    Select From Options [1-7 or x] :  " Restart
 echo -e ""
 echo -e "======================================"
 sleep 1
@@ -86,6 +87,7 @@ case $Restart in
                 #systemctl restart ws-dropbear.service >/dev/null 2>&1
                 systemctl restart ws-stunnel.service >/dev/null 2>&1
                 systemctl restart xray.service >/dev/null 2>&1
+                systemctl restart haproxy >/dev/null 2>&1
                 /etc/init.d/ssh restart
                 /etc/init.d/dropbear restart
                 /etc/init.d/stunnel4 restart
@@ -153,6 +155,16 @@ case $Restart in
                 echo -e "======================================"
                 echo -e ""
                 echo -e "    Badvpn  Badvpn Service Restarted  "
+                echo -e ""
+                echo -e "======================================"
+                ;;
+                7)
+                clear && printf '\033[3J'
+                systemctl restart haproxy >/dev/null 2>&1
+                echo -e ""
+                echo -e "======================================"
+                echo -e ""
+                echo -e "        HAProxy Service Restarted     "
                 echo -e ""
                 echo -e "======================================"
                 ;;
