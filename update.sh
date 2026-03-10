@@ -47,6 +47,14 @@ wget -q -O /usr/bin/xp "${REPO}/xp.sh" && chmod +x /usr/bin/xp
 systemctl restart ws-stunnel >/dev/null 2>&1
 
 # --- HOTFIX: APPLY DROPBEAR, HAPROXY, DAN BANNER FIX PADA SERVER YANG SUDAH JALAN ---
+echo -e "[ ${GREEN}INFO${NC} ] Menerapkan patch & membersihkan cron..."
+
+# Hapus backup ganda bawaan dari instalasi lama
+sed -i '/root backup/d' /etc/crontab
+sed -i '/root \/usr\/bin\/backup/d' /etc/crontab
+service cron restart >/dev/null 2>&1
+service cron reload >/dev/null 2>&1
+
 echo -e "[ ${GREEN}INFO${NC} ] Menerapkan patch Dropbear & HAProxy..."
 # Fix Dropbear
 cat > /etc/default/dropbear <<-END
