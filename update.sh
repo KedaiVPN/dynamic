@@ -52,6 +52,11 @@ echo -e "[ ${GREEN}INFO${NC} ] Menerapkan patch & membersihkan cron..."
 # Hapus backup ganda bawaan dari instalasi lama
 sed -i '/root backup/d' /etc/crontab
 sed -i '/root \/usr\/bin\/backup/d' /etc/crontab
+
+# Hapus auto-reboot paksa dari instalasi lama
+sed -i '/root reboot/d' /etc/crontab
+sed -i '/root \/usr\/bin\/reboot/d' /etc/crontab
+
 service cron restart >/dev/null 2>&1
 service cron reload >/dev/null 2>&1
 

@@ -179,6 +179,8 @@ service cron restart >/dev/null 2>&1
 ;;
 7)
 rm -fr /etc/cron.d/auto_reboot
+sed -i '/root reboot/d' /etc/crontab
+sed -i '/root \/usr\/bin\/reboot/d' /etc/crontab
 echo "" > /root/log-reboot.txt
 echo -e ""
 echo -e "======================================"

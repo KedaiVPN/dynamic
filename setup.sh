@@ -362,7 +362,6 @@ echo "0 1 * * * root delete" >> /etc/crontab
 echo "0 2 * * * root cleaner" >> /etc/crontab
 echo "0 4 * * * root /usr/bin/delete" >> /etc/crontab
 echo "0 7 * * * root /usr/bin/cleaner" >> /etc/crontab
-echo "0 5 * * * root reboot" >> /etc/crontab
 if [ ! -f /etc/cron.d/xray-limit ]; then
 cat > /etc/cron.d/xray-limit <<-END
 */5 * * * * root /usr/bin/xray-limit
