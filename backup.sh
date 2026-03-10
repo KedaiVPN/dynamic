@@ -11,6 +11,34 @@ green='\e[0;32m'
 purple='\e[0;35m'
 orange='\e[0;33m'
 NC='\e[0m'
+
+# ==========================================
+# Lock Mechanism untuk Mencegah Double Backup
+# ==========================================
+LOCK_FILE="/tmp/backup_process.lock"
+
+# Cek apakah file lock sudah ada
+if [ -e "$LOCK_FILE" ]; then
+    # Baca PID dari lock file
+    PID=$(cat "$LOCK_FILE")
+    # Cek apakah proses dengan PID tersebut masih aktif
+    if kill -0 "$PID" 2>/dev/null; then
+        echo -e "[ ${red}ERROR${NC} ] Proses backup sedang berjalan (PID: $PID). Backup ini dihentikan untuk mencegah double backup."
+        exit 1
+    else
+        # Jika PID tidak aktif (misal proses crash sebelumnya), hapus lock file yang stale
+        echo -e "[ ${orange}WARNING${NC} ] Menghapus lock file usang."
+        rm -f "$LOCK_FILE"
+    fi
+fi
+
+# Buat lock file dengan PID saat ini
+echo $$ > "$LOCK_FILE"
+
+# Pastikan lock file dihapus saat script selesai atau dihentikan secara paksa (SIGINT, SIGTERM)
+trap 'rm -f "$LOCK_FILE"; exit' INT TERM EXIT
+# ==========================================
+
 clear && printf '\033[3J'
 IP=$(wget -qO- icanhazip.com);
 IP=$(curl -s ipinfo.io/ip )
