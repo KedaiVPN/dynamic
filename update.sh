@@ -27,24 +27,25 @@ echo -e "[ ${GREEN}INFO${NC} ] Mendownload script terbaru..."
 
 # Update menu & ws-stunnel untuk perbaikan kompatibilitas Ubuntu 22/Debian 12
 wget -q -O /usr/bin/menu "${REPO}/menu4.sh" && chmod +x /usr/bin/menu
-wget -q -O /usr/bin/menu-ssh "${REPO}/menu-ssh.sh" && chmod +x /usr/bin/menu-ssh
-wget -q -O /usr/bin/menu-vmess "${REPO}/menu-vmess.sh" && chmod +x /usr/bin/menu-vmess
-wget -q -O /usr/bin/menu-vless "${REPO}/menu-vless.sh" && chmod +x /usr/bin/menu-vless
-wget -q -O /usr/bin/menu-trojan "${REPO}/menu-trojan.sh" && chmod +x /usr/bin/menu-trojan
-wget -q -O /usr/bin/menu-ss "${REPO}/menu-ss.sh" && chmod +x /usr/bin/menu-ss
-wget -q -O /usr/bin/cek-trafik "${REPO}/cek-trafik.sh" && chmod +x /usr/bin/cek-trafik
-wget -q -O /usr/bin/cek-expired "${REPO}/cek-expired.sh" && chmod +x /usr/bin/cek-expired
-wget -q -O /usr/bin/menu-vless "${REPO}/menu-vless.sh" && chmod +x /usr/bin/menu-vless
-wget -q -O /usr/bin/running "${REPO}/running.sh" && chmod +x /usr/bin/running
-wget -q -O /usr/bin/restart "${REPO}/restart.sh" && chmod +x /usr/bin/restart
-wget -q -O /usr/local/bin/cek-lisensi "${REPO}/cek-lisensi.sh" && chmod +x /usr/local/bin/cek-lisensi
-wget -q -O /usr/local/bin/ws-stunnel "${REPO}/ws-stunnel" && chmod +x /usr/local/bin/ws-stunnel
-wget -q -O /usr/bin/backup "${REPO}/backup.sh" && chmod +x /usr/bin/backup
-wget -q -O /usr/bin/restore "${REPO}/restore.sh" && chmod +x /usr/bin/restore
-wget -q -O /usr/bin/clearlog "${REPO}/clearlog.sh" && chmod +x /usr/bin/clearlog
-wget -q -O /usr/bin/xp "${REPO}/xp.sh" && chmod +x /usr/bin/xp
+wget -q -O /usr/bin/tendang "${REPO}/tendang.sh" && chmod +x /usr/bin/tendang
+# wget -q -O /usr/bin/menu-ssh "${REPO}/menu-ssh.sh" && chmod +x /usr/bin/menu-ssh
+# wget -q -O /usr/bin/menu-vmess "${REPO}/menu-vmess.sh" && chmod +x /usr/bin/menu-vmess
+# wget -q -O /usr/bin/menu-vless "${REPO}/menu-vless.sh" && chmod +x /usr/bin/menu-vless
+# wget -q -O /usr/bin/menu-trojan "${REPO}/menu-trojan.sh" && chmod +x /usr/bin/menu-trojan
+# wget -q -O /usr/bin/menu-ss "${REPO}/menu-ss.sh" && chmod +x /usr/bin/menu-ss
+# wget -q -O /usr/bin/cek-trafik "${REPO}/cek-trafik.sh" && chmod +x /usr/bin/cek-trafik
+# wget -q -O /usr/bin/cek-expired "${REPO}/cek-expired.sh" && chmod +x /usr/bin/cek-expired
+# wget -q -O /usr/bin/menu-vless "${REPO}/menu-vless.sh" && chmod +x /usr/bin/menu-vless
+# wget -q -O /usr/bin/running "${REPO}/running.sh" && chmod +x /usr/bin/running
+# wget -q -O /usr/bin/restart "${REPO}/restart.sh" && chmod +x /usr/bin/restart
+# wget -q -O /usr/local/bin/cek-lisensi "${REPO}/cek-lisensi.sh" && chmod +x /usr/local/bin/cek-lisensi
+# wget -q -O /usr/local/bin/ws-stunnel "${REPO}/ws-stunnel" && chmod +x /usr/local/bin/ws-stunnel
+# wget -q -O /usr/bin/backup "${REPO}/backup.sh" && chmod +x /usr/bin/backup
+# wget -q -O /usr/bin/restore "${REPO}/restore.sh" && chmod +x /usr/bin/restore
+# wget -q -O /usr/bin/clearlog "${REPO}/clearlog.sh" && chmod +x /usr/bin/clearlog
+# wget -q -O /usr/bin/xp "${REPO}/xp.sh" && chmod +x /usr/bin/xp
 
-systemctl restart ws-stunnel >/dev/null 2>&1
+# systemctl restart ws-stunnel >/dev/null 2>&1
 
 # --- HOTFIX: APPLY DROPBEAR, HAPROXY, DAN BANNER FIX PADA SERVER YANG SUDAH JALAN ---
 echo -e "[ ${GREEN}INFO${NC} ] Menerapkan patch & membersihkan cron..."
@@ -276,4 +277,6 @@ done
 
 echo -e "[ ${GREEN}INFO${NC} ] Update Selesai!"
 echo -e "[ ${GREEN}INFO${NC} ] Menu Footer Layout telah di-update."
+echo -e "[ ${GREEN}INFO${NC} ] Script Auto-Kill SSH/Dropbear telah diperbarui."
 echo -e "[ ${GREEN}INFO${NC} ] Timezone server sekarang: $(date)"
+echo -e "[ ${GREEN}INFO${NC} ] Update Version: v1.1"
