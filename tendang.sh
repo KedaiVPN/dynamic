@@ -64,7 +64,11 @@ RAW_LOGS=$(journalctl -u dropbear -u ssh -n 2000 --no-pager)
 
 # Parse Dropbear
 while read -r line; do
-    if [[ "$line" =~ for\ \'([a-zA-Z0-9._-]+)\'\ from\ [0-9.]+:([0-9]+) ]]; then
+    if [[ "$line" =~ auth\ succeeded\ for\ \'([a-zA-Z0-9._-]+)\'\ from\ [0-9.]+:([0-9]+) ]]; then
+        user="${BASH_REMATCH[1]}"
+        port="${BASH_REMATCH[2]}"
+        PORT_TO_USER[$port]="$user"
+    elif [[ "$line" =~ for\ \'([a-zA-Z0-9._-]+)\'\ from\ [0-9.]+:([0-9]+) ]]; then
         user="${BASH_REMATCH[1]}"
         port="${BASH_REMATCH[2]}"
         PORT_TO_USER[$port]="$user"
@@ -73,7 +77,11 @@ done <<< "$RAW_LOGS"
 
 # Parse OpenSSH
 while read -r line; do
-    if [[ "$line" =~ for\ ([a-zA-Z0-9._-]+)\ from\ [0-9.]+\ port\ ([0-9]+) ]]; then
+    if [[ "$line" =~ Accepted\ [a-zA-Z]+\ for\ ([a-zA-Z0-9._-]+)\ from\ [0-9.]+\ port\ ([0-9]+) ]]; then
+        user="${BASH_REMATCH[1]}"
+        port="${BASH_REMATCH[2]}"
+        PORT_TO_USER[$port]="$user"
+    elif [[ "$line" =~ for\ ([a-zA-Z0-9._-]+)\ from\ [0-9.]+\ port\ ([0-9]+) ]]; then
         user="${BASH_REMATCH[1]}"
         port="${BASH_REMATCH[2]}"
         PORT_TO_USER[$port]="$user"
@@ -95,17 +103,15 @@ netstat -tnp 2>/dev/null | grep 'ESTABLISHED' | grep -E 'sshd|dropbear' | while 
     user=""
     real_ip="$ip"
 
+    # Try looking up user by remote port (which corresponds to ws-stunnel local port)
+    user="${PORT_TO_USER[$port]}"
+
     if [[ "$ip" == "127.0.0.1" || "$ip" == "localhost" ]]; then
         # Local Connection (Tunnel)
-        user="${PORT_TO_USER[$port]}"
-
         mapped_ip="${PORT_TO_REAL_IP[$port]}"
         if [ -n "$mapped_ip" ]; then
             real_ip="$mapped_ip"
         fi
-    else
-        # Direct Connection
-        user="${PORT_TO_USER[$port]}"
     fi
 
     # If user found and not root
