@@ -216,28 +216,29 @@ systemctl restart nginx >/dev/null 2>&1
 # rm -f /usr/bin/bckpbot
 
 # --- UPDATE API MODULES ONLY ---
-# echo -e "[ ${GREEN}INFO${NC} ] Updating API Modules..."
-# mkdir -p /usr/local/bin/api-modules
+echo -e "[ ${GREEN}INFO${NC} ] Updating API Modules..."
+mkdir -p /usr/local/bin/api-modules
+mkdir -p /home/vps/public_html/api
 
-# update_api_module() {
-#     local script_name="$1"
-#     local verify_string="$2"
-#     local tmp_file="/tmp/${script_name}"
-#     local target_file="/usr/local/bin/api-modules/${script_name}"
+update_api_module() {
+    local script_name="$1"
+    local verify_string="$2"
+    local tmp_file="/tmp/${script_name}"
+    local target_file="/usr/local/bin/api-modules/${script_name}"
 
-#     echo -e "[ ${GREEN}INFO${NC} ] Updating ${script_name}..."
-#     wget -q -O "$tmp_file" "${REPO}/api-modules/${script_name}?v=$(date +%s)"
+    echo -e "[ ${GREEN}INFO${NC} ] Updating ${script_name}..."
+    wget -q -O "$tmp_file" "${REPO}/api-modules/${script_name}?v=$(date +%s)"
 
-#     if [ -f "$tmp_file" ] && grep -q "$verify_string" "$tmp_file"; then
-#         echo -e "[ ${GREEN}OK${NC} ] ${script_name} downloaded and verified."
-#         rm -f "$target_file"
-#         mv "$tmp_file" "$target_file"
-#         chmod +x "$target_file"
-#     else
-#         echo -e "[ ${RED}ERROR${NC} ] Failed to update ${script_name}!"
-#         rm -f "$tmp_file"
-#     fi
-# }
+    if [ -f "$tmp_file" ] && grep -q "$verify_string" "$tmp_file"; then
+        echo -e "[ ${GREEN}OK${NC} ] ${script_name} downloaded and verified."
+        rm -f "$target_file"
+        mv "$tmp_file" "$target_file"
+        chmod +x "$target_file"
+    else
+        echo -e "[ ${RED}ERROR${NC} ] Failed to update ${script_name}!"
+        rm -f "$tmp_file"
+    fi
+}
 
 # # Update API Create Module
 # update_api_module "api-xray-create.sh" "grpc_link"
@@ -245,10 +246,17 @@ systemctl restart nginx >/dev/null 2>&1
 # # Update API Trial Module
 # update_api_module "api-xray-trial.sh" "grpc_link"
 
-# echo -e "[ ${GREEN}INFO${NC} ] Restarting API Service..."
-# systemctl restart geovpn-api >/dev/null 2>&1 || systemctl restart api-backend >/dev/null 2>&1
-# echo -e "[ ${GREEN}OK${NC} ] API Service restarted."
-# echo -e "[ ${GREEN}INFO${NC} ] API Xray Create & Trial Modules Update Completed."
+# Update API Status Modules
+update_api_module "api-ssh-status.sh" "status_account"
+update_api_module "api-xray-status.sh" "status_account"
+
+echo -e "[ ${GREEN}INFO${NC} ] Updating API Server Backend..."
+wget -q -O /home/vps/public_html/api/server.js "${REPO}/api/server.js"
+
+echo -e "[ ${GREEN}INFO${NC} ] Restarting API Service..."
+systemctl restart geovpn-api >/dev/null 2>&1 || systemctl restart api-backend >/dev/null 2>&1
+echo -e "[ ${GREEN}OK${NC} ] API Service restarted."
+echo -e "[ ${GREEN}INFO${NC} ] API Modules Update Completed."
 
 # 3. Terapkan Fix 'Clear Ghosting' (Scrollback Buffer Wipe)
 # Mengganti 'clear' biasa dengan 'clear && printf "\033[3J"' pada script yang didownload
