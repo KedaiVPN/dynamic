@@ -113,6 +113,12 @@ app.get('/trialssh', (req, res) => {
     runScript('api-ssh-trial.sh', [], res);
 });
 
+app.get('/statusssh', (req, res) => {
+    const { user } = req.query;
+    if (!user) return res.status(400).json({ status: 'error', message: 'Missing user parameter' });
+    runScript('api-ssh-status.sh', [user], res);
+});
+
 // --- Xray Endpoints (Vmess, Vless, Trojan) ---
 
 const handleXrayCreate = (protocol, req, res) => {
@@ -141,23 +147,32 @@ const handleXrayTrial = (protocol, req, res) => {
     runScript('api-xray-trial.sh', [protocol], res);
 };
 
+const handleXrayStatus = (protocol, req, res) => {
+    const { user } = req.query;
+    if (!user) return res.status(400).json({ status: 'error', message: 'Missing user parameter' });
+    runScript('api-xray-status.sh', [protocol, user], res);
+};
+
 // Vmess
 app.get('/createvmess', (req, res) => handleXrayCreate('vmess', req, res));
 app.get('/renewvmess', (req, res) => handleXrayRenew('vmess', req, res));
 app.get('/deletevmess', (req, res) => handleXrayDelete('vmess', req, res));
 app.get('/trialvmess', (req, res) => handleXrayTrial('vmess', req, res));
+app.get('/statusvmess', (req, res) => handleXrayStatus('vmess', req, res));
 
 // Vless
 app.get('/createvless', (req, res) => handleXrayCreate('vless', req, res));
 app.get('/renewvless', (req, res) => handleXrayRenew('vless', req, res));
 app.get('/deletevless', (req, res) => handleXrayDelete('vless', req, res));
 app.get('/trialvless', (req, res) => handleXrayTrial('vless', req, res));
+app.get('/statusvless', (req, res) => handleXrayStatus('vless', req, res));
 
 // Trojan
 app.get('/createtrojan', (req, res) => handleXrayCreate('trojan', req, res));
 app.get('/renewtrojan', (req, res) => handleXrayRenew('trojan', req, res));
 app.get('/deletetrojan', (req, res) => handleXrayDelete('trojan', req, res));
 app.get('/trialtrojan', (req, res) => handleXrayTrial('trojan', req, res));
+app.get('/statustrojan', (req, res) => handleXrayStatus('trojan', req, res));
 
 app.listen(PORT, () => {
     console.log(`API Server running on port ${PORT}`);
