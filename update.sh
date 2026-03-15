@@ -218,7 +218,7 @@ systemctl restart nginx >/dev/null 2>&1
 # --- UPDATE API MODULES ONLY ---
 echo -e "[ ${GREEN}INFO${NC} ] Updating API Modules..."
 mkdir -p /usr/local/bin/api-modules
-mkdir -p /home/vps/public_html/api
+mkdir -p /etc/nevermore-api/node
 
 update_api_module() {
     local script_name="$1"
@@ -251,7 +251,7 @@ update_api_module "api-ssh-status.sh" "status_account"
 update_api_module "api-xray-status.sh" "status_account"
 
 echo -e "[ ${GREEN}INFO${NC} ] Updating API Server Backend..."
-wget -q -O /home/vps/public_html/api/server.js "${REPO}/api/server.js"
+wget -q -O /etc/nevermore-api/node/server.js "${REPO}/api/server.js"
 
 echo -e "[ ${GREEN}INFO${NC} ] Restarting API Service..."
 systemctl restart geovpn-api >/dev/null 2>&1 || systemctl restart api-backend >/dev/null 2>&1
