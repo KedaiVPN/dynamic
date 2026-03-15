@@ -73,7 +73,7 @@ while read -r line; do
                 # Extract UUID from config before deleting
                 # Config format: "id": "uuid", ... "email": "user"
                 # We need to find the block for this user and extract ID
-                uuid=$(grep -A 1 "#vms $user " /etc/xray/config.json | grep "id" | cut -d '"' -f 4)
+                uuid=$(grep -A 1 "#vms $user " /etc/xray/config.json | grep "id" | cut -d '"' -f 4 | head -n 1 | tr -d '\n\r ')
                 if [ -z "$uuid" ]; then uuid="unknown"; fi
 
                 sed -i "/^ *#vms $user /,/^ *},{/d" /etc/xray/config.json
@@ -84,7 +84,7 @@ while read -r line; do
                 pass="$uuid"
                 ;;
             vless)
-                uuid=$(grep -A 1 "#vls $user " /etc/xray/config.json | grep "id" | cut -d '"' -f 4)
+                uuid=$(grep -A 1 "#vls $user " /etc/xray/config.json | grep "id" | cut -d '"' -f 4 | head -n 1 | tr -d '\n\r ')
                 if [ -z "$uuid" ]; then uuid="unknown"; fi
 
                 sed -i "/^ *#vls $user /,/^ *},{/d" /etc/xray/config.json
@@ -93,7 +93,7 @@ while read -r line; do
                 pass="$uuid"
                 ;;
             trojan)
-                uuid=$(grep -A 1 "#tr $user " /etc/xray/config.json | grep "password" | cut -d '"' -f 4)
+                uuid=$(grep -A 1 "#tr $user " /etc/xray/config.json | grep "password" | cut -d '"' -f 4 | head -n 1 | tr -d '\n\r ')
                 if [ -z "$uuid" ]; then uuid="unknown"; fi
 
                 sed -i "/^ *#tr $user /,/^ *},{/d" /etc/xray/config.json
@@ -103,7 +103,7 @@ while read -r line; do
                 ;;
             ssws)
                 # Shadowsock format might be different
-                uuid=$(grep -A 1 "#ssw $user " /etc/xray/config.json | grep "password" | cut -d '"' -f 4)
+                uuid=$(grep -A 1 "#ssw $user " /etc/xray/config.json | grep "password" | cut -d '"' -f 4 | head -n 1 | tr -d '\n\r ')
                 if [ -z "$uuid" ]; then uuid="unknown"; fi
 
                 sed -i "/^ *#ssw $user /,/^ *},{/d" /etc/xray/config.json
@@ -111,6 +111,10 @@ while read -r line; do
                 pass="$uuid"
                 ;;
         esac
+
+        # Ensure pass only contains a single word and no spaces/newlines
+        pass=$(echo "$pass" | tr -d '\n\r ')
+        if [ -z "$pass" ]; then pass="unknown"; fi
 
         # Add to TRASH database (Check for duplicates first)
         # Format: username type deleted_timestamp credentials(uuid/pass)
