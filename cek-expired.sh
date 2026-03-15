@@ -38,7 +38,15 @@ while read -r line; do
     type=$(echo "$line" | awk '{print $2}')
     del_timestamp=$(echo "$line" | awk '{print $3}')
 
-    readable_date=$(date -d @"$del_timestamp" "+%d-%m-%Y %H:%M:%S")
+    # Validasi apakah del_timestamp adalah angka (Unix timestamp)
+    if ! [[ "$del_timestamp" =~ ^[0-9]+$ ]]; then
+        continue # Skip baris yang corrupt/rusak
+    fi
+
+    readable_date=$(date -d @"$del_timestamp" "+%d-%m-%Y %H:%M:%S" 2>/dev/null)
+    if [ $? -ne 0 ]; then
+        continue # Skip jika konversi tanggal masih gagal
+    fi
 
     printf "%-15s %-10s %-25s\n" "$user" "$type" "$readable_date"
     ((i++))
