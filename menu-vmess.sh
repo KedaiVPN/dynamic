@@ -223,7 +223,7 @@ NUMBER_OF_CLIENTS=$(grep -c -E "^#vmsg " "/etc/xray/config.json")
         sed -i "/^$user /d" "$lock_file"
     else
         # Update quota & expiry and reset usage to 0 in limit file for active users
-        awk -v user="$user" -v exp="$exp4" -v q="$quota" 'BEGIN{OFS=" "} $1==user{$3=exp; $4=q; $5=0} {print}' "$limit_file" > "${limit_file}.tmp" && mv "${limit_file}.tmp" "$limit_file"
+        awk -v user="$user" -v e="$exp4" -v q="$quota" 'BEGIN{OFS=" "} $1==user{$3=e; $4=q; $5=0} {print}' "$limit_file" > "${limit_file}.tmp" && mv "${limit_file}.tmp" "$limit_file"
     fi
 
     # Reset internal xray usage counter
