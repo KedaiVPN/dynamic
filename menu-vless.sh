@@ -180,6 +180,13 @@ NUMBER_OF_CLIENTS=$(grep -c -E "^#vlsg " "/etc/xray/config.json")
         read -p "Limit Bandwidth Baru (GB): " quota
     done
     exp=$(grep -wE "^#vlsg $user" "/etc/xray/config.json" | cut -d ' ' -f 3 | sort | uniq)
+    if [[ -z "$exp" ]]; then
+        # Jika user tidak ada di config.json (karena sedang dilock), ambil exp dari limit/lock file
+        exp=$(grep "^$user " "/etc/xray/limit/lock-vless" | awk '{print $3}')
+        if [[ -z "$exp" ]]; then
+            exp=$(grep "^$user " "/etc/xray/limit/vless" | awk '{print $3}')
+        fi
+    fi
     now=$(date +%Y-%m-%d)
     d1=$(date -d "$exp" +%s)
     d2=$(date -d "$now" +%s)
