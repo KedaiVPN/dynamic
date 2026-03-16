@@ -130,11 +130,11 @@ const handleXrayCreate = (protocol, req, res) => {
 };
 
 const handleXrayRenew = (protocol, req, res) => {
-    const { user, exp } = req.query;
-    if (!user || !exp) {
-        return res.status(400).json({ status: 'error', message: 'Missing required parameters (user, exp)' });
+    const { user, exp, quota } = req.query;
+    if (!user || !exp || !quota) {
+        return res.status(400).json({ status: 'error', message: 'Missing required parameters (user, exp, quota)' });
     }
-    runScript('api-xray-renew.sh', [protocol, user, exp], res);
+    runScript('api-xray-renew.sh', [protocol, user, exp, quota], res);
 };
 
 const handleXrayDelete = (protocol, req, res) => {

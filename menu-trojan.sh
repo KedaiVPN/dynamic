@@ -174,6 +174,10 @@ NUMBER_OF_CLIENTS=$(grep -c -E "^#trg " "/etc/xray/config.json")
     menu
     else
     read -p "Expired (days): " masaaktif
+    quota=""
+    until [[ $quota =~ ^[0-9]+$ && $quota -gt 0 ]]; do
+        read -p "Limit Bandwidth Baru (GB): " quota
+    done
     exp=$(grep -wE "^#trg $user" "/etc/xray/config.json" | cut -d ' ' -f 3 | sort | uniq)
     now=$(date +%Y-%m-%d)
     d1=$(date -d "$exp" +%s)
@@ -188,8 +192,31 @@ NUMBER_OF_CLIENTS=$(grep -c -E "^#trg " "/etc/xray/config.json")
     lock_file="${limit_dir}/lock-trojan"
     mkdir -p "$limit_dir"
     touch "$limit_file" "$lock_file"
-    awk -v user="$user" -v exp="$exp4" 'BEGIN{OFS=" "} $1==user{$3=exp} {print}' "$limit_file" > "${limit_file}.tmp" && mv "${limit_file}.tmp" "$limit_file"
-    awk -v user="$user" -v exp="$exp4" 'BEGIN{OFS=" "} $1==user{$3=exp} {print}' "$lock_file" > "${lock_file}.tmp" && mv "${lock_file}.tmp" "$lock_file"
+
+    # Check if user is locked
+    if grep -q "^$user " "$lock_file"; then
+        uuid=$(grep "^$user " "$lock_file" | awk '{print $2}')
+        # Update limit file with new quota and 0 usage (and copy the locked user back to limit file)
+        sed -i "/^$user /d" "$limit_file"
+        echo "$user $uuid $exp4 $quota 0" >> "$limit_file"
+
+        # Inject back to config.json
+        sed -i '/#trojanws$/a\#tr '"$user $exp4"'\
+},{"password": "'""$uuid""'","email": "'""$user""'"}' /etc/xray/config.json
+        sed -i '/#trojangrpc$/a\#trg '"$user $exp4"'\
+},{"password": "'""$uuid""'","email": "'""$user""'"}' /etc/xray/config.json
+
+        # Remove from lock
+        sed -i "/^$user /d" "$lock_file"
+    else
+        # Update quota & expiry and reset usage to 0 in limit file for active users
+        awk -v user="$user" -v exp="$exp4" -v q="$quota" 'BEGIN{OFS=" "} $1==user{$3=exp; $4=q; $5=0} {print}' "$limit_file" > "${limit_file}.tmp" && mv "${limit_file}.tmp" "$limit_file"
+    fi
+
+    # Reset internal xray usage counter
+    /usr/local/bin/xray api stats --server=127.0.0.1:10085 --name "user>>>${user}>>>traffic>>>uplink" --reset > /dev/null 2>&1
+    /usr/local/bin/xray api stats --server=127.0.0.1:10085 --name "user>>>${user}>>>traffic>>>downlink" --reset > /dev/null 2>&1
+
     systemctl restart xray > /dev/null 2>&1
     clear && printf '\033[3J'
     echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
@@ -198,6 +225,7 @@ NUMBER_OF_CLIENTS=$(grep -c -E "^#trg " "/etc/xray/config.json")
     echo ""
     echo " Client Name : $user"
     echo " Expired On  : $exp4"
+    echo " Limit Baru  : ${quota} GB"
     echo ""
     echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
     echo ""
