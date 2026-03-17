@@ -220,9 +220,10 @@ NUMBER_OF_CLIENTS=$(grep -c -E "^#trg " "/etc/xray/config.json")
         awk -v user="$user" -v e="$exp4" -v q="$quota" 'BEGIN{OFS=" "} $1==user{$3=e; $4=q; $5=0} {print}' "$limit_file" > "${limit_file}.tmp" && mv "${limit_file}.tmp" "$limit_file"
     fi
 
-    # Reset internal xray usage counter
+    # Reset internal xray usage counter & hapus akumulasi lama
     /usr/local/bin/xray api stats --server=127.0.0.1:10085 --name "user>>>${user}>>>traffic>>>uplink" --reset > /dev/null 2>&1
     /usr/local/bin/xray api stats --server=127.0.0.1:10085 --name "user>>>${user}>>>traffic>>>downlink" --reset > /dev/null 2>&1
+    sed -i "/^${user} /d" "/etc/xray/limit/usage-trojan" >/dev/null 2>&1
 
     systemctl restart xray > /dev/null 2>&1
     clear && printf '\033[3J'

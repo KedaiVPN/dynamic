@@ -112,9 +112,10 @@ else
     fi
 fi
 
-# Reset internal xray usage counter
+# Reset internal xray usage counter & hapus akumulasi lama
 /usr/local/bin/xray api stats --server=127.0.0.1:10085 --name "user>>>${user}>>>traffic>>>uplink" --reset > /dev/null 2>&1
 /usr/local/bin/xray api stats --server=127.0.0.1:10085 --name "user>>>${user}>>>traffic>>>downlink" --reset > /dev/null 2>&1
+sed -i "/^${user} /d" "/etc/xray/limit/usage-$protocol" >/dev/null 2>&1
 
 systemctl restart xray >/dev/null 2>&1
 
