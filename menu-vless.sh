@@ -210,9 +210,9 @@ NUMBER_OF_CLIENTS=$(grep -c -E "^#vlsg " "/etc/xray/config.json")
 
         # Inject back to config.json
         sed -i '/#vless$/a\#vls '"$user $exp4"'\
-},{"id": "'""$uuid""'","email": "'""$user""'"}' /etc/xray/config.json
+},{"id": "'""$uuid""'","email": "'""$user""'"' /etc/xray/config.json
         sed -i '/#vlessgrpc$/a\#vlsg '"$user $exp4"'\
-},{"id": "'""$uuid""'","email": "'""$user""'"}' /etc/xray/config.json
+},{"id": "'""$uuid""'","email": "'""$user""'"' /etc/xray/config.json
 
         # Remove from lock
         sed -i "/^$user /d" "$lock_file"

@@ -211,13 +211,13 @@ NUMBER_OF_CLIENTS=$(grep -c -E "^#vmsg " "/etc/xray/config.json")
 
         # Inject back to config.json
         sed -i '/#vmess$/a\#vms '"$user $exp4"'\
-},{"id": "'""$uuid""'","alterId": '"0"',"email": "'""$user""'"}' /etc/xray/config.json
+},{"id": "'""$uuid""'","alterId": '"0"',"email": "'""$user""'"' /etc/xray/config.json
         sed -i '/#vmessworry$/a\### '"$user $exp4"'\
-},{"id": "'""$uuid""'","alterId": '"0"',"email": "'""$user""'"}' /etc/xray/config.json
+},{"id": "'""$uuid""'","alterId": '"0"',"email": "'""$user""'"' /etc/xray/config.json
         sed -i '/#vmesskuota$/a\### '"$user $exp4"'\
-},{"id": "'""$uuid""'","alterId": '"0"',"email": "'""$user""'"}' /etc/xray/config.json
+},{"id": "'""$uuid""'","alterId": '"0"',"email": "'""$user""'"' /etc/xray/config.json
         sed -i '/#vmessgrpc$/a\#vmsg '"$user $exp4"'\
-},{"id": "'""$uuid""'","alterId": '"0"',"email": "'""$user""'"}' /etc/xray/config.json
+},{"id": "'""$uuid""'","alterId": '"0"',"email": "'""$user""'"' /etc/xray/config.json
 
         # Remove from lock
         sed -i "/^$user /d" "$lock_file"
