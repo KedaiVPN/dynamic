@@ -77,25 +77,25 @@ if [[ -f "$lock_file" ]] && grep -q "^$user " "$lock_file"; then
     case $protocol in
         vmess)
             sed -i '/#vmess$/a\#vms '"$user $new_exp_date"'\
-},{"id": "'""$uuid""'","alterId": '"0"',"email": "'""$user""'"}' /etc/xray/config.json
+},{"id": "'""$uuid""'","alterId": '"0"',"email": "'""$user""'"' /etc/xray/config.json
             sed -i '/#vmessworry$/a\### '"$user $new_exp_date"'\
-},{"id": "'""$uuid""'","alterId": '"0"',"email": "'""$user""'"}' /etc/xray/config.json
+},{"id": "'""$uuid""'","alterId": '"0"',"email": "'""$user""'"' /etc/xray/config.json
             sed -i '/#vmesskuota$/a\### '"$user $new_exp_date"'\
-},{"id": "'""$uuid""'","alterId": '"0"',"email": "'""$user""'"}' /etc/xray/config.json
+},{"id": "'""$uuid""'","alterId": '"0"',"email": "'""$user""'"' /etc/xray/config.json
             sed -i '/#vmessgrpc$/a\#vmsg '"$user $new_exp_date"'\
-},{"id": "'""$uuid""'","alterId": '"0"',"email": "'""$user""'"}' /etc/xray/config.json
+},{"id": "'""$uuid""'","alterId": '"0"',"email": "'""$user""'"' /etc/xray/config.json
             ;;
         vless)
             sed -i '/#vless$/a\#vls '"$user $new_exp_date"'\
-},{"id": "'""$uuid""'","email": "'""$user""'"}' /etc/xray/config.json
+},{"id": "'""$uuid""'","email": "'""$user""'"' /etc/xray/config.json
             sed -i '/#vlessgrpc$/a\#vlsg '"$user $new_exp_date"'\
-},{"id": "'""$uuid""'","email": "'""$user""'"}' /etc/xray/config.json
+},{"id": "'""$uuid""'","email": "'""$user""'"' /etc/xray/config.json
             ;;
         trojan)
             sed -i '/#trojanws$/a\#tr '"$user $new_exp_date"'\
-},{"password": "'""$uuid""'","email": "'""$user""'"}' /etc/xray/config.json
+},{"password": "'""$uuid""'","email": "'""$user""'"' /etc/xray/config.json
             sed -i '/#trojangrpc$/a\#trg '"$user $new_exp_date"'\
-},{"password": "'""$uuid""'","email": "'""$user""'"}' /etc/xray/config.json
+},{"password": "'""$uuid""'","email": "'""$user""'"' /etc/xray/config.json
             ;;
     esac
 

@@ -209,9 +209,9 @@ NUMBER_OF_CLIENTS=$(grep -c -E "^#trg " "/etc/xray/config.json")
 
         # Inject back to config.json
         sed -i '/#trojanws$/a\#tr '"$user $exp4"'\
-},{"password": "'""$uuid""'","email": "'""$user""'"}' /etc/xray/config.json
+},{"password": "'""$uuid""'","email": "'""$user""'"' /etc/xray/config.json
         sed -i '/#trojangrpc$/a\#trg '"$user $exp4"'\
-},{"password": "'""$uuid""'","email": "'""$user""'"}' /etc/xray/config.json
+},{"password": "'""$uuid""'","email": "'""$user""'"' /etc/xray/config.json
 
         # Remove from lock
         sed -i "/^$user /d" "$lock_file"
