@@ -264,6 +264,18 @@ echo -e " \E[41;1;39m          ⇱ Install SSH / WS ⇲           \E[0m$NC"
 echo -e "$white\033[0;34m└─────────────────────────────────────────┘${NC}"
 sleep 1
 wget -q https://raw.githubusercontent.com/KedaiVPN/dynamic/main/ssh-vpn.sh && chmod +x ssh-vpn.sh && ./ssh-vpn.sh
+
+#install udp-custom
+echo -e "$white\033[0;34m┌─────────────────────────────────────────┐${NC}"
+echo -e " \E[41;1;39m          ⇱ Install UDP Custom ⇲          \E[0m$NC"
+echo -e "$white\033[0;34m└─────────────────────────────────────────┘${NC}"
+sleep 1
+if [ -f "udp-custom.sh" ]; then
+    chmod +x udp-custom.sh && ./udp-custom.sh
+else
+    wget -q https://raw.githubusercontent.com/KedaiVPN/dynamic/main/udp-custom.sh && chmod +x udp-custom.sh && ./udp-custom.sh
+fi
+
 #install ins-xray
 echo -e "$white\033[0;34m┌─────────────────────────────────────────┐${NC}"
 echo -e " \E[41;1;39m            ⇱ Install Xray ⇲             \E[0m$NC"
@@ -476,6 +488,7 @@ echo "" | tee -a log-install.txt
 rm -fr /root/weleh.sh 
 rm -fr /root/vnstat.sh 
 rm -fr /root/ssh-vpn.sh
+rm -fr /root/udp-custom.sh
 rm -fr /root/ins-xray.sh
 rm -fr /root/setup.sh
 rm -fr /root/domain
