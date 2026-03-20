@@ -28,8 +28,8 @@ echo -e "[ ${GREEN}INFO${NC} ] Mendownload script terbaru..."
 # Update menu & ws-stunnel untuk perbaikan kompatibilitas Ubuntu 22/Debian 12
 wget -q -O /usr/bin/menu "${REPO}/menu4.sh" && chmod +x /usr/bin/menu
 wget -q -O /home/.ver "${REPO}/test/versions"
-# wget -q -O /usr/bin/tendang "${REPO}/tendang.sh" && chmod +x /usr/bin/tendang
-# wget -q -O /usr/bin/menu-ssh "${REPO}/menu-ssh.sh" && chmod +x /usr/bin/menu-ssh
+wget -q -O /usr/bin/tendang "${REPO}/tendang.sh" && chmod +x /usr/bin/tendang
+wget -q -O /usr/bin/menu-ssh "${REPO}/menu-ssh.sh" && chmod +x /usr/bin/menu-ssh
 # Update UDP Custom for HTTP Custom app
 echo -e "[ ${GREEN}INFO${NC} ] Menerapkan patch UDP Custom..."
 wget -q -O /root/udp-custom.sh "${REPO}/udp-custom.sh"

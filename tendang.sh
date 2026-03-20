@@ -171,7 +171,7 @@ for user in "${!USER_IP_COUNT[@]}"; do
              fi
 
              # Schedule Unlock
-             (sleep $(($duration * 60)) && usermod -U "$user" && rm -f "$lock_file") >/dev/null 2>&1 &
+             (sleep $(($duration * 60)) && usermod -U "$user" && rm -f "$lock_file" && sed -i "/ - $user - /d" "$LOG_FILE") >/dev/null 2>&1 &
         fi
     fi
 done

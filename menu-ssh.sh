@@ -516,6 +516,7 @@ if id -u "$Login" >/dev/null 2>&1; then
         if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
             usermod -U "$Login"
             rm -f "/tmp/lock-$Login"
+            sed -i "/ - $Login - /d" /root/log-limit.txt
             echo -e "${GREEN}User $Login telah di-UNLOCK.${NC}"
         else
             echo -e "${YELLOW}Dibatalkan.${NC}"
