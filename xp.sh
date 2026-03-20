@@ -39,7 +39,10 @@ while read -r line; do
 
     user=$(echo "$line" | awk '{print $1}')
     type=$(echo "$line" | awk '{print $2}')
-    exp_timestamp=$(echo "$line" | awk '{print $3}')
+    exp_timestamp=$(echo "$line" | awk '{print $3}' | tr -d '\r')
+
+    # Ensure exp_timestamp is a valid integer before comparison
+    if [[ ! "$exp_timestamp" =~ ^[0-9]+$ ]]; then continue; fi
 
     if [[ "$now_timestamp" -ge "$exp_timestamp" ]]; then
         echo -e "${RED}Moving expired account to trash: $user ($type)${NC}"
@@ -145,7 +148,9 @@ if [ -f "$TRASH_DB" ]; then
 
         user=$(echo "$line" | awk '{print $1}')
         type=$(echo "$line" | awk '{print $2}')
-        del_timestamp=$(echo "$line" | awk '{print $3}')
+        del_timestamp=$(echo "$line" | awk '{print $3}' | tr -d '\r')
+
+        if [[ ! "$del_timestamp" =~ ^[0-9]+$ ]]; then continue; fi
 
         diff=$((now_timestamp - del_timestamp))
 
