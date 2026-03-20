@@ -31,16 +31,16 @@ wget -q -O /home/.ver "${REPO}/test/versions"
 wget -q -O /usr/bin/tendang "${REPO}/tendang.sh" && chmod +x /usr/bin/tendang
 wget -q -O /usr/bin/menu-ssh "${REPO}/menu-ssh.sh" && chmod +x /usr/bin/menu-ssh
 # Update UDP Custom for HTTP Custom app
-echo -e "[ ${GREEN}INFO${NC} ] Menerapkan patch UDP Custom..."
-wget -q -O /root/udp-custom.sh "${REPO}/udp-custom.sh"
-if [ -f "/root/udp-custom.sh" ]; then
-    chmod +x /root/udp-custom.sh
-    cd /root
-    ./udp-custom.sh
-    rm -f /root/udp-custom.sh
-else
-    echo -e "[ ${RED}ERROR${NC} ] Gagal mendownload udp-custom.sh"
-fi
+# echo -e "[ ${GREEN}INFO${NC} ] Menerapkan patch UDP Custom..."
+# wget -q -O /root/udp-custom.sh "${REPO}/udp-custom.sh"
+# if [ -f "/root/udp-custom.sh" ]; then
+#     chmod +x /root/udp-custom.sh
+#     cd /root
+#     ./udp-custom.sh
+#     rm -f /root/udp-custom.sh
+# else
+#     echo -e "[ ${RED}ERROR${NC} ] Gagal mendownload udp-custom.sh"
+# fi
 
 wget -q -O /usr/bin/menu-vmess "${REPO}/menu-vmess.sh" && chmod +x /usr/bin/menu-vmess
 wget -q -O /usr/bin/menu-vless "${REPO}/menu-vless.sh" && chmod +x /usr/bin/menu-vless
