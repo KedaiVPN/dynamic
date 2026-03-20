@@ -69,10 +69,32 @@ cp -r /etc/passwd /root/backup/passwd >/dev/null 2>&1
 cp -r /etc/group /root/backup/group >/dev/null 2>&1
 cd /root
 zip -r $IP-$date-$domain-blueblue.zip backup > /dev/null 2>&1
-rclone copy /root/$IP-$date-$domain-blueblue.zip dr:backup/
-url=$(rclone link dr:backup/$IP-$date-$domain-blueblue.zip)
-id=(`echo $url | grep '^https' | cut -d'=' -f2`)
-link="https://drive.google.com/u/4/uc?id=${id}&export=download"
+
+# Rclone Fallback Logic
+remotes=("dr" "dr1" "dr2" "dr3" "dr4")
+backup_success=false
+used_remote=""
+link=""
+
+for remote in "${remotes[@]}"; do
+    echo -e "[ ${green}INFO${NC} ] Mencoba backup menggunakan remote: ${remote}..."
+    if rclone copy /root/$IP-$date-$domain-blueblue.zip ${remote}:backup/; then
+        url=$(rclone link ${remote}:backup/$IP-$date-$domain-blueblue.zip)
+        # Ekstrak ID file dari link rclone dengan regex
+        id=$(echo "$url" | grep -oP '(?<=/d/)[a-zA-Z0-9_-]+|(?<=id=)[a-zA-Z0-9_-]+' | head -n 1)
+        if [ -n "$id" ]; then
+            link="https://drive.google.com/u/4/uc?id=${id}&export=download"
+            backup_success=true
+            used_remote="${remote}"
+            echo -e "[ ${green}INFO${NC} ] Backup berhasil menggunakan remote: ${remote}"
+            break
+        else
+            echo -e "[ ${orange}WARNING${NC} ] Berhasil upload ke ${remote}, namun gagal mendapatkan link (ID kosong). Mencoba remote lain..."
+        fi
+    else
+        echo -e "[ ${orange}WARNING${NC} ] Gagal upload menggunakan remote: ${remote}. Mencoba remote lain..."
+    fi
+done
 
 # Get Telegram Bot Credentials
 BOT_TOKEN=""
@@ -91,7 +113,8 @@ fi
 
 # Send notification to Telegram if configured
 if [ -n "$BOT_TOKEN" ] && [ -n "$CHAT_ID" ]; then
-    msg="◇━━━━━━━━━━━━━━◇
+    if [ "$backup_success" = true ]; then
+        msg="◇━━━━━━━━━━━━━━◇
  🔄Detail Backup VPS🔄
 ◇━━━━━━━━━━━━━━◇
 IP VPS  : $IP
@@ -102,6 +125,18 @@ Link Backup   :
 <code>$link</code>
 ◇━━━━━━━━━━━━━━◇
 Silahkan copy Link dan restore di VPS baru"
+    else
+        msg="◇━━━━━━━━━━━━━━◇
+ ❌Backup VPS GAGAL❌
+◇━━━━━━━━━━━━━━◇
+IP VPS  : $IP
+DOMAIN  : $domain
+Tanggal : $date
+◇━━━━━━━━━━━━━━◇
+Pesan :
+Semua konfigurasi rclone (dr, dr1, dr2, dr3, dr4) gagal mengupload file backup.
+◇━━━━━━━━━━━━━━◇"
+    fi
 
     curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
         -d chat_id="$CHAT_ID" \
