@@ -56,7 +56,7 @@ wget -q -O /usr/bin/menu-trojan "${REPO}/menu-trojan.sh" && chmod +x /usr/bin/me
 wget -q -O /usr/bin/backup "${REPO}/backup.sh" && chmod +x /usr/bin/backup
 # wget -q -O /usr/bin/restore "${REPO}/restore.sh" && chmod +x /usr/bin/restore
 # wget -q -O /usr/bin/clearlog "${REPO}/clearlog.sh" && chmod +x /usr/bin/clearlog
-# wget -q -O /usr/bin/xp "${REPO}/xp.sh" && chmod +x /usr/bin/xp
+wget -q -O /usr/bin/xp "${REPO}/xp.sh" && chmod +x /usr/bin/xp
 
 # systemctl restart ws-stunnel >/dev/null 2>&1
 
