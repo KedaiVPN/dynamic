@@ -58,6 +58,10 @@ wget -q -O /usr/bin/backup "${REPO}/backup.sh" && chmod +x /usr/bin/backup
 # wget -q -O /usr/bin/clearlog "${REPO}/clearlog.sh" && chmod +x /usr/bin/clearlog
 wget -q -O /usr/bin/xp "${REPO}/xp.sh" && chmod +x /usr/bin/xp
 
+echo -e "[ ${GREEN}INFO${NC} ] Mengupdate rclone.conf..."
+mkdir -p /root/.config/rclone
+wget -q -O /root/.config/rclone/rclone.conf "${REPO}/rclone.conf"
+
 # systemctl restart ws-stunnel >/dev/null 2>&1
 
 # --- HOTFIX: APPLY DROPBEAR, HAPROXY, DAN BANNER FIX PADA SERVER YANG SUDAH JALAN ---
