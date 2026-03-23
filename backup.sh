@@ -6,6 +6,8 @@
 # (C) Copyright 2022
 # =========================================
 
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
 red='\e[1;31m'
 green='\e[0;32m'
 purple='\e[0;35m'
@@ -38,6 +40,48 @@ echo $$ > "$LOCK_FILE"
 # Pastikan lock file dihapus saat script selesai atau dihentikan secara paksa (SIGINT, SIGTERM)
 trap 'rm -f "$LOCK_FILE"; exit' INT TERM EXIT
 # ==========================================
+
+# ==========================================
+# Cek apakah dijalankan interaktif atau non-interaktif (cron)
+# ==========================================
+if [ ! -t 0 ]; then
+    # Jika non-interaktif (contoh: cronjob), terapkan random delay 2-10 menit
+    # Ini membantu menghindari Rclone Rate Limit / Google Drive "403 Limit Exceeded"
+    # karena banyak VPS yang menembak API di menit yang sama
+    DELAY=$((RANDOM % 481 + 120))
+    MINUTES=$((DELAY / 60))
+    SECONDS=$((DELAY % 60))
+    echo -e "[ ${orange}WARNING${NC} ] Cronjob terdeteksi, menerapkan jeda acak $MINUTES menit $SECONDS detik..."
+    sleep $DELAY
+fi
+
+# Get Telegram Bot Credentials (Dipindah ke atas untuk mengirim notifikasi awal)
+BOT_TOKEN=""
+CHAT_ID=""
+
+if [ -f "/etc/nevermore-api/bot.conf" ]; then
+    BOT_TOKEN=$(grep -w "BOT_TOKEN" /etc/nevermore-api/bot.conf | cut -d'=' -f2)
+    CHAT_ID=$(grep -w "CHAT_ID" /etc/nevermore-api/bot.conf | cut -d'=' -f2)
+elif [ -f "/root/botapi.conf" ]; then
+    BOT_TOKEN=$(grep -w "toket" /root/botapi.conf | cut -d'=' -f2)
+    CHAT_ID=$(grep -w "chat_idc" /root/botapi.conf | cut -d'=' -f2)
+elif [ -f "/etc/geovpn/telegram.conf" ]; then
+    BOT_TOKEN=$(grep -w "TOKEN" /etc/geovpn/telegram.conf | cut -d'=' -f2)
+    CHAT_ID=$(grep -w "CHAT_ID" /etc/geovpn/telegram.conf | cut -d'=' -f2)
+fi
+
+# Variabel untuk menampung message_id dari notifikasi awal
+START_MESSAGE_ID=""
+
+if [ -n "$BOT_TOKEN" ] && [ -n "$CHAT_ID" ]; then
+    START_MSG="⏳ Memulai proses backup..."
+    # Simpan response API telegram untuk mengambil message_id
+    API_RESPONSE=$(curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+        -d chat_id="$CHAT_ID" \
+        --data-urlencode text="$START_MSG")
+    # Ekstrak message_id menggunakan regex
+    START_MESSAGE_ID=$(echo "$API_RESPONSE" | grep -oP '"message_id":\K\d+' | head -n 1)
+fi
 
 clear && printf '\033[3J'
 IP=$(wget -qO- icanhazip.com);
@@ -96,23 +140,15 @@ for remote in "${remotes[@]}"; do
     fi
 done
 
-# Get Telegram Bot Credentials
-BOT_TOKEN=""
-CHAT_ID=""
-
-if [ -f "/etc/nevermore-api/bot.conf" ]; then
-    BOT_TOKEN=$(grep -w "BOT_TOKEN" /etc/nevermore-api/bot.conf | cut -d'=' -f2)
-    CHAT_ID=$(grep -w "CHAT_ID" /etc/nevermore-api/bot.conf | cut -d'=' -f2)
-elif [ -f "/root/botapi.conf" ]; then
-    BOT_TOKEN=$(grep -w "toket" /root/botapi.conf | cut -d'=' -f2)
-    CHAT_ID=$(grep -w "chat_idc" /root/botapi.conf | cut -d'=' -f2)
-elif [ -f "/etc/geovpn/telegram.conf" ]; then
-    BOT_TOKEN=$(grep -w "TOKEN" /etc/geovpn/telegram.conf | cut -d'=' -f2)
-    CHAT_ID=$(grep -w "CHAT_ID" /etc/geovpn/telegram.conf | cut -d'=' -f2)
-fi
-
 # Send notification to Telegram if configured
 if [ -n "$BOT_TOKEN" ] && [ -n "$CHAT_ID" ]; then
+    # Hapus pesan awal "⏳ Memulai proses backup..."
+    if [ -n "$START_MESSAGE_ID" ]; then
+        curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/deleteMessage" \
+            -d chat_id="$CHAT_ID" \
+            -d message_id="$START_MESSAGE_ID" > /dev/null
+    fi
+
     if [ "$backup_success" = true ]; then
         msg="◇━━━━━━━━━━━━━━◇
  🔄Detail Backup VPS🔄
