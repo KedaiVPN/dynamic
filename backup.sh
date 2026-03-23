@@ -125,8 +125,49 @@ Link Backup   :
 <code>$link</code>
 ◇━━━━━━━━━━━━━━◇
 Silahkan copy Link dan restore di VPS baru"
+
+        curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+            -d chat_id="$CHAT_ID" \
+            --data-urlencode text="$msg" \
+            -d parse_mode="HTML" > /dev/null
     else
-        msg="◇━━━━━━━━━━━━━━◇
+        # Gagal Rclone, kirim file langsung ke Telegram
+        echo -e "[ ${orange}WARNING${NC} ] Mengirim file backup ke Telegram..."
+
+        # Kirim Document ke bot Telegram
+        RESPONSE=$(curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendDocument" \
+            -F chat_id="$CHAT_ID" \
+            -F document="@/root/$IP-$date-$domain-blueblue.zip" \
+            -F caption="Backup VPS Gagal via Gdrive. File backup dikirim melalui Telegram.")
+
+        # Ekstrak file_id dari response json Telegram menggunakan jq
+        # Jika jq gagal atau tidak ada, sed/grep akan digunakan sebagai fallback
+        FILE_ID=$(echo "$RESPONSE" | grep -oP '"file_id":"\K[^"]+' | head -n 1)
+
+        if [ -n "$FILE_ID" ]; then
+            msg="◇━━━━━━━━━━━━━━◇
+ 🔄Detail Backup VPS🔄
+◇━━━━━━━━━━━━━━◇
+IP VPS  : $IP
+DOMAIN  : $domain
+Tanggal : $date
+◇━━━━━━━━━━━━━━◇
+Id file   :
+<code>$FILE_ID</code>
+◇━━━━━━━━━━━━━━◇
+Silahkan copy Id file dan restore di VPS baru"
+
+            curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+                -d chat_id="$CHAT_ID" \
+                --data-urlencode text="$msg" \
+                -d parse_mode="HTML" > /dev/null
+            echo -e "[ ${green}INFO${NC} ] File backup berhasil dikirim ke Telegram."
+
+            # Set link untuk ditampilkan di layar (terminal)
+            link="$FILE_ID"
+        else
+            # Jika gagal mengirim file
+            msg="◇━━━━━━━━━━━━━━◇
  ❌Backup VPS GAGAL❌
 ◇━━━━━━━━━━━━━━◇
 IP VPS  : $IP
@@ -134,27 +175,30 @@ DOMAIN  : $domain
 Tanggal : $date
 ◇━━━━━━━━━━━━━━◇
 Pesan :
-Semua konfigurasi rclone (dr, dr1, dr2, dr3, dr4) gagal mengupload file backup.
+Semua konfigurasi rclone (dr, dr1, dr2, dr3, dr4) gagal mengupload file backup, dan gagal mengirim ke Telegram.
 ◇━━━━━━━━━━━━━━◇"
-    fi
 
-    curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
-        -d chat_id="$CHAT_ID" \
-        --data-urlencode text="$msg" \
-        -d parse_mode="HTML" > /dev/null
+            curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+                -d chat_id="$CHAT_ID" \
+                --data-urlencode text="$msg" \
+                -d parse_mode="HTML" > /dev/null
+            echo -e "[ ${red}ERROR${NC} ] Gagal mengirim file backup ke Telegram."
+            link="Gagal mendapatkan Link / Id file"
+        fi
+    fi
 fi
 
 clear && printf '\033[3J'
 echo -e "\033[1;37mVPS Data Backup By NevermoreSSH\033[0m
 \033[1;37mTelegram : https://t.me/todfix667 / @NevermoreSSH\033[0m"
 echo ""
-echo "Please Copy Link Below & Save In Notepad"
+echo "Please Copy Link/Id File Below & Save In Notepad"
 echo ""
 echo -e "Your VPS IP ( \033[1;37m$IP\033[0m )"
 echo ""
 echo -e "\033[1;37m$link\033[0m"
 echo ""
-echo "If you want to restore data, please enter the link above"
+echo "If you want to restore data, please enter the link/Id file above"
 rm -rf /root/backup
-rm -r /root/$IP-$date-$domain-blueblue.zip
+rm -f /root/$IP-$date-$domain-blueblue.zip
 echo ""

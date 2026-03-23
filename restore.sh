@@ -34,11 +34,55 @@ echo -e   "  \e[$back_text            \e[30m[\e[$box RESTORE SSH & XRAY ACCOUNT 
 echo -e   "  \e[$line═══════════════════════════════════════════════════════\e[m"
 echo ""
 echo " This Feature Can Only Be Used According To VPS Data With This Autoscript"
-echo " Please Insert VPS Data Backup Link To Restore The Data"
+echo " Please Choose The Restore Method:"
 echo ""
+echo " 1. Via Gdrive"
+echo " 2. Via Telegram"
+echo ""
+read -rp " Pilih Opsi Restore (1/2): " -e opsi_restore
+echo ""
+
+if [[ "$opsi_restore" == "1" ]]; then
+    read -rp " Link File: " -e url
+    wget -O backup.zip "$url"
+elif [[ "$opsi_restore" == "2" ]]; then
+    read -rp " Masukkan Id File Telegram: " -e file_id
+    BOT_TOKEN=""
+    if [ -f "/etc/nevermore-api/bot.conf" ]; then
+        BOT_TOKEN=$(grep -w "BOT_TOKEN" /etc/nevermore-api/bot.conf | cut -d'=' -f2)
+    elif [ -f "/root/botapi.conf" ]; then
+        BOT_TOKEN=$(grep -w "toket" /root/botapi.conf | cut -d'=' -f2)
+    elif [ -f "/etc/geovpn/telegram.conf" ]; then
+        BOT_TOKEN=$(grep -w "TOKEN" /etc/geovpn/telegram.conf | cut -d'=' -f2)
+    fi
+
+    if [ -z "$BOT_TOKEN" ]; then
+        echo -e "[ ${red}ERROR${NC} ] Bot Token tidak ditemukan, tidak dapat mengunduh dari Telegram."
+        exit 1
+    fi
+
+    FILE_INFO=$(curl -s -X GET "https://api.telegram.org/bot$BOT_TOKEN/getFile?file_id=$file_id")
+    FILE_PATH=$(echo "$FILE_INFO" | grep -oP '"file_path":"\K[^"]+' | head -n 1)
+
+    if [ -z "$FILE_PATH" ]; then
+        echo -e "[ ${red}ERROR${NC} ] Gagal mendapatkan file_path dari Telegram. Pastikan Id File benar."
+        exit 1
+    fi
+
+    DOWNLOAD_URL="https://api.telegram.org/file/bot$BOT_TOKEN/$FILE_PATH"
+    echo -e "[ ${green}INFO${NC} ] Mengunduh file backup dari Telegram..."
+    wget -qO backup.zip "$DOWNLOAD_URL"
+
+    if [ ! -s backup.zip ]; then
+        echo -e "[ ${red}ERROR${NC} ] File backup kosong atau gagal diunduh."
+        exit 1
+    fi
+else
+    echo -e "[ ${red}ERROR${NC} ] Pilihan tidak valid."
+    exit 1
+fi
+
 #read -rp " Password File: " -e InputPass
-read -rp " Link File: " -e url
-wget -O backup.zip "$url"
 #unzip -P $InputPass /root/backup.zip &> /dev/null
 unzip backup.zip
 rm -f backup.zip
