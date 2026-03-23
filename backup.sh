@@ -115,7 +115,19 @@ cd /root
 zip -r $IP-$date-$domain-blueblue.zip backup > /dev/null 2>&1
 
 # Rclone Fallback Logic
+# Acak urutan remote untuk membagi beban (Load Balancing) ke semua akun GDrive
+# agar tidak terjadi "gang bang" (rate limit) pada remote pertama ("dr")
 remotes=("dr" "dr1" "dr2" "dr3" "dr4")
+
+# Fungsi untuk mengacak array menggunakan bash native RANDOM
+for i in "${!remotes[@]}"; do
+    random_idx=$((RANDOM % ${#remotes[@]}))
+    # Swap element
+    temp="${remotes[$i]}"
+    remotes[$i]="${remotes[$random_idx]}"
+    remotes[$random_idx]="$temp"
+done
+
 backup_success=false
 used_remote=""
 link=""
