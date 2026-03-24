@@ -12,7 +12,7 @@ REPO="https://raw.githubusercontent.com/KedaiVPN/dynamic/main"
 # 1. Install Dependencies
 echo "Installing Node.js and dependencies..."
 if ! command -v node &> /dev/null; then
-    curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
+    curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
     apt-get install -y nodejs
 fi
 
