@@ -89,9 +89,10 @@ lock_user() {
   local usage_file="${limit_dir}/usage-${proto}"
 
   remove_user_config "$proto" "$user"
-  sed -i "/^${user} /d" "$limit_file"
+  # User is kept in the limit_file so their usage is still visible in the bandwidth menu
   sed -i "/^${user} /d" "$lock_file"
-  sed -i "/^${user} /d" "$usage_file"
+  # User usage is also kept so the bandwidth menu shows their last usage
+  # sed -i "/^${user} /d" "$usage_file"
   echo "$user $uuid $exp $limit_gb $reset_bytes" >> "$lock_file"
   echo "$(date '+%Y-%m-%d %H:%M:%S') ${proto} ${user} locked (limit ${limit_gb} GB)" >> "$limit_log"
   systemctl restart xray >/dev/null 2>&1
