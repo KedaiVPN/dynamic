@@ -27,9 +27,10 @@ echo -e "[ ${GREEN}INFO${NC} ] Mendownload script terbaru..."
 
 # Update menu & ws-stunnel untuk perbaikan kompatibilitas Ubuntu 22/Debian 12
 wget -q -O /usr/bin/menu "${REPO}/menu4.sh" && chmod +x /usr/bin/menu
-wget -q -O /home/.ver "${REPO}/test/versions"
-wget -q -O /usr/bin/tendang "${REPO}/tendang.sh" && chmod +x /usr/bin/tendang
-wget -q -O /usr/bin/menu-ssh "${REPO}/menu-ssh.sh" && chmod +x /usr/bin/menu-ssh
+wget -q -O /usr/bin/xray-limit "${REPO}/xray-limit.sh" && chmod +x /usr/bin/xray-limit
+# wget -q -O /home/.ver "${REPO}/test/versions"
+# wget -q -O /usr/bin/tendang "${REPO}/tendang.sh" && chmod +x /usr/bin/tendang
+# wget -q -O /usr/bin/menu-ssh "${REPO}/menu-ssh.sh" && chmod +x /usr/bin/menu-ssh
 # Update UDP Custom for HTTP Custom app
 # echo -e "[ ${GREEN}INFO${NC} ] Menerapkan patch UDP Custom..."
 # wget -q -O /root/udp-custom.sh "${REPO}/udp-custom.sh"
@@ -42,9 +43,9 @@ wget -q -O /usr/bin/menu-ssh "${REPO}/menu-ssh.sh" && chmod +x /usr/bin/menu-ssh
 #     echo -e "[ ${RED}ERROR${NC} ] Gagal mendownload udp-custom.sh"
 # fi
 
-wget -q -O /usr/bin/menu-vmess "${REPO}/menu-vmess.sh" && chmod +x /usr/bin/menu-vmess
-wget -q -O /usr/bin/menu-vless "${REPO}/menu-vless.sh" && chmod +x /usr/bin/menu-vless
-wget -q -O /usr/bin/menu-trojan "${REPO}/menu-trojan.sh" && chmod +x /usr/bin/menu-trojan
+# wget -q -O /usr/bin/menu-vmess "${REPO}/menu-vmess.sh" && chmod +x /usr/bin/menu-vmess
+# wget -q -O /usr/bin/menu-vless "${REPO}/menu-vless.sh" && chmod +x /usr/bin/menu-vless
+# wget -q -O /usr/bin/menu-trojan "${REPO}/menu-trojan.sh" && chmod +x /usr/bin/menu-trojan
 # wget -q -O /usr/bin/menu-ss "${REPO}/menu-ss.sh" && chmod +x /usr/bin/menu-ss
 # wget -q -O /usr/bin/cek-trafik "${REPO}/cek-trafik.sh" && chmod +x /usr/bin/cek-trafik
 # wget -q -O /usr/bin/cek-expired "${REPO}/cek-expired.sh" && chmod +x /usr/bin/cek-expired
@@ -53,14 +54,14 @@ wget -q -O /usr/bin/menu-trojan "${REPO}/menu-trojan.sh" && chmod +x /usr/bin/me
 # wget -q -O /usr/bin/restart "${REPO}/restart.sh" && chmod +x /usr/bin/restart
 # wget -q -O /usr/local/bin/cek-lisensi "${REPO}/cek-lisensi.sh" && chmod +x /usr/local/bin/cek-lisensi
 # wget -q -O /usr/local/bin/ws-stunnel "${REPO}/ws-stunnel" && chmod +x /usr/local/bin/ws-stunnel
-wget -q -O /usr/bin/backup "${REPO}/backup.sh" && chmod +x /usr/bin/backup
-wget -q -O /usr/bin/restore "${REPO}/restore.sh" && chmod +x /usr/bin/restore
+# wget -q -O /usr/bin/backup "${REPO}/backup.sh" && chmod +x /usr/bin/backup
+# wget -q -O /usr/bin/restore "${REPO}/restore.sh" && chmod +x /usr/bin/restore
 # wget -q -O /usr/bin/clearlog "${REPO}/clearlog.sh" && chmod +x /usr/bin/clearlog
-wget -q -O /usr/bin/xp "${REPO}/xp.sh" && chmod +x /usr/bin/xp
+# wget -q -O /usr/bin/xp "${REPO}/xp.sh" && chmod +x /usr/bin/xp
 
 echo -e "[ ${GREEN}INFO${NC} ] Mengupdate rclone.conf..."
 mkdir -p /root/.config/rclone
-wget -q -O /root/.config/rclone/rclone.conf "${REPO}/rclone.conf"
+# wget -q -O /root/.config/rclone/rclone.conf "${REPO}/rclone.conf"
 
 # systemctl restart ws-stunnel >/dev/null 2>&1
 
@@ -244,7 +245,7 @@ update_api_module() {
     local target_file="/usr/local/bin/api-modules/${script_name}"
 
     echo -e "[ ${GREEN}INFO${NC} ] Updating ${script_name}..."
-    wget -q -O "$tmp_file" "${REPO}/api-modules/${script_name}?v=$(date +%s)"
+#     wget -q -O "$tmp_file" "${REPO}/api-modules/${script_name}?v=$(date +%s)"
 
     if [ -f "$tmp_file" ] && grep -q "$verify_string" "$tmp_file"; then
         echo -e "[ ${GREEN}OK${NC} ] ${script_name} downloaded and verified."
@@ -264,14 +265,14 @@ update_api_module() {
 # update_api_module "api-xray-trial.sh" "grpc_link"
 
 # Update API Status Modules
-update_api_module "api-ssh-status.sh" "status_account"
-update_api_module "api-xray-status.sh" "status_account"
+# update_api_module "api-ssh-status.sh" "status_account"
+# update_api_module "api-xray-status.sh" "status_account"
 
 # Update API Renew Module
-update_api_module "api-xray-renew.sh" "new_quota"
+# update_api_module "api-xray-renew.sh" "new_quota"
 
 echo -e "[ ${GREEN}INFO${NC} ] Updating API Server Backend..."
-wget -q -O /etc/nevermore-api/node/server.js "${REPO}/api/server.js"
+# wget -q -O /etc/nevermore-api/node/server.js "${REPO}/api/server.js"
 
 echo -e "[ ${GREEN}INFO${NC} ] Restarting API Service..."
 systemctl restart geovpn-api >/dev/null 2>&1 || systemctl restart api-backend >/dev/null 2>&1
