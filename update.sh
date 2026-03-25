@@ -54,10 +54,11 @@ wget -q -O /usr/bin/xray-limit "${REPO}/xray-limit.sh" && chmod +x /usr/bin/xray
 # wget -q -O /usr/bin/restart "${REPO}/restart.sh" && chmod +x /usr/bin/restart
 # wget -q -O /usr/local/bin/cek-lisensi "${REPO}/cek-lisensi.sh" && chmod +x /usr/local/bin/cek-lisensi
 # wget -q -O /usr/local/bin/ws-stunnel "${REPO}/ws-stunnel" && chmod +x /usr/local/bin/ws-stunnel
-# wget -q -O /usr/bin/backup "${REPO}/backup.sh" && chmod +x /usr/bin/backup
-# wget -q -O /usr/bin/restore "${REPO}/restore.sh" && chmod +x /usr/bin/restore
-# wget -q -O /usr/bin/clearlog "${REPO}/clearlog.sh" && chmod +x /usr/bin/clearlog
-# wget -q -O /usr/bin/xp "${REPO}/xp.sh" && chmod +x /usr/bin/xp
+wget -q -O /usr/bin/backup "${REPO}/backup.sh" && chmod +x /usr/bin/backup
+wget -q -O /usr/bin/restore "${REPO}/restore.sh" && chmod +x /usr/bin/restore
+wget -q -O /usr/bin/clearlog "${REPO}/clearlog.sh" && chmod +x /usr/bin/clearlog
+wget -q -O /usr/bin/xp "${REPO}/xp.sh" && chmod +x /usr/bin/xp
+wget -q -O /usr/local/bin/factory-reset.sh "${REPO}/factory-reset.sh" && chmod +x /usr/local/bin/factory-reset.sh
 
 echo -e "[ ${GREEN}INFO${NC} ] Mengupdate rclone.conf..."
 mkdir -p /root/.config/rclone
