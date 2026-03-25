@@ -246,7 +246,7 @@ update_api_module() {
     local target_file="/usr/local/bin/api-modules/${script_name}"
 
     echo -e "[ ${GREEN}INFO${NC} ] Updating ${script_name}..."
-#     wget -q -O "$tmp_file" "${REPO}/api-modules/${script_name}?v=$(date +%s)"
+    wget -q -O "$tmp_file" "${REPO}/api-modules/${script_name}?v=$(date +%s)"
 
     if [ -f "$tmp_file" ] && grep -q "$verify_string" "$tmp_file"; then
         echo -e "[ ${GREEN}OK${NC} ] ${script_name} downloaded and verified."
@@ -258,6 +258,10 @@ update_api_module() {
         rm -f "$tmp_file"
     fi
 }
+
+# Update API Bot Manager & Auth Gen Modules
+update_api_module "api-bot-manager.sh" "Setup Telegram Bot"
+update_api_module "api-auth-gen.sh" "Generate API Auth Key"
 
 # # Update API Create Module
 # update_api_module "api-xray-create.sh" "grpc_link"
@@ -275,7 +279,17 @@ update_api_module() {
 echo -e "[ ${GREEN}INFO${NC} ] Updating API Server Backend..."
 # wget -q -O /etc/nevermore-api/node/server.js "${REPO}/api/server.js"
 
-echo -e "[ ${GREEN}INFO${NC} ] Restarting API Service..."
+echo -e "[ ${GREEN}INFO${NC} ] Fixing and Restarting API Service..."
+# Unmask in case it was masked by failed installations
+systemctl unmask api-backend >/dev/null 2>&1
+
+# Ensure service file exists before restarting
+if [ ! -f "/etc/systemd/system/api-backend.service" ]; then
+    wget -q -O /etc/systemd/system/api-backend.service "${REPO}/api/api-backend.service"
+    systemctl daemon-reload >/dev/null 2>&1
+    systemctl enable api-backend >/dev/null 2>&1
+fi
+
 systemctl restart geovpn-api >/dev/null 2>&1 || systemctl restart api-backend >/dev/null 2>&1
 echo -e "[ ${GREEN}OK${NC} ] API Service restarted."
 echo -e "[ ${GREEN}INFO${NC} ] API Modules Update Completed."
