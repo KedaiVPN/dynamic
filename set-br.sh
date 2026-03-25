@@ -44,9 +44,25 @@ make install
 cd
 rm -rf wondershaper
 cd /usr/bin
-wget -O backup "https://${Server_URL}/backup.sh"
-wget -O restore "https://${Server_URL}/restore.sh"
-wget -O cleaner "https://${Server_URL}/logcleaner.sh"
+# Download or copy scripts locally
+if [ -f "/root/backup.sh" ]; then
+    cp -f /root/backup.sh backup
+else
+    wget -q -O backup "https://${Server_URL}/backup.sh"
+fi
+
+if [ -f "/root/restore.sh" ]; then
+    cp -f /root/restore.sh restore
+else
+    wget -q -O restore "https://${Server_URL}/restore.sh"
+fi
+
+if [ -f "/root/logcleaner.sh" ]; then
+    cp -f /root/logcleaner.sh cleaner
+else
+    wget -q -O cleaner "https://${Server_URL}/logcleaner.sh"
+fi
+
 chmod +x /usr/bin/backup
 chmod +x /usr/bin/restore
 chmod +x /usr/bin/cleaner

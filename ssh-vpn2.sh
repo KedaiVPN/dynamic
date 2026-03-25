@@ -479,7 +479,7 @@ fi
 # apt autoremove -y >/dev/null 2>&1
 # finishing
 cd
-echo -e "[ ${green}ok${NC} ] Restarting openvpn"
+echo -e "[ ${green}ok${NC} ] Restarting services"
 /etc/init.d/cron restart >/dev/null 2>&1
 sleep 1
 echo -e "[ ${green}ok${NC} ] Restarting cron"
@@ -489,6 +489,9 @@ echo -e "[ ${green}ok${NC} ] Restarting ssh"
 /etc/init.d/dropbear restart >/dev/null 2>&1
 sleep 1
 echo -e "[ ${green}ok${NC} ] Restarting dropbear"
+systemctl restart ws-stunnel >/dev/null 2>&1
+sleep 1
+echo -e "[ ${green}ok${NC} ] Restarting ws-stunnel"
 /etc/init.d/fail2ban restart >/dev/null 2>&1
 sleep 1
 echo -e "[ ${green}ok${NC} ] Restarting fail2ban"
@@ -497,7 +500,11 @@ sleep 1
 echo -e "[ ${green}ok${NC} ] Restarting stunnel4"
 /etc/init.d/vnstat restart >/dev/null 2>&1
 sleep 1
-echo -e "[ ${green}ok${NC} ] Restarting squid "
+echo -e "[ ${green}ok${NC} ] Restarting vnstat"
+# Memberi waktu agar backend server naik sebelum haproxy mengaksesnya
+sleep 2
+systemctl restart haproxy >/dev/null 2>&1
+echo -e "[ ${green}ok${NC} ] Restarting HAProxy"
 screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 500 >/dev/null 2>&1
 screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 500 >/dev/null 2>&1
 screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 500 >/dev/null 2>&1
