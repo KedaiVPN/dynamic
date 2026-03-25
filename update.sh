@@ -104,6 +104,10 @@ sed -i 's/127.0.0.1:1010 check/127.0.0.1:1010 check send-proxy/g' /etc/haproxy/h
 sed -i 's/127.0.0.1:1013 check/127.0.0.1:1013 check send-proxy/g' /etc/haproxy/haproxy.cfg
 sed -i 's/127.0.0.1:2020 check/127.0.0.1:2020 check send-proxy/g' /etc/haproxy/haproxy.cfg
 
+# Hapus check untuk mencegah backend down saat idle/restart
+sed -i 's/ check send-proxy/ send-proxy/g' /etc/haproxy/haproxy.cfg
+sed -i 's/ check//g' /etc/haproxy/haproxy.cfg
+
 systemctl daemon-reload >/dev/null 2>&1
 systemctl enable haproxy >/dev/null 2>&1
 systemctl restart haproxy >/dev/null 2>&1
