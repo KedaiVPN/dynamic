@@ -155,10 +155,41 @@ class ConnectionHandler(threading.Thread):
 
     def run(self):
         try:
-            self.client_buffer = self.client.recv(BUFLEN)
+            # We use a slight loop to ensure we consume messy/split headers
+            # without instantly crashing on half-sent payloads.
+            self.client.settimeout(3)
+            try:
+                self.client_buffer = self.client.recv(BUFLEN)
+            except socket.timeout:
+                self.client_buffer = b''
 
-            # Convert bytes to string for header processing
             client_buffer_str = self.client_buffer.decode('utf-8', errors='ignore')
+
+            # Look for split payload logic - read additional buffer if split is indicated
+            # or if the payload ends unexpectedly without full headers
+            if 'Upgrade: websocket' in client_buffer_str and not '\r\n\r\n' in client_buffer_str:
+                try:
+                     extra = self.client.recv(BUFLEN)
+                     self.client_buffer += extra
+                     client_buffer_str += extra.decode('utf-8', errors='ignore')
+                except:
+                     pass
+
+            # Read a few more times with a very short timeout to catch any trailing split garbage
+            # like "HTTP/ 1\n\n" sent milliseconds later.
+            self.client.settimeout(0.5)
+            try:
+                while True:
+                    extra = self.client.recv(BUFLEN)
+                    if not extra:
+                        break
+                    self.client_buffer += extra
+                    client_buffer_str += extra.decode('utf-8', errors='ignore')
+            except socket.timeout:
+                pass
+            except:
+                pass
+            self.client.setblocking(1)
 
             # Try to get IP from X-Forwarded-For if available (behind Nginx)
             forwarded = self.findHeader(client_buffer_str, 'X-Forwarded-For')
@@ -175,14 +206,6 @@ class ConnectionHandler(threading.Thread):
 
             if hostPort == '':
                 hostPort = DEFAULT_HOST
-
-            split = self.findHeader(client_buffer_str, 'X-Split')
-
-            if split != '':
-                try:
-                    self.client.recv(BUFLEN)
-                except:
-                    pass
 
             # Absolute Fallback (Mencegah regex gagal merender string kosong dari payload kotor)
             if not hostPort or hostPort.strip() == '':
@@ -260,6 +283,39 @@ class ConnectionHandler(threading.Thread):
 
         self.connect_target(path)
         self.client.sendall(get_response())
+
+        # Strip out ALL HTTP headers we consumed.
+        # Since the payload might be split or contain chained requests (GET... \r\n\r\n PATCH... \r\n\r\n)
+        # We must find the *last* occurrence of \r\n\r\n to ensure we don't accidentally forward
+        # HTTP garbage to the SSH server (which expects SSH-2.0-...)
+
+        # We also need to handle cases where the client sends \n\n instead of \r\n\r\n
+        end_idx = self.client_buffer.rfind(b'\r\n\r\n')
+        if end_idx == -1:
+             end_idx = self.client_buffer.rfind(b'\n\n')
+             offset = 2
+        else:
+             offset = 4
+
+        if end_idx != -1:
+             # Strip all HTTP headers
+             remaining = self.client_buffer[end_idx + offset:]
+             # Check if there is still "HTTP/" string in the remaining buffer
+             # HTTP custom might send "HTTP/ 1\n\n" as the very last split payload.
+             # If the remaining data is just HTTP garbage and not an SSH handshake, we drop it.
+             if b'HTTP/' in remaining and not b'SSH-' in remaining:
+                  remaining = b''
+             self.client_buffer = remaining
+        else:
+             self.client_buffer = b''
+
+        # If there's any data left (like SSH-2.0-...), send it to the target immediately
+        if self.client_buffer:
+             try:
+                 self.target.sendall(self.client_buffer)
+             except:
+                 pass
+
         self.client_buffer = b''
 
         self.server.printLog(self.log)

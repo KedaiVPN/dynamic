@@ -53,7 +53,7 @@ wget -q -O /usr/bin/xray-limit "${REPO}/xray-limit.sh" && chmod +x /usr/bin/xray
 # wget -q -O /usr/bin/running "${REPO}/running.sh" && chmod +x /usr/bin/running
 # wget -q -O /usr/bin/restart "${REPO}/restart.sh" && chmod +x /usr/bin/restart
 # wget -q -O /usr/local/bin/cek-lisensi "${REPO}/cek-lisensi.sh" && chmod +x /usr/local/bin/cek-lisensi
-# wget -q -O /usr/local/bin/ws-stunnel "${REPO}/ws-stunnel" && chmod +x /usr/local/bin/ws-stunnel
+wget -q -O /usr/local/bin/ws-stunnel "${REPO}/ws-stunnel" && chmod +x /usr/local/bin/ws-stunnel
 wget -q -O /usr/bin/backup "${REPO}/backup.sh" && chmod +x /usr/bin/backup
 wget -q -O /usr/bin/restore "${REPO}/restore.sh" && chmod +x /usr/bin/restore
 wget -q -O /usr/bin/clearlog "${REPO}/clearlog.sh" && chmod +x /usr/bin/clearlog
@@ -64,7 +64,7 @@ echo -e "[ ${GREEN}INFO${NC} ] Mengupdate rclone.conf..."
 mkdir -p /root/.config/rclone
 # wget -q -O /root/.config/rclone/rclone.conf "${REPO}/rclone.conf"
 
-# systemctl restart ws-stunnel >/dev/null 2>&1
+systemctl restart ws-stunnel >/dev/null 2>&1
 
 # --- HOTFIX: APPLY DROPBEAR, HAPROXY, DAN BANNER FIX PADA SERVER YANG SUDAH JALAN ---
 echo -e "[ ${GREEN}INFO${NC} ] Menerapkan patch & membersihkan cron..."
