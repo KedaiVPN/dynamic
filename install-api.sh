@@ -29,10 +29,12 @@ files=(
     "api-ssh-renew.sh"
     "api-ssh-delete.sh"
     "api-ssh-trial.sh"
+    "api-ssh-status.sh"
     "api-xray-create.sh"
     "api-xray-renew.sh"
     "api-xray-delete.sh"
     "api-xray-trial.sh"
+    "api-xray-status.sh"
     "api-bot-manager.sh"
     "api-auth-gen.sh"
 )
