@@ -279,7 +279,16 @@ update_api_module "api-auth-gen.sh" "Generate API Auth Key"
 echo -e "[ ${GREEN}INFO${NC} ] Updating API Server Backend..."
 # wget -q -O /etc/nevermore-api/node/server.js "${REPO}/api/server.js"
 
-echo -e "[ ${GREEN}INFO${NC} ] Fixing and Restarting API Service..."
+echo -e "[ ${GREEN}INFO${NC} ] Fixing Dependencies & Restarting API Service..."
+cd /etc/nevermore-api/node
+
+# Perbaiki package.json kosong yang menyebabkan error 'Unexpected end of JSON input'
+if [ ! -s "package.json" ]; then
+    echo '{"name": "geovpn-api","version": "1.0.0","description": "VPN API","main": "server.js","dependencies": {"cors": "^2.8.5","express": "^4.18.2"}}' > package.json
+fi
+
+npm install >/dev/null 2>&1
+
 # Unmask in case it was masked by failed installations
 systemctl unmask api-backend >/dev/null 2>&1
 
