@@ -155,42 +155,10 @@ class ConnectionHandler(threading.Thread):
 
     def run(self):
         try:
-            # We use a slight loop to ensure we consume messy/split headers
-            # without instantly crashing on half-sent payloads.
-            self.client.settimeout(3)
-            try:
-                self.client_buffer = self.client.recv(BUFLEN)
-            except socket.timeout:
-                self.client_buffer = b''
+            self.client_buffer = self.client.recv(BUFLEN)
 
+            # Convert bytes to string for header processing
             client_buffer_str = self.client_buffer.decode('utf-8', errors='ignore')
-
-            # Look for split payload logic - read additional buffer if split is indicated
-            # or if the payload ends unexpectedly without full headers
-            if 'Upgrade: websocket' in client_buffer_str and not '\r\n\r\n' in client_buffer_str:
-                try:
-                     extra = self.client.recv(BUFLEN)
-                     self.client_buffer += extra
-                     client_buffer_str += extra.decode('utf-8', errors='ignore')
-                except:
-                     pass
-
-            # Read a few more times with a very short timeout to catch any trailing split garbage
-            # like "HTTP/ 1\n\n" sent milliseconds later.
-            self.client.settimeout(0.5)
-            try:
-                # Limit the loop to prevent memory exhaustion (DoS) from infinite data streams
-                for _ in range(5):
-                    extra = self.client.recv(BUFLEN)
-                    if not extra:
-                        break
-                    self.client_buffer += extra
-                    client_buffer_str += extra.decode('utf-8', errors='ignore')
-            except socket.timeout:
-                pass
-            except:
-                pass
-            self.client.setblocking(1)
 
             # Try to get IP from X-Forwarded-For if available (behind Nginx)
             forwarded = self.findHeader(client_buffer_str, 'X-Forwarded-For')
@@ -207,6 +175,14 @@ class ConnectionHandler(threading.Thread):
 
             if hostPort == '':
                 hostPort = DEFAULT_HOST
+
+            split = self.findHeader(client_buffer_str, 'X-Split')
+
+            if split != '':
+                try:
+                    self.client.recv(BUFLEN)
+                except:
+                    pass
 
             # Absolute Fallback (Mencegah regex gagal merender string kosong dari payload kotor)
             if not hostPort or hostPort.strip() == '':
@@ -284,28 +260,6 @@ class ConnectionHandler(threading.Thread):
 
         self.connect_target(path)
         self.client.sendall(get_response())
-
-        # Dropbear (SSH) is extremely strict and will instantly Broken Pipe if it receives
-        # ANY leftover HTTP garbage from a complex chained or split payload
-        # (e.g. GET ... PATCH ... [split] HTTP/).
-        # We must NOT forward anything from the initial client buffer unless we
-        # specifically find the SSH handshake marker (SSH-2.0-...)
-
-        ssh_idx = self.client_buffer.find(b'SSH-')
-
-        if ssh_idx != -1:
-             # If the SSH handshake is somewhere in this buffer, slice it from that exact point
-             # and forward it, discarding all HTTP garbage before it.
-             self.client_buffer = self.client_buffer[ssh_idx:]
-             try:
-                 self.target.sendall(self.client_buffer)
-             except:
-                 pass
-        else:
-             # If there's no SSH handshake yet, the buffer is pure HTTP garbage
-             # from the split payload. We throw it all away completely.
-             pass
-
         self.client_buffer = b''
 
         self.server.printLog(self.log)
@@ -315,6 +269,12 @@ class ConnectionHandler(threading.Thread):
         socs = [self.client, self.target]
         count = 0
         error = False
+
+        # Flag to track whether we have seen the SSH handshake from the client
+        # Before this is True, ALL data from the client will be discarded
+        # This prevents delayed payload splits (like HTTP/ 1\n\n) from killing Dropbear
+        ssh_handshake_passed = False
+
         while True:
             count += 1
             (recv, _, err) = select.select(socs, [], socs, 3)
@@ -328,6 +288,19 @@ class ConnectionHandler(threading.Thread):
                             if in_ is self.target:
                                 self.client.send(data)
                             else:
+                                if not ssh_handshake_passed:
+                                    # Filter mode: we are waiting for the SSH client to speak
+                                    ssh_idx = data.find(b'SSH-')
+                                    if ssh_idx != -1:
+                                        # SSH Handshake found! Discard any HTTP garbage before it
+                                        # and forward the real SSH protocol data
+                                        ssh_handshake_passed = True
+                                        data = data[ssh_idx:]
+                                    else:
+                                        # This is purely HTTP split payload garbage. Discard it completely.
+                                        data = b''
+
+                                # Only forward if there's actual data (after potential filtering)
                                 while data:
                                     byte = self.target.send(data)
                                     data = data[byte:]
