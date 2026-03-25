@@ -264,11 +264,11 @@ update_api_module "api-bot-manager.sh" "Setup Telegram Bot"
 update_api_module "api-auth-gen.sh" "Generate API Auth Key"
 
 # Update API Create Module
-update_api_module "api-ssh-create.sh" "status_account"
+update_api_module "api-ssh-create.sh" "API Module"
 update_api_module "api-xray-create.sh" "grpc_link"
 
 # Update API Trial Module
-update_api_module "api-ssh-trial.sh" "status_account"
+update_api_module "api-ssh-trial.sh" "API Module"
 update_api_module "api-xray-trial.sh" "grpc_link"
 
 # Update API Status Modules
@@ -276,12 +276,12 @@ update_api_module "api-ssh-status.sh" "status_account"
 update_api_module "api-xray-status.sh" "status_account"
 
 # Update API Renew Module
-update_api_module "api-ssh-renew.sh" "status_account"
+update_api_module "api-ssh-renew.sh" "API Module"
 update_api_module "api-xray-renew.sh" "new_quota"
 
 # Update API Delete Module
-update_api_module "api-ssh-delete.sh" "status_account"
-update_api_module "api-xray-delete.sh" "status_account"
+update_api_module "api-ssh-delete.sh" "API Module"
+update_api_module "api-xray-delete.sh" "API Module"
 
 echo -e "[ ${GREEN}INFO${NC} ] Updating API Server Backend..."
 wget -q -O /etc/nevermore-api/node/server.js "${REPO}/api/server.js"
