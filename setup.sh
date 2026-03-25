@@ -257,13 +257,22 @@ echo -e "$white\033[0;34m┌─────────────────�
 echo -e " \E[41;1;39m           ⇱ Install vnStat ⇲            \E[0m$NC"
 echo -e "$white\033[0;34m└─────────────────────────────────────────┘${NC}"
 sleep 1 
-wget -q https://raw.githubusercontent.com/KedaiVPN/dynamic/main/vnstat.sh && chmod +x vnstat.sh && ./vnstat.sh
+if [ -f "vnstat.sh" ]; then
+    chmod +x vnstat.sh && ./vnstat.sh
+else
+    wget -q https://raw.githubusercontent.com/KedaiVPN/dynamic/main/vnstat.sh && chmod +x vnstat.sh && ./vnstat.sh
+fi
+
 #install ssh-vpn
 echo -e "$white\033[0;34m┌─────────────────────────────────────────┐${NC}"
 echo -e " \E[41;1;39m          ⇱ Install SSH / WS ⇲           \E[0m$NC"
 echo -e "$white\033[0;34m└─────────────────────────────────────────┘${NC}"
 sleep 1
-wget -q https://raw.githubusercontent.com/KedaiVPN/dynamic/main/ssh-vpn.sh && chmod +x ssh-vpn.sh && ./ssh-vpn.sh
+if [ -f "ssh-vpn.sh" ]; then
+    chmod +x ssh-vpn.sh && ./ssh-vpn.sh
+else
+    wget -q https://raw.githubusercontent.com/KedaiVPN/dynamic/main/ssh-vpn.sh && chmod +x ssh-vpn.sh && ./ssh-vpn.sh
+fi
 
 #install udp-custom
 echo -e "$white\033[0;34m┌─────────────────────────────────────────┐${NC}"
@@ -281,47 +290,73 @@ echo -e "$white\033[0;34m┌─────────────────�
 echo -e " \E[41;1;39m            ⇱ Install Xray ⇲             \E[0m$NC"
 echo -e "$white\033[0;34m└─────────────────────────────────────────┘${NC}"
 sleep 1 
-wget -q https://raw.githubusercontent.com/KedaiVPN/dynamic/main/ins-xray.sh && chmod +x ins-xray.sh && ./ins-xray.sh
-wget -q https://raw.githubusercontent.com/KedaiVPN/dynamic/main/set-br.sh && chmod +x set-br.sh && ./set-br.sh
+if [ -f "ins-xray.sh" ]; then
+    chmod +x ins-xray.sh && ./ins-xray.sh
+else
+    wget -q https://raw.githubusercontent.com/KedaiVPN/dynamic/main/ins-xray.sh && chmod +x ins-xray.sh && ./ins-xray.sh
+fi
+
+if [ -f "set-br.sh" ]; then
+    chmod +x set-br.sh && ./set-br.sh
+else
+    wget -q https://raw.githubusercontent.com/KedaiVPN/dynamic/main/set-br.sh && chmod +x set-br.sh && ./set-br.sh
+fi
 
 # // Download Data
 echo -e "${GREEN}Download Data${NC}"
-wget -q -O /usr/bin/add-ws "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/add-ws.sh"
-wget -q -O /usr/bin/add-ssws "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/add-ssws.sh"
-wget -q -O /usr/bin/add-socks "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/add-socks.sh"
-wget -q -O /usr/bin/add-vless "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/add-vless.sh"
-wget -q -O /usr/bin/add-tr "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/add-tr.sh"
-wget -q -O /usr/bin/add-trgo "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/add-trgo.sh"
-wget -q -O /usr/bin/autoreboot "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/autoreboot.sh"
-wget -q -O /usr/bin/restart "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/restart.sh"
-wget -q -O /usr/bin/tendang "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/tendang.sh"
-wget -q -O /usr/bin/clearlog "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/clearlog.sh"
-wget -q -O /usr/bin/running "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/running.sh"
-wget -q -O /usr/bin/cek-trafik "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/cek-trafik.sh"
-wget -q -O /usr/bin/cek-speed "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/speedtes_cli.py"
-wget -q -O /usr/bin/cek-bandwidth "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/cek-bandwidth.sh"
-wget -q -O /usr/bin/cek-expired "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/cek-expired.sh"
-wget -q -O /usr/bin/cek-ram "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/ram.sh"
-wget -q -O /usr/bin/limit-speed "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/limit-speed.sh"
-wget -q -O /usr/bin/xray-limit "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/xray-limit.sh"
-wget -q -O /usr/bin/menu-vless "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/menu-vless.sh"
-wget -q -O /usr/bin/menu-vmess "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/menu-vmess.sh"
-wget -q -O /usr/bin/menu-socks "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/menu-socks.sh"
-wget -q -O /usr/bin/menu-ss "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/menu-ss.sh"
-wget -q -O /usr/bin/menu-trojan "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/menu-trojan.sh"
-wget -q -O /usr/bin/menu-trgo "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/menu-trgo.sh"
-wget -q -O /usr/bin/menu-ssh "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/menu-ssh.sh"
-wget -q -O /usr/bin/bckp "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/bckpbot.sh"
-wget -q -O /usr/bin/usernew "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/usernew.sh"
-wget -q -O /usr/bin/menu "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/menu4.sh"
-wget -q -O /usr/bin/wbm "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/webmin.sh"
-wget -q -O /usr/bin/xp "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/xp.sh"
-wget -q -O /usr/bin/update "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/update.sh"
-wget -q -O /usr/bin/dns "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/dns.sh"
-wget -q -O /usr/bin/netf "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/netf.sh"
-wget -q -O /usr/bin/bbr "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/bbr.sh"
-wget -q -O /usr/local/bin/factory-reset.sh "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/factory-reset.sh" && chmod +x /usr/local/bin/factory-reset.sh
-wget -q -O /usr/bin/install-api "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/install-api.sh" && chmod +x /usr/bin/install-api && /usr/bin/install-api
+repo_url="https://raw.githubusercontent.com/KedaiVPN/dynamic/main"
+
+download_or_copy() {
+    local file_name=$1
+    local target_path=$2
+    if [ -f "/root/${file_name}" ]; then
+        cp -f "/root/${file_name}" "$target_path"
+    else
+        wget -q -O "$target_path" "${repo_url}/${file_name}"
+    fi
+}
+
+download_or_copy "add-ws.sh" "/usr/bin/add-ws"
+download_or_copy "add-ssws.sh" "/usr/bin/add-ssws"
+download_or_copy "add-socks.sh" "/usr/bin/add-socks"
+download_or_copy "add-vless.sh" "/usr/bin/add-vless"
+download_or_copy "add-tr.sh" "/usr/bin/add-tr"
+download_or_copy "add-trgo.sh" "/usr/bin/add-trgo"
+download_or_copy "autoreboot.sh" "/usr/bin/autoreboot"
+download_or_copy "restart.sh" "/usr/bin/restart"
+download_or_copy "tendang.sh" "/usr/bin/tendang"
+download_or_copy "clearlog.sh" "/usr/bin/clearlog"
+download_or_copy "running.sh" "/usr/bin/running"
+download_or_copy "cek-trafik.sh" "/usr/bin/cek-trafik"
+download_or_copy "speedtes_cli.py" "/usr/bin/cek-speed"
+download_or_copy "cek-bandwidth.sh" "/usr/bin/cek-bandwidth"
+download_or_copy "cek-expired.sh" "/usr/bin/cek-expired"
+download_or_copy "ram.sh" "/usr/bin/cek-ram"
+download_or_copy "limit-speed.sh" "/usr/bin/limit-speed"
+download_or_copy "xray-limit.sh" "/usr/bin/xray-limit"
+download_or_copy "menu-vless.sh" "/usr/bin/menu-vless"
+download_or_copy "menu-vmess.sh" "/usr/bin/menu-vmess"
+download_or_copy "menu-socks.sh" "/usr/bin/menu-socks"
+download_or_copy "menu-ss.sh" "/usr/bin/menu-ss"
+download_or_copy "menu-trojan.sh" "/usr/bin/menu-trojan"
+download_or_copy "menu-trgo.sh" "/usr/bin/menu-trgo"
+download_or_copy "menu-ssh.sh" "/usr/bin/menu-ssh"
+download_or_copy "bckpbot.sh" "/usr/bin/bckp"
+download_or_copy "usernew.sh" "/usr/bin/usernew"
+download_or_copy "menu4.sh" "/usr/bin/menu"
+download_or_copy "webmin.sh" "/usr/bin/wbm"
+download_or_copy "xp.sh" "/usr/bin/xp"
+download_or_copy "update.sh" "/usr/bin/update"
+download_or_copy "dns.sh" "/usr/bin/dns"
+download_or_copy "netf.sh" "/usr/bin/netf"
+download_or_copy "bbr.sh" "/usr/bin/bbr"
+
+download_or_copy "factory-reset.sh" "/usr/local/bin/factory-reset.sh"
+chmod +x /usr/local/bin/factory-reset.sh
+
+download_or_copy "install-api.sh" "/usr/bin/install-api"
+chmod +x /usr/bin/install-api
+/usr/bin/install-api
 chmod +x /usr/bin/add-ws
 chmod +x /usr/bin/add-ssws
 chmod +x /usr/bin/add-socks
@@ -366,7 +401,11 @@ chmod +x /usr/bin/bbr
 
 
 # // Download / Setup License Checker
-wget -q -O /usr/local/bin/cek-lisensi "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/cek-lisensi.sh"
+if [ -f "/root/cek-lisensi.sh" ]; then
+    cp -f /root/cek-lisensi.sh /usr/local/bin/cek-lisensi
+else
+    wget -q -O /usr/local/bin/cek-lisensi "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/cek-lisensi.sh"
+fi
 chmod +x /usr/local/bin/cek-lisensi
 
 # > Setup Crontab

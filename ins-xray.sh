@@ -981,10 +981,15 @@ sleep 1
 chown -R www-data:www-data /home/vps/public_html
 # Enable & Restart & Xray & Trojan & Nginx & HAProxy
 sleep 1
-echo -e "[ ${GREEN}ok${NC} ] Restart & Xray & Nginx & HAProxy"
+echo -e "[ ${GREEN}ok${NC} ] Restart & Xray & Nginx & ws-stunnel & dropbear"
 systemctl daemon-reload >/dev/null 2>&1
 systemctl restart xray >/dev/null 2>&1
 systemctl restart nginx >/dev/null 2>&1
+systemctl restart ws-stunnel >/dev/null 2>&1
+systemctl restart dropbear >/dev/null 2>&1
+
+sleep 2 # Beri waktu agar backend siap
+echo -e "[ ${GREEN}ok${NC} ] Restart HAProxy"
 systemctl restart haproxy >/dev/null 2>&1
 
 # Output the NEW UUID and Ports
