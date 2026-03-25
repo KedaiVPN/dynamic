@@ -277,7 +277,7 @@ update_api_module "api-auth-gen.sh" "Generate API Auth Key"
 # update_api_module "api-xray-renew.sh" "new_quota"
 
 echo -e "[ ${GREEN}INFO${NC} ] Updating API Server Backend..."
-# wget -q -O /etc/nevermore-api/node/server.js "${REPO}/api/server.js"
+wget -q -O /etc/nevermore-api/node/server.js "${REPO}/api/server.js"
 
 echo -e "[ ${GREEN}INFO${NC} ] Fixing Dependencies & Restarting API Service..."
 cd /etc/nevermore-api/node
