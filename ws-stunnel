@@ -179,7 +179,8 @@ class ConnectionHandler(threading.Thread):
             # like "HTTP/ 1\n\n" sent milliseconds later.
             self.client.settimeout(0.5)
             try:
-                while True:
+                # Limit the loop to prevent memory exhaustion (DoS) from infinite data streams
+                for _ in range(5):
                     extra = self.client.recv(BUFLEN)
                     if not extra:
                         break
@@ -284,37 +285,26 @@ class ConnectionHandler(threading.Thread):
         self.connect_target(path)
         self.client.sendall(get_response())
 
-        # Strip out ALL HTTP headers we consumed.
-        # Since the payload might be split or contain chained requests (GET... \r\n\r\n PATCH... \r\n\r\n)
-        # We must find the *last* occurrence of \r\n\r\n to ensure we don't accidentally forward
-        # HTTP garbage to the SSH server (which expects SSH-2.0-...)
+        # Dropbear (SSH) is extremely strict and will instantly Broken Pipe if it receives
+        # ANY leftover HTTP garbage from a complex chained or split payload
+        # (e.g. GET ... PATCH ... [split] HTTP/).
+        # We must NOT forward anything from the initial client buffer unless we
+        # specifically find the SSH handshake marker (SSH-2.0-...)
 
-        # We also need to handle cases where the client sends \n\n instead of \r\n\r\n
-        end_idx = self.client_buffer.rfind(b'\r\n\r\n')
-        if end_idx == -1:
-             end_idx = self.client_buffer.rfind(b'\n\n')
-             offset = 2
-        else:
-             offset = 4
+        ssh_idx = self.client_buffer.find(b'SSH-')
 
-        if end_idx != -1:
-             # Strip all HTTP headers
-             remaining = self.client_buffer[end_idx + offset:]
-             # Check if there is still "HTTP/" string in the remaining buffer
-             # HTTP custom might send "HTTP/ 1\n\n" as the very last split payload.
-             # If the remaining data is just HTTP garbage and not an SSH handshake, we drop it.
-             if b'HTTP/' in remaining and not b'SSH-' in remaining:
-                  remaining = b''
-             self.client_buffer = remaining
-        else:
-             self.client_buffer = b''
-
-        # If there's any data left (like SSH-2.0-...), send it to the target immediately
-        if self.client_buffer:
+        if ssh_idx != -1:
+             # If the SSH handshake is somewhere in this buffer, slice it from that exact point
+             # and forward it, discarding all HTTP garbage before it.
+             self.client_buffer = self.client_buffer[ssh_idx:]
              try:
                  self.target.sendall(self.client_buffer)
              except:
                  pass
+        else:
+             # If there's no SSH handshake yet, the buffer is pure HTTP garbage
+             # from the split payload. We throw it all away completely.
+             pass
 
         self.client_buffer = b''
 
