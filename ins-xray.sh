@@ -182,6 +182,8 @@ rm -fr /etc/haproxy/haproxy.cfg
 cat >/etc/haproxy/haproxy.cfg <<EOF
 # CFG LOADBALANCER NEWBIE STORE [ \$domain ]
 global
+    maxconn 100000
+    ulimit-n 200000
     stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
     stats timeout 1d
 
@@ -209,6 +211,10 @@ defaults
     mode tcp
     option tcplog
     option dontlognull
+    maxconn 100000
+    option tcp-smart-accept
+    option tcp-smart-connect
+    timeout tarpit 1m
     timeout connect 60s          # Timeout connect ditingkatkan untuk mencegah timeout yang terlalu cepat
     timeout client  300s
     timeout server  300s
