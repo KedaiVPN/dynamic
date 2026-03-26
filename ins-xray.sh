@@ -178,6 +178,8 @@ install_ssl(){
 # Install HAProxy Config
 mkdir -p /var/lib/haproxy
 mkdir -p /etc/haproxy
+mkdir -p /run/haproxy
+chown -R haproxy:haproxy /run/haproxy 2>/dev/null || true
 rm -fr /etc/haproxy/haproxy.cfg
 cat >/etc/haproxy/haproxy.cfg <<EOF
 # CFG LOADBALANCER NEWBIE STORE [ \$domain ]
@@ -415,6 +417,18 @@ fi
 
 # Install HAProxy only after PEM certificates are generated to prevent crash loops
 DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install -f -y haproxy
+
+# Fix HAProxy Service agar tidak gampang crash-loop "Start request repeated too quickly"
+mkdir -p /etc/systemd/system/haproxy.service.d
+cat > /etc/systemd/system/haproxy.service.d/override.conf << EOF
+[Unit]
+StartLimitIntervalSec=0
+
+[Service]
+Restart=always
+RestartSec=2
+EOF
+systemctl daemon-reload
 
 # Ensure ws-stunnel is running on port 10015
 if [ -f /usr/local/bin/ws-stunnel ]; then
@@ -975,7 +989,9 @@ systemctl daemon-reload >/dev/null 2>&1
 systemctl enable nginx >/dev/null 2>&1
 systemctl start nginx >/dev/null 2>&1
 systemctl restart nginx >/dev/null 2>&1
+
 echo -e "[ ${GREEN}ok${NC} ] Enable & Start & Restart & HAProxy"
+sleep 2 # Jeda supaya Nginx tidak membajak port saat instalasi
 systemctl daemon-reload >/dev/null 2>&1
 systemctl enable haproxy >/dev/null 2>&1
 systemctl start haproxy >/dev/null 2>&1

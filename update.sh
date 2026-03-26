@@ -95,6 +95,22 @@ systemctl restart dropbear >/dev/null 2>&1
 
 # Fix HAProxy
 DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install -f -y haproxy >/dev/null 2>&1
+
+mkdir -p /run/haproxy
+chown -R haproxy:haproxy /run/haproxy 2>/dev/null || true
+
+# Cegah error "Start request repeated too quickly"
+mkdir -p /etc/systemd/system/haproxy.service.d
+cat > /etc/systemd/system/haproxy.service.d/override.conf << EOF
+[Unit]
+StartLimitIntervalSec=0
+
+[Service]
+Restart=always
+RestartSec=2
+EOF
+systemctl daemon-reload
+
 sed -i 's/ tfo//g' /etc/haproxy/haproxy.cfg
 sed -i '/chroot/d' /etc/haproxy/haproxy.cfg
 sed -i '/option httplog/d' /etc/haproxy/haproxy.cfg
