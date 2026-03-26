@@ -99,6 +99,19 @@ sed -i 's/ tfo//g' /etc/haproxy/haproxy.cfg
 sed -i '/chroot/d' /etc/haproxy/haproxy.cfg
 sed -i '/option httplog/d' /etc/haproxy/haproxy.cfg
 
+# Optimasi batas TCP dan antrean untuk mencegah internet timeout/port exhaustion
+sed -i '/stats socket/i \    maxconn 100000\n    ulimit-n 200000' /etc/haproxy/haproxy.cfg
+sed -i '/option dontlognull/a \    maxconn 100000\n    option tcp-smart-accept\n    option tcp-smart-connect\n    timeout tarpit 1m' /etc/haproxy/haproxy.cfg
+# Mencegah duplikasi jika skrip di run berkali-kali
+sed -i '/maxconn 100000/d' /etc/haproxy/haproxy.cfg
+sed -i '/ulimit-n 200000/d' /etc/haproxy/haproxy.cfg
+sed -i '/option tcp-smart-accept/d' /etc/haproxy/haproxy.cfg
+sed -i '/option tcp-smart-connect/d' /etc/haproxy/haproxy.cfg
+sed -i '/timeout tarpit 1m/d' /etc/haproxy/haproxy.cfg
+sed -i '/stats socket/i \    maxconn 100000\n    ulimit-n 200000' /etc/haproxy/haproxy.cfg
+sed -i '/option dontlognull/a \    maxconn 100000\n    option tcp-smart-accept\n    option tcp-smart-connect\n    timeout tarpit 1m' /etc/haproxy/haproxy.cfg
+
+
 # Kembalikan send-proxy untuk backend xray agar tidak error 521/400
 sed -i 's/127.0.0.1:1010 check/127.0.0.1:1010 check send-proxy/g' /etc/haproxy/haproxy.cfg
 sed -i 's/127.0.0.1:1013 check/127.0.0.1:1013 check send-proxy/g' /etc/haproxy/haproxy.cfg
@@ -119,6 +132,20 @@ sed -i '/Banner \/etc\/issue.net/d' /etc/ssh/sshd_config
 echo "Banner /etc/issue.net" >> /etc/ssh/sshd_config
 systemctl restart ssh >/dev/null 2>&1
 systemctl restart sshd >/dev/null 2>&1
+
+# Fix TCP Kernel (Mencegah port exhaustion / time_wait numpuk)
+sed -i '/net.core.somaxconn/d' /etc/sysctl.conf
+sed -i '/net.ipv4.tcp_fin_timeout/d' /etc/sysctl.conf
+sed -i '/net.ipv4.tcp_max_syn_backlog/d' /etc/sysctl.conf
+sed -i '/net.ipv4.tcp_max_tw_buckets/d' /etc/sysctl.conf
+sed -i '/net.netfilter.nf_conntrack_max/d' /etc/sysctl.conf
+
+echo "net.core.somaxconn = 65535" >> /etc/sysctl.conf
+echo "net.ipv4.tcp_fin_timeout = 15" >> /etc/sysctl.conf
+echo "net.ipv4.tcp_max_syn_backlog = 65535" >> /etc/sysctl.conf
+echo "net.ipv4.tcp_max_tw_buckets = 2000000" >> /etc/sysctl.conf
+echo "net.netfilter.nf_conntrack_max = 2000000" >> /etc/sysctl.conf
+sysctl -p >/dev/null 2>&1
 
 # Fix Nginx Xray Routing Proxy (agar Vmess/Vless/Trojan bisa connect dari port 443)
 domain=$(cat /etc/xray/domain)
