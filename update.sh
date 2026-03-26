@@ -117,15 +117,17 @@ sed -i '/chroot/d' /etc/haproxy/haproxy.cfg
 sed -i '/option httplog/d' /etc/haproxy/haproxy.cfg
 
 # Optimasi batas TCP dan antrean untuk mencegah internet timeout/port exhaustion
-sed -i '/stats socket/i \    maxconn 100000\n    ulimit-n 200000' /etc/haproxy/haproxy.cfg
+# Menaikkan ulimit-n ke 250000 karena HAProxy secara internal butuh FD minimal >200051 untuk melayani 100000 koneksi
+sed -i '/stats socket/i \    maxconn 100000\n    ulimit-n 250000' /etc/haproxy/haproxy.cfg
 sed -i '/option dontlognull/a \    maxconn 100000\n    option tcp-smart-accept\n    option tcp-smart-connect\n    timeout tarpit 1m' /etc/haproxy/haproxy.cfg
 # Mencegah duplikasi jika skrip di run berkali-kali
 sed -i '/maxconn 100000/d' /etc/haproxy/haproxy.cfg
 sed -i '/ulimit-n 200000/d' /etc/haproxy/haproxy.cfg
+sed -i '/ulimit-n 250000/d' /etc/haproxy/haproxy.cfg
 sed -i '/option tcp-smart-accept/d' /etc/haproxy/haproxy.cfg
 sed -i '/option tcp-smart-connect/d' /etc/haproxy/haproxy.cfg
 sed -i '/timeout tarpit 1m/d' /etc/haproxy/haproxy.cfg
-sed -i '/stats socket/i \    maxconn 100000\n    ulimit-n 200000' /etc/haproxy/haproxy.cfg
+sed -i '/stats socket/i \    maxconn 100000\n    ulimit-n 250000' /etc/haproxy/haproxy.cfg
 sed -i '/option dontlognull/a \    maxconn 100000\n    option tcp-smart-accept\n    option tcp-smart-connect\n    timeout tarpit 1m' /etc/haproxy/haproxy.cfg
 
 

@@ -185,7 +185,7 @@ cat >/etc/haproxy/haproxy.cfg <<EOF
 # CFG LOADBALANCER NEWBIE STORE [ \$domain ]
 global
     maxconn 100000
-    ulimit-n 200000
+    ulimit-n 250000
     stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
     stats timeout 1d
 
