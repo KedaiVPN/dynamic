@@ -264,11 +264,9 @@ backend grpc_backend
     server grpc_server 127.0.0.1:1013 send-proxy
 EOF
 
-# install nginx
-apt install -y nginx
+# install nginx (sudah diinstall di atas saat certbot)
+apt install -y nginx >/dev/null 2>&1
 cd
-rm -fr /etc/nginx/sites-enabled/default
-rm -fr /etc/nginx/sites-available/default
 # wget -q -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/nginx.conf"
 # Embed nginx.conf with Proxy Protocol support for Xray frontend
 # Merging user optimizations
@@ -414,6 +412,11 @@ else
     # We exit here because Xray won't start without certs
     exit 1
 fi
+
+# Hentikan Nginx dan hapus konfigurasi default agar tidak membajak port 80/443 saat HAProxy diinstall
+systemctl stop nginx >/dev/null 2>&1
+rm -fr /etc/nginx/sites-enabled/default
+rm -fr /etc/nginx/sites-available/default
 
 # Install HAProxy only after PEM certificates are generated to prevent crash loops
 DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install -f -y haproxy
