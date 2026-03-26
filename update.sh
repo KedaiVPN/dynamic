@@ -94,6 +94,7 @@ systemctl enable dropbear >/dev/null 2>&1
 systemctl restart dropbear >/dev/null 2>&1
 
 # Fix HAProxy
+systemctl stop nginx >/dev/null 2>&1
 DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install -f -y haproxy >/dev/null 2>&1
 
 mkdir -p /run/haproxy
