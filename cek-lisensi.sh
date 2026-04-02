@@ -22,7 +22,6 @@ function disable_services() {
     systemctl stop stunnel4
     systemctl stop dropbear
     systemctl stop ws-stunnel
-    systemctl stop cron
 
     # Disable them so they don't restart on boot
     systemctl disable nginx
@@ -30,8 +29,32 @@ function disable_services() {
     systemctl disable stunnel4
     systemctl disable dropbear
     systemctl disable ws-stunnel
-    systemctl disable cron
+
+    # Update crontab to check every 10 minutes when expired/invalid
+    sed -i '/cek-lisensi/d' /etc/crontab
+    echo "*/10 * * * * root /usr/local/bin/cek-lisensi" >> /etc/crontab
+    systemctl restart cron
     exit 1
+}
+
+function enable_services() {
+    # Check if services are already running to avoid unnecessary restarts
+    if ! systemctl is-active --quiet xray; then
+        echo -e "✅ Lisensi Aktif. Menghidupkan ulang layanan VPS..."
+        wall "✅ VPS UNBANNED / Lisensi Aktif. SCRIPT UNLOCKED ✅"
+
+        systemctl enable nginx
+        systemctl enable xray
+        systemctl enable stunnel4
+        systemctl enable dropbear
+        systemctl enable ws-stunnel
+
+        systemctl start nginx
+        systemctl start xray
+        systemctl start stunnel4
+        systemctl start dropbear
+        systemctl start ws-stunnel
+    fi
 }
 
 SERVER_IP=$(curl -sS ipv4.icanhazip.com)
@@ -69,8 +92,17 @@ if [ "$expiry_timestamp" -le "$current_timestamp" ]; then
     disable_services "Masa Aktif Sudah Habis"
 fi
 
+# Jika sukses, hidupkan kembali service jika sebelumnya mati
+enable_services
+
 # Jika sukses, update file lokal untuk sinkronisasi (termasuk jika ada perubahan nama/tanggal)
 mkdir -p /etc/xray
 echo "$client_name" > /etc/xray/license_client
 echo "$expiry_date_str" > /etc/xray/license_exp
+
+# Update crontab to check at 00:10 when active
+sed -i '/cek-lisensi/d' /etc/crontab
+echo "10 0 * * * root /usr/local/bin/cek-lisensi" >> /etc/crontab
+systemctl restart cron
+
 exit 0
