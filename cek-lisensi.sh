@@ -63,9 +63,14 @@ if [ -z "$SERVER_IP" ]; then
     exit 0
 fi
 
-license_data=$(curl -s "https://raw.githubusercontent.com/kedaivpn/izin/main/allowed")
-if [ $? -ne 0 ] || [ -z "$license_data" ]; then
-    # Jika github diblokir atau offline, gunakan data lokal terakhir untuk menghindari pemblokiran tidak sengaja
+# Fetch HTTP Status code and Body
+http_response=$(curl -s -w "%{http_code}" "https://raw.githubusercontent.com/kedaivpn/izin/main/allowed")
+http_code=$(tail -n1 <<< "$http_response")
+license_data=$(sed '$ d' <<< "$http_response")
+
+# Validasi apakah curl gagal koneksi (exit code) ATAU HTTP status bukan 200 (misal 404/429/500 dll) ATAU data kosong
+if [ $? -ne 0 ] || [ "$http_code" -ne 200 ] || [ -z "$license_data" ]; then
+    # Jika github diblokir, kena rate limit, atau offline, gunakan data lokal terakhir
     if [ -f /etc/xray/license_exp ]; then
         local_exp=$(cat /etc/xray/license_exp)
         expiry_timestamp=$(date -d "$local_exp" +%s)
