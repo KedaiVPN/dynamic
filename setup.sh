@@ -22,10 +22,15 @@ function verify_license() {
         exit 1
     fi
 
+    local http_response
+    local http_code
     local license_data
-    license_data=$(curl -s "https://raw.githubusercontent.com/kedaivpn/izin/main/allowed")
-    if [ $? -ne 0 ] || [ -z "$license_data" ]; then
-        echo -e "\033[0;31m[ ERROR ]\033[0m Gagal terhubung ke server lisensi. Mohon periksa koneksi internet Anda."
+    http_response=$(curl -s -w "%{http_code}" "https://raw.githubusercontent.com/kedaivpn/izin/main/allowed")
+    http_code=$(tail -n1 <<< "$http_response")
+    license_data=$(sed '$ d' <<< "$http_response")
+
+    if [ $? -ne 0 ] || [ "$http_code" -ne 200 ] || [ -z "$license_data" ]; then
+        echo -e "\033[0;31m[ ERROR ]\033[0m Gagal terhubung ke server lisensi (HTTP: $http_code). Mohon periksa koneksi internet Anda."
         exit 1
     fi
 
