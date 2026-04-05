@@ -107,13 +107,6 @@ echo ""
 echo -e "[ ${green}INFO${NC} ] Back to menu . . . "
 systemctl restart nginx
 systemctl restart xray.service
-systemctl restart xray@none.service
-systemctl restart xray@vless.service
-systemctl restart xray@vnone.service
-systemctl restart xray@trojanws.service
-systemctl restart xray@trnone.service
-systemctl restart xray@xtrojan.service
-systemctl restart xray@trojan.service
 systemctl restart haproxy
 service cron restart
 sleep 5
