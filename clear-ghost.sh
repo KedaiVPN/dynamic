@@ -130,4 +130,35 @@ awk -F: '$3 >= 1000 && $1 != "nobody" && $7 == "/bin/false" {print $1}' /etc/pas
     fi
 done
 
-echo -e "[ ${GREEN}INFO${NC} ] Proses Smart Cleanup selesai."
+echo -e "[ ${GREEN}INFO${NC} ] Memulai Pembersihan Data Sampah (Orphan Data) di Database..."
+# Cek apakah ada data di EXP_DB yang akun fisiknya sudah dihapus manual
+if [ -s "$EXP_DB" ]; then
+    while read -r line; do
+        if [[ -z "$line" ]]; then continue; fi
+
+        user=$(echo "$line" | awk '{print $1}')
+        protocol=$(echo "$line" | awk '{print $2}')
+
+        account_exists=0
+        if [[ "$protocol" == "vmess" ]]; then
+            grep -q "^ *#vms $user " /etc/xray/config.json && account_exists=1
+        elif [[ "$protocol" == "vless" ]]; then
+            grep -q "^ *#vls $user " /etc/xray/config.json && account_exists=1
+        elif [[ "$protocol" == "trojan" ]]; then
+            grep -q "^ *#tr $user " /etc/xray/config.json && account_exists=1
+        elif [[ "$protocol" == "ssws" ]]; then
+            grep -q "^ *#ssw $user " /etc/xray/config.json && account_exists=1
+        elif [[ "$protocol" == "ssh" ]]; then
+            if id "$user" &>/dev/null; then
+                account_exists=1
+            fi
+        fi
+
+        if [[ $account_exists -eq 0 ]]; then
+            echo -e "${RED}Menghapus data sampah (Orphan) dari database: $user ($protocol)${NC}"
+            sed -i "/^$user $protocol /d" "$EXP_DB"
+        fi
+    done < "$EXP_DB"
+fi
+
+echo -e "[ ${GREEN}INFO${NC} ] Proses Smart Cleanup & Sync selesai."
