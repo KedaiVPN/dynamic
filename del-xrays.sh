@@ -38,6 +38,7 @@ NUMBER_OF_CLIENTS=$(grep -c -E "^### " "/etc/xray/config.json")
 user=$(grep -E "^### " "/etc/xray/config.json" | cut -d ' ' -f 2 | sed -n "${CLIENT_NUMBER}"p)
 exp=$(grep -E "^### " "/etc/xray/config.json" | cut -d ' ' -f 3 | sed -n "${CLIENT_NUMBER}"p)
 sed -i "/^### $user $exp/,/^},{/d" /etc/xray/config.json
+sed -i "/^$user vmess /d" /etc/expired-users.db 2>/dev/null
 systemctl restart xray
 clear && printf '\033[3J'
 echo " XRAYS WS Account Deleted"

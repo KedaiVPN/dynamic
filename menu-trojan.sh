@@ -275,6 +275,7 @@ lock_file="${limit_dir}/lock-trojan"
 mkdir -p "$limit_dir"
 touch "$limit_file" "$lock_file"
 sed -i "/^$user /d" "$limit_file" "$lock_file"
+sed -i "/^$user trojan /d" /etc/expired-users.db 2>/dev/null
 systemctl restart xray.service
 clear && printf '\033[3J'
 echo ""

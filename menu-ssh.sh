@@ -93,6 +93,7 @@ read -p "Username SSH to Delete : " Pengguna
 
 if getent passwd $Pengguna > /dev/null 2>&1; then
         userdel $Pengguna > /dev/null 2>&1
+        sed -i "/^$Pengguna ssh /d" /etc/expired-users.db 2>/dev/null
         echo -e "User $Pengguna was removed."
 else
         echo -e "Failure: User $Pengguna Not Exist."
@@ -138,6 +139,7 @@ clear && printf '\033[3J'
                echo "echo "Expired- Username : $username are expired at: $tgl $bulantahun and removed : $hariini "" >> /usr/local/bin/deleteduser
 	           echo "Username $username that are expired at $tgl $bulantahun removed from the VPS $hariini"
                userdel $username
+               sed -i "/^$username ssh /d" /etc/expired-users.db 2>/dev/null
                fi
                done
                echo " "

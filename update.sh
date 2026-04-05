@@ -30,8 +30,8 @@ REPO="https://raw.githubusercontent.com/KedaiVPN/dynamic/main"
 echo -e "[ ${GREEN}INFO${NC} ] Mendownload script terbaru..."
 # wget -q -O /usr/bin/add-vless "${REPO}/add-vless.sh" && chmod +x /usr/bin/add-vless
 # wget -q -O /usr/bin/add-tr "${REPO}/add-tr.sh" && chmod +x /usr/bin/add-tr
-# wget -q -O /usr/bin/menu-vless "${REPO}/menu-vless.sh" && chmod +x /usr/bin/menu-vless
-# wget -q -O /usr/bin/menu-trojan "${REPO}/menu-trojan.sh" && chmod +x /usr/bin/menu-trojan
+wget -q -O /usr/bin/menu-vless "${REPO}/menu-vless.sh" && chmod +x /usr/bin/menu-vless
+wget -q -O /usr/bin/menu-trojan "${REPO}/menu-trojan.sh" && chmod +x /usr/bin/menu-trojan
 # wget -q -O /usr/bin/user-xrays "${REPO}/user-xrays.sh" && chmod +x /usr/bin/user-xrays
 
 # Update menu & ws-stunnel untuk perbaikan kompatibilitas Ubuntu 22/Debian 12
@@ -39,7 +39,7 @@ wget -q -O /usr/bin/menu "${REPO}/menu4.sh" && chmod +x /usr/bin/menu
 # wget -q -O /usr/bin/xray-limit "${REPO}/xray-limit.sh" && chmod +x /usr/bin/xray-limit
 # wget -q -O /home/.ver "${REPO}/test/versions"
 # wget -q -O /usr/bin/tendang "${REPO}/tendang.sh" && chmod +x /usr/bin/tendang
-# wget -q -O /usr/bin/menu-ssh "${REPO}/menu-ssh.sh" && chmod +x /usr/bin/menu-ssh
+wget -q -O /usr/bin/menu-ssh "${REPO}/menu-ssh.sh" && chmod +x /usr/bin/menu-ssh
 # Update UDP Custom for HTTP Custom app
 # echo -e "[ ${GREEN}INFO${NC} ] Menerapkan patch UDP Custom..."
 # wget -q -O /root/udp-custom.sh "${REPO}/udp-custom.sh"
@@ -52,13 +52,11 @@ wget -q -O /usr/bin/menu "${REPO}/menu4.sh" && chmod +x /usr/bin/menu
 #     echo -e "[ ${RED}ERROR${NC} ] Gagal mendownload udp-custom.sh"
 # fi
 
-# wget -q -O /usr/bin/menu-vmess "${REPO}/menu-vmess.sh" && chmod +x /usr/bin/menu-vmess
-# wget -q -O /usr/bin/menu-vless "${REPO}/menu-vless.sh" && chmod +x /usr/bin/menu-vless
-# wget -q -O /usr/bin/menu-trojan "${REPO}/menu-trojan.sh" && chmod +x /usr/bin/menu-trojan
-# wget -q -O /usr/bin/menu-ss "${REPO}/menu-ss.sh" && chmod +x /usr/bin/menu-ss
+wget -q -O /usr/bin/menu-vmess "${REPO}/menu-vmess.sh" && chmod +x /usr/bin/menu-vmess
+wget -q -O /usr/bin/menu-ss "${REPO}/menu-ss.sh" && chmod +x /usr/bin/menu-ss
+wget -q -O /usr/bin/del-xrays "${REPO}/del-xrays.sh" && chmod +x /usr/bin/del-xrays
 # wget -q -O /usr/bin/cek-trafik "${REPO}/cek-trafik.sh" && chmod +x /usr/bin/cek-trafik
 # wget -q -O /usr/bin/cek-expired "${REPO}/cek-expired.sh" && chmod +x /usr/bin/cek-expired
-# wget -q -O /usr/bin/menu-vless "${REPO}/menu-vless.sh" && chmod +x /usr/bin/menu-vless
 # wget -q -O /usr/bin/running "${REPO}/running.sh" && chmod +x /usr/bin/running
 # wget -q -O /usr/bin/restart "${REPO}/restart.sh" && chmod +x /usr/bin/restart
 wget -q -O /usr/local/bin/cek-lisensi "${REPO}/cek-lisensi.sh" && chmod +x /usr/local/bin/cek-lisensi
@@ -66,7 +64,7 @@ wget -q -O /usr/local/bin/cek-lisensi "${REPO}/cek-lisensi.sh" && chmod +x /usr/
 # wget -q -O /usr/bin/backup "${REPO}/backup.sh" && chmod +x /usr/bin/backup
 # wget -q -O /usr/bin/restore "${REPO}/restore.sh" && chmod +x /usr/bin/restore
 # wget -q -O /usr/bin/clearlog "${REPO}/clearlog.sh" && chmod +x /usr/bin/clearlog
-# wget -q -O /usr/bin/xp "${REPO}/xp.sh" && chmod +x /usr/bin/xp
+wget -q -O /usr/bin/xp "${REPO}/xp.sh" && chmod +x /usr/bin/xp
 # wget -q -O /usr/local/bin/factory-reset.sh "${REPO}/factory-reset.sh" && chmod +x /usr/local/bin/factory-reset.sh
 
 echo -e "[ ${GREEN}INFO${NC} ] Mengupdate rclone.conf..."
