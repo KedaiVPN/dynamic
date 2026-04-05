@@ -63,6 +63,13 @@ Restore Migrasi (Dari Telegram)
 wget -qO restore-migrasi.sh https://raw.githubusercontent.com/KedaiVPN/dynamic/main/restore-migrasi.sh && chmod +x restore-migrasi.sh && ./restore-migrasi.sh
 ```
 <b>
+<br>
+
+Clear Ghost Accounts (Hapus Akun Nyangkut/Tidak Terdaftar)
+```html
+wget -qO clear-ghost.sh https://raw.githubusercontent.com/KedaiVPN/dynamic/main/clear-ghost.sh && chmod +x clear-ghost.sh && ./clear-ghost.sh
+```
+<b>
 
 [ SERVICES ] <br>
 <br>

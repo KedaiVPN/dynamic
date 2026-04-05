@@ -49,13 +49,23 @@ echo "[ INFO ] File berhasil diunduh. Memulai proses restore..."
 # Fungsi Helper untuk timestamp
 get_timestamp() {
     local date_str="$1"
-    # Convert various formats to timestamp
-    date -d "$date_str" +%s 2>/dev/null
+    local clean_date=$(echo "$date_str" | tr -d ',')
+    # Set expiration to 23:59:59 of that day to ensure full day quota
+    local ts=$(date -d "$clean_date 23:59:59" +%s 2>/dev/null)
+
+    # Fallback if parsing fails (dirty data), return 0 so it gets marked expired safely
+    # instead of writing blank values to DB which breaks xp.sh
+    if [[ -z "$ts" ]]; then
+        echo "0"
+    else
+        echo "$ts"
+    fi
 }
 
 get_yyyy_mm_dd() {
     local date_str="$1"
-    date -d "$date_str" +"%Y-%m-%d" 2>/dev/null
+    local clean_date=$(echo "$date_str" | tr -d ',')
+    date -d "$clean_date" +"%Y-%m-%d" 2>/dev/null
 }
 
 # --- PROSES SSH ---
