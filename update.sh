@@ -14,6 +14,15 @@ echo -e "[ ${GREEN}INFO${NC} ] Mengatur Timezone ke Asia/Jakarta..."
 timedatectl set-timezone Asia/Jakarta
 ln -fs /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
 
+# 1.5 Update cron job xp_otm
+echo -e "[ ${GREEN}INFO${NC} ] Memastikan cron job auto-delete (xp_otm) terpasang..."
+cat > /etc/cron.d/xp_otm <<-END
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+* * * * * root /usr/bin/xp
+END
+chmod 644 /etc/cron.d/xp_otm
+
 # 2. Download Script Baru
 # Pastikan URL ini sesuai dengan raw repository Anda
 REPO="https://raw.githubusercontent.com/KedaiVPN/dynamic/main"
