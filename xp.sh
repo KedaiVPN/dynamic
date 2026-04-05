@@ -39,10 +39,10 @@ while read -r line; do
 
     user=$(echo "$line" | awk '{print $1}')
     type=$(echo "$line" | awk '{print $2}')
-    exp_timestamp=$(echo "$line" | awk '{print $3}' | tr -d '\r')
+    exp_timestamp=$(echo "$line" | awk '{print $3}' | tr -d '\r\n')
 
     # Ensure exp_timestamp is a valid integer before comparison
-    if [[ ! "$exp_timestamp" =~ ^[0-9]+$ ]]; then continue; fi
+    if ! [[ "$exp_timestamp" =~ ^[0-9]+$ ]]; then continue; fi
 
     if [[ "$now_timestamp" -ge "$exp_timestamp" ]]; then
         echo -e "${RED}Moving expired account to trash: $user ($type)${NC}"
