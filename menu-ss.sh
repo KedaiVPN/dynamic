@@ -193,6 +193,7 @@ exp=$(grep -E "^#sswg " "/etc/xray/config.json" | cut -d ' ' -f 3 | sed -n "${CL
 sed -i "/^#sswg $user $exp/,/^},{/d" /etc/xray/config.json
 sed -i "/^#ssw $user $exp/,/^},{/d" /etc/xray/config.json
 rm -f /etc/xray/vmess-$user-tls.json /etc/xray/vmess-$user-nontls.json
+sed -i "/^$user ssws /d" /etc/expired-users.db 2>/dev/null
 systemctl restart xray.service
 clear && printf '\033[3J'
 echo ""
