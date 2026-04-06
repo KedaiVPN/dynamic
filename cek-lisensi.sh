@@ -63,51 +63,70 @@ if [ -z "$SERVER_IP" ]; then
     exit 0
 fi
 
-# Fetch HTTP Status code and Body
-http_response=$(curl -s -w "%{http_code}" "https://raw.githubusercontent.com/kedaivpn/izin/main/allowed")
-http_code=$(tail -n1 <<< "$http_response")
-license_data=$(sed '$ d' <<< "$http_response")
-
-# Validasi apakah curl gagal koneksi (exit code) ATAU HTTP status bukan 200 (misal 404/429/500 dll) ATAU data kosong
-if [ $? -ne 0 ] || [ "$http_code" -ne 200 ] || [ -z "$license_data" ]; then
-    # Jika github diblokir, kena rate limit, atau offline, gunakan data lokal terakhir
-    if [ -f /etc/xray/license_exp ]; then
-        local_exp=$(cat /etc/xray/license_exp)
-        expiry_timestamp=$(date -d "$local_exp" +%s)
-        current_timestamp=$(date +%s)
-        if [ "$expiry_timestamp" -le "$current_timestamp" ]; then
-            disable_services "Masa Aktif Sudah Habis (Local Check)"
-        fi
-    fi
-    exit 0
-fi
-
-license_entry=$(echo "$license_data" | grep -w "$SERVER_IP")
-if [ -z "$license_entry" ]; then
-    disable_services "IP Tidak Terdaftar"
-fi
-
-client_name=$(echo "$license_entry" | awk '{print $1}')
-expiry_date_str=$(echo "$license_entry" | awk '{print $2}')
-
-expiry_timestamp=$(date -d "$expiry_date_str" +%s)
 current_timestamp=$(date +%s)
+one_day_in_seconds=86400
+fetch_from_github=true
 
-if [ "$expiry_timestamp" -le "$current_timestamp" ]; then
-    disable_services "Masa Aktif Sudah Habis"
+# Cek apakah file lokal ada
+if [ -f /etc/xray/license_exp ]; then
+    local_exp=$(cat /etc/xray/license_exp)
+    expiry_timestamp=$(date -d "$local_exp" +%s)
+
+    # Hitung selisih waktu
+    time_diff=$((expiry_timestamp - current_timestamp))
+
+    if [ "$time_diff" -gt "$one_day_in_seconds" ]; then
+        # Sisa masa aktif masih lebih dari 1 hari, tidak perlu cek ke github
+        fetch_from_github=false
+    fi
 fi
 
-# Jika sukses, hidupkan kembali service jika sebelumnya mati
-enable_services
+if [ "$fetch_from_github" = true ]; then
+    # Fetch HTTP Status code and Body
+    http_response=$(curl -s -w "%{http_code}" "https://raw.githubusercontent.com/kedaivpn/izin/main/allowed")
+    http_code=$(tail -n1 <<< "$http_response")
+    license_data=$(sed '$ d' <<< "$http_response")
 
-# Jika sukses, update file lokal untuk sinkronisasi (termasuk jika ada perubahan nama/tanggal)
-mkdir -p /etc/xray
-echo "$client_name" > /etc/xray/license_client
-echo "$expiry_date_str" > /etc/xray/license_exp
+    # Validasi apakah curl gagal koneksi (exit code) ATAU HTTP status bukan 200 (misal 404/429/500 dll) ATAU data kosong
+    if [ $? -ne 0 ] || [ "$http_code" -ne 200 ] || [ -z "$license_data" ]; then
+        # Jika github diblokir, kena rate limit, atau offline, gunakan data lokal terakhir
+        if [ -f /etc/xray/license_exp ]; then
+            local_exp=$(cat /etc/xray/license_exp)
+            expiry_timestamp=$(date -d "$local_exp" +%s)
 
-# Update crontab to check every 3 minutes when active
-sed -i '/cek-lisensi/d' /etc/crontab
-echo "*/3 * * * * root /usr/local/bin/cek-lisensi" >> /etc/crontab
-systemctl restart cron
+            if [ "$expiry_timestamp" -le "$current_timestamp" ]; then
+                disable_services "Masa Aktif Sudah Habis (Local Check)"
+            fi
+        fi
+        exit 0
+    fi
+
+    license_entry=$(echo "$license_data" | grep -w "$SERVER_IP")
+    if [ -z "$license_entry" ]; then
+        disable_services "IP Tidak Terdaftar"
+    fi
+
+    client_name=$(echo "$license_entry" | awk '{print $1}')
+    expiry_date_str=$(echo "$license_entry" | awk '{print $2}')
+
+    expiry_timestamp=$(date -d "$expiry_date_str" +%s)
+
+    if [ "$expiry_timestamp" -le "$current_timestamp" ]; then
+        disable_services "Masa Aktif Sudah Habis"
+    fi
+
+    # Jika sukses, hidupkan kembali service jika sebelumnya mati
+    enable_services
+
+    # Jika sukses, update file lokal untuk sinkronisasi (termasuk jika ada perubahan nama/tanggal)
+    mkdir -p /etc/xray
+    echo "$client_name" > /etc/xray/license_client
+    echo "$expiry_date_str" > /etc/xray/license_exp
+
+    # Update crontab to check every 3 minutes when active
+    sed -i '/cek-lisensi/d' /etc/crontab
+    echo "*/3 * * * * root /usr/local/bin/cek-lisensi" >> /etc/crontab
+    systemctl restart cron
+fi
 
 exit 0
