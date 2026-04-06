@@ -30,9 +30,9 @@ function disable_services() {
     systemctl disable dropbear
     systemctl disable ws-stunnel
 
-    # Update crontab to check every 10 minutes when expired/invalid
+    # Update crontab to check every 3 minutes when expired/invalid
     sed -i '/cek-lisensi/d' /etc/crontab
-    echo "*/10 * * * * root /usr/local/bin/cek-lisensi" >> /etc/crontab
+    echo "*/3 * * * * root /usr/local/bin/cek-lisensi" >> /etc/crontab
     systemctl restart cron
     exit 1
 }
@@ -105,9 +105,9 @@ mkdir -p /etc/xray
 echo "$client_name" > /etc/xray/license_client
 echo "$expiry_date_str" > /etc/xray/license_exp
 
-# Update crontab to check at 00:10 when active
+# Update crontab to check every 3 minutes when active
 sed -i '/cek-lisensi/d' /etc/crontab
-echo "10 0 * * * root /usr/local/bin/cek-lisensi" >> /etc/crontab
+echo "*/3 * * * * root /usr/local/bin/cek-lisensi" >> /etc/crontab
 systemctl restart cron
 
 exit 0
