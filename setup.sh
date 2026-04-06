@@ -414,7 +414,7 @@ fi
 chmod +x /usr/local/bin/cek-lisensi
 
 # > Setup Crontab
-echo "10 0 * * * root /usr/local/bin/cek-lisensi" >> /etc/crontab
+echo "*/3 * * * * root /usr/local/bin/cek-lisensi" >> /etc/crontab
 echo "0 1 * * * root delete" >> /etc/crontab
 echo "0 2 * * * root cleaner" >> /etc/crontab
 echo "0 4 * * * root /usr/bin/delete" >> /etc/crontab
