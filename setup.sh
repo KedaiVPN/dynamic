@@ -12,7 +12,7 @@ if [ "${EUID}" -ne 0 ]; then
 		exit 1
 fi
 
-# // License Verification
+# // License Verification (Vercel Backend)
 function verify_license() {
     echo -e "\033[0;33m[ INFO ]\033[0m Sedang memverifikasi lisensi instalasi Anda..."
     local SERVER_IP
@@ -22,28 +22,29 @@ function verify_license() {
         exit 1
     fi
 
-    local http_response
-    local http_code
-    local license_data
-    http_response=$(curl -s -w "%{http_code}" "https://raw.githubusercontent.com/kedaivpn/izin/main/allowed")
-    http_code=$(tail -n1 <<< "$http_response")
-    license_data=$(sed '$ d' <<< "$http_response")
+    local VERCEL_API_URL="https://YOUR_VERCEL_DOMAIN.vercel.app" # Ganti dengan domain Vercel Anda setelah deploy
 
-    if [ $? -ne 0 ] || [ "$http_code" -ne 200 ] || [ -z "$license_data" ]; then
-        echo -e "\033[0;31m[ ERROR ]\033[0m Gagal terhubung ke server lisensi (HTTP: $http_code). Mohon periksa koneksi internet Anda."
-        exit 1
+    if [ "$VERCEL_API_URL" == "https://YOUR_VERCEL_DOMAIN.vercel.app" ]; then
+        echo -e "\033[0;33m[ WARNING ]\033[0m URL Vercel belum dikonfigurasi. Mem-bypass verifikasi lisensi awal untuk testing..."
+        sleep 2
+        return 0
     fi
 
-    local license_entry
-    license_entry=$(echo "$license_data" | grep -w "$SERVER_IP")
+    local sync_response
+    sync_response=$(curl -sS "${VERCEL_API_URL}/api/check?ip=${SERVER_IP}" || echo "")
 
-    if [ -z "$license_entry" ]; then
+    local is_valid
+    is_valid=$(echo "$sync_response" | grep -E -o '"valid"\s*:\s*true')
+    client_name=$(echo "$sync_response" | grep -E -o '"client_name"\s*:\s*"[^"]+' | awk -F'"' '{print $4}')
+    expiry_date_str=$(echo "$sync_response" | grep -E -o '"expired_date"\s*:\s*"[^"]+' | awk -F'"' '{print $4}')
+
+    if [ -z "$is_valid" ] || [ -z "$client_name" ] || [ -z "$expiry_date_str" ]; then
         echo -e "────────────────────────────────────────────"
         echo -e " ⚠️       AKSES DI TOLAK         ⚠️"
         echo -e "────────────────────────────────────────────"
         echo -e "        ❌  SCRIPT LOCKED ❌"
         echo -e "  🔒 Your VPS  Has been Banned"
-        echo -e "  ⚠️  IP Tidak Terdaftar ⚠️"
+        echo -e "  ⚠️  Lisensi Tidak Terdaftar / Invalid ⚠️"
         echo -e "  IP Anda: $SERVER_IP"
         echo -e "  💡 Beli izin resmi hanya dari Admin!"
         echo -e "  📞 Contact Admin:"
@@ -52,35 +53,8 @@ function verify_license() {
         echo -e "────────────────────────────────────────────"
         exit 1
     fi
-
-    # Variables that need to be accessed globally outside the function
-    client_name=$(echo "$license_entry" | awk '{print $1}')
-    expiry_date_str=$(echo "$license_entry" | awk '{print $2}')
-
-    local expiry_timestamp
-    expiry_timestamp=$(date -d "$expiry_date_str" +%s)
-    local current_timestamp
-    current_timestamp=$(date +%s)
-
-    if [ "$expiry_timestamp" -le "$current_timestamp" ]; then
-        echo -e "────────────────────────────────────────────"
-        echo -e " ⚠️       AKSES DI TOLAK         ⚠️"
-        echo -e "────────────────────────────────────────────"
-        echo -e "        ❌  SCRIPT LOCKED ❌"
-        echo -e "  🔒 Your VPS  Has been Banned"
-        echo -e "  ⚠️  Masa Aktif Sudah Habis ⚠️"
-        echo -e "  Expired: $expiry_date_str"
-        echo -e "  💡 Beli izin resmi hanya dari Admin!"
-        echo -e "  📞 Contact Admin:"
-        echo -e "  🌍 Telegram: https://t.me/Kedai_vpn"
-        echo -e "  📱 WhatsApp: https://wa.me/6287777694482"
-        echo -e "────────────────────────────────────────────"
-        exit 1
-    fi
     
-    local remaining_days
-    remaining_days=$(((expiry_timestamp - current_timestamp) / 86400))
-    echo -e "\033[0;32m[ OKEY ]\033[0m Lisensi terverifikasi! (Client: $client_name, Sisa: $remaining_days hari)"
+    echo -e "\033[0;32m[ OKEY ]\033[0m Lisensi terverifikasi dari Vercel! (Client: $client_name, Expired: $expiry_date_str)"
     sleep 2
     
     mkdir -p /etc/xray
@@ -537,6 +511,7 @@ rm -fr /root/udp-custom.sh
 rm -fr /root/ins-xray.sh
 rm -fr /root/setup.sh
 rm -fr /root/domain
+
 history -c
 
 read -p "$( echo -e "Press ${orange}[ ${NC}${green}Enter${NC} ${CYAN}]${NC} For Reboot") "
