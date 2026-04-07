@@ -22,17 +22,11 @@ function verify_license() {
         exit 1
     fi
 
-    local VERCEL_API_URL="https://licence-manager-nu.vercel.app/" # Ganti dengan domain Vercel Anda setelah deploy
-
-    if [ "$VERCEL_API_URL" == "https://licence-manager-nu.vercel.app/" ]; then
-        echo -e "\033[0;33m[ WARNING ]\033[0m URL Vercel belum dikonfigurasi. Mem-bypass verifikasi lisensi awal untuk testing..."
-        sleep 2
-        return 0
-    fi
+    local VERCEL_API_URL="https://licence-manager-nu.vercel.app"
 
     local sync_response
     sync_response=$(curl -sS "${VERCEL_API_URL}/api/check?ip=${SERVER_IP}" || echo "")
-
+    
     local is_valid
     is_valid=$(echo "$sync_response" | grep -E -o '"valid"\s*:\s*true')
     client_name=$(echo "$sync_response" | grep -E -o '"client_name"\s*:\s*"[^"]+' | awk -F'"' '{print $4}')
