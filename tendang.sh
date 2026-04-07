@@ -1,4 +1,10 @@
 #!/bin/bash
+
+# // License Checking
+if [ -f /usr/local/bin/cek-lisensi ]; then
+    /usr/local/bin/cek-lisensi --check-only || exit 1
+fi
+
 # Autokill User SSH Multi-Login (Journalctl + Netstat + WS-Tunnel Map + PID Kill)
 # Uses systemd journal for real-time auth data. Kills specific PIDs to handle root-owned Dropbear sessions.
 

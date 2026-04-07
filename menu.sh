@@ -58,9 +58,7 @@ fi
 
 # // License Checking
 if [ -f /usr/local/bin/cek-lisensi ]; then
-    echo -e "\033[0;33m[ INFO ]\033[0m Sedang memverifikasi lisensi IP VPS Anda..."
-    sleep 0.5
-    /usr/local/bin/cek-lisensi || exit 1
+    /usr/local/bin/cek-lisensi --check-only || exit 1
 fi
 
 # // Exporting IP Address

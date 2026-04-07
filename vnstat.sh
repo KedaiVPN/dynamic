@@ -57,6 +57,12 @@ if [ "${EUID}" -ne 0 ]; then
 		exit 1
 fi
 
+# // License Checking
+if [ -f /usr/local/bin/cek-lisensi ]; then
+    /usr/local/bin/cek-lisensi --check-only || exit 1
+fi
+
+
 # // Exporting IP Address
 export IP=$( curl -s https://ipinfo.io/ip/ )
 IP=$(curl -s ipinfo.io/ip )

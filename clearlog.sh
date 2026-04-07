@@ -1,3 +1,9 @@
+
+# // License Checking
+if [ -f /usr/local/bin/cek-lisensi ]; then
+    /usr/local/bin/cek-lisensi --check-only || exit 1
+fi
+
 # Color
 RED='\033[0;31m'
 NC='\033[0m'

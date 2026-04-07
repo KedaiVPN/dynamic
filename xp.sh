@@ -1,4 +1,10 @@
 #!/bin/bash
+
+# // License Checking
+if [ -f /usr/local/bin/cek-lisensi ]; then
+    /usr/local/bin/cek-lisensi --check-only || exit 1
+fi
+
 # =========================================
 # Quick Setup | Script Setup Manager
 # Edition : Stable Edition V1.0
