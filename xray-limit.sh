@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# // License Checking
+if [ -f /usr/local/bin/cek-lisensi ]; then
+    /usr/local/bin/cek-lisensi --check-only || exit 1
+fi
+
+
 xray_bin="$(command -v xray)"
 if [[ -z "$xray_bin" ]]; then
   xray_bin="/usr/local/bin/xray"
