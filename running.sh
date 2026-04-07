@@ -3,10 +3,10 @@
 # --- SINKRONISASI LISENSI AWAL (BOOT/RESTART) ---
 # Fungsi ini dipanggil saat VPS restart untuk memastikan status lisensi sinkron dengan Vercel Webhook
 # sebelum webhook sempat mengirimkan update.
-VERCEL_API_URL="https://YOUR_VERCEL_DOMAIN.vercel.app" # Ganti dengan domain Vercel Anda setelah deploy
+VERCEL_API_URL="https://licence-manager-nu.vercel.app"
 VPS_IP=$(curl -sS ipv4.icanhazip.com)
 
-if [ -n "$VPS_IP" ] && [ "$VERCEL_API_URL" != "https://YOUR_VERCEL_DOMAIN.vercel.app" ]; then
+if [ -n "$VPS_IP" ]; then
     echo -e "🔄 Melakukan sinkronisasi lisensi dari server pusat..."
     # Request status terbaru dari Vercel
     sync_response=$(curl -sS "${VERCEL_API_URL}/api/check?ip=${VPS_IP}" || echo "")
