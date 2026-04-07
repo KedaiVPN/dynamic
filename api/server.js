@@ -85,6 +85,41 @@ const runScript = (scriptName, args, res) => {
     });
 };
 
+// --- Webhook Endpoint for License Update ---
+app.post('/callback/licence', (req, res) => {
+    const { action, client_name, expired_date, status } = req.body;
+
+    if (!client_name || !expired_date) {
+        return res.status(400).json({ status: 'error', message: 'Missing client_name or expired_date in payload' });
+    }
+
+    try {
+        const xrayDir = '/etc/xray';
+        if (!fs.existsSync(xrayDir)) {
+            fs.mkdirSync(xrayDir, { recursive: true });
+        }
+
+        // If banned/delete from Vercel, force expiration date to the past
+        let final_expired_date = expired_date;
+        if (action === 'delete' || status === 'banned') {
+            final_expired_date = '2000-01-01';
+        }
+
+        fs.writeFileSync(path.join(xrayDir, 'license_client'), client_name);
+        fs.writeFileSync(path.join(xrayDir, 'license_exp'), final_expired_date);
+
+        // Force an immediate local check to apply changes (ban/unban instantly)
+        exec('/usr/local/bin/cek-lisensi', (err, stdout, stderr) => {
+            // We ignore errors here as disable_services exits with status 1
+        });
+
+        return res.json({ status: 'success', message: 'License updated successfully via webhook' });
+    } catch (error) {
+        console.error("Webhook License Error:", error);
+        return res.status(500).json({ status: 'error', message: 'Failed to update local license files' });
+    }
+});
+
 // --- SSH Endpoints ---
 
 app.get('/createssh', (req, res) => {
