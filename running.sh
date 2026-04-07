@@ -3,14 +3,14 @@
 # --- SINKRONISASI LISENSI AWAL (BOOT/RESTART) ---
 # Fungsi ini dipanggil saat VPS restart untuk memastikan status lisensi sinkron dengan Vercel Webhook
 # sebelum webhook sempat mengirimkan update.
-VERCEL_API_URL="https://licence-manager-nu.vercel.app/" # Ganti dengan domain Vercel Anda setelah deploy
+VERCEL_API_URL="https://licence-manager-nu.vercel.app"
 VPS_IP=$(curl -sS ipv4.icanhazip.com)
 
-if [ -n "$VPS_IP" ] && [ "$VERCEL_API_URL" != "https://licence-manager-nu.vercel.app/" ]; then
+if [ -n "$VPS_IP" ]; then
     echo -e "🔄 Melakukan sinkronisasi lisensi dari server pusat..."
     # Request status terbaru dari Vercel
     sync_response=$(curl -sS "${VERCEL_API_URL}/api/check?ip=${VPS_IP}" || echo "")
-
+    
     # Ambil nilai JSON menggunakan regex / manipulasi teks (karena jq mungkin tidak terinstall)
     is_valid=$(echo "$sync_response" | grep -E -o '"valid"\s*:\s*true')
     client_name=$(echo "$sync_response" | grep -E -o '"client_name"\s*:\s*"[^"]+' | awk -F'"' '{print $4}')
@@ -26,7 +26,7 @@ if [ -n "$VPS_IP" ] && [ "$VERCEL_API_URL" != "https://licence-manager-nu.vercel
         echo "Banned" > /etc/xray/license_client
         echo "2000-01-01" > /etc/xray/license_exp
     fi
-
+    
     # Panggil cek-lisensi untuk mengaplikasikan efeknya (disable/enable service)
     /usr/local/bin/cek-lisensi >/dev/null 2>&1
 fi
