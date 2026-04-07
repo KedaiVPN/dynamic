@@ -22,9 +22,9 @@ function verify_license() {
         exit 1
     fi
 
-    local VERCEL_API_URL="https://YOUR_VERCEL_DOMAIN.vercel.app" # Ganti dengan domain Vercel Anda setelah deploy
+    local VERCEL_API_URL="https://licence-manager-nu.vercel.app/" # Ganti dengan domain Vercel Anda setelah deploy
 
-    if [ "$VERCEL_API_URL" == "https://YOUR_VERCEL_DOMAIN.vercel.app" ]; then
+    if [ "$VERCEL_API_URL" == "https://licence-manager-nu.vercel.app/" ]; then
         echo -e "\033[0;33m[ WARNING ]\033[0m URL Vercel belum dikonfigurasi. Mem-bypass verifikasi lisensi awal untuk testing..."
         sleep 2
         return 0
