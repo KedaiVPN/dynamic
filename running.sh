@@ -1,3 +1,37 @@
+#!/bin/bash
+
+# --- SINKRONISASI LISENSI AWAL (BOOT/RESTART) ---
+# Fungsi ini dipanggil saat VPS restart untuk memastikan status lisensi sinkron dengan Vercel Webhook
+# sebelum webhook sempat mengirimkan update.
+VERCEL_API_URL="https://YOUR_VERCEL_DOMAIN.vercel.app" # Ganti dengan domain Vercel Anda setelah deploy
+VPS_IP=$(curl -sS ipv4.icanhazip.com)
+
+if [ -n "$VPS_IP" ] && [ "$VERCEL_API_URL" != "https://YOUR_VERCEL_DOMAIN.vercel.app" ]; then
+    echo -e "🔄 Melakukan sinkronisasi lisensi dari server pusat..."
+    # Request status terbaru dari Vercel
+    sync_response=$(curl -sS "${VERCEL_API_URL}/api/check?ip=${VPS_IP}" || echo "")
+
+    # Ambil nilai JSON menggunakan regex / manipulasi teks (karena jq mungkin tidak terinstall)
+    is_valid=$(echo "$sync_response" | grep -E -o '"valid"\s*:\s*true')
+    client_name=$(echo "$sync_response" | grep -E -o '"client_name"\s*:\s*"[^"]+' | awk -F'"' '{print $4}')
+    expired_date=$(echo "$sync_response" | grep -E -o '"expired_date"\s*:\s*"[^"]+' | awk -F'"' '{print $4}')
+
+    if [ -n "$is_valid" ] && [ -n "$client_name" ] && [ -n "$expired_date" ]; then
+        mkdir -p /etc/xray
+        echo "$client_name" > /etc/xray/license_client
+        echo "$expired_date" > /etc/xray/license_exp
+    elif echo "$sync_response" | grep -E -q '"valid"\s*:\s*false'; then
+        # Jika respon dari server mengindikasikan lisensi tidak valid / di-banned
+        mkdir -p /etc/xray
+        echo "Banned" > /etc/xray/license_client
+        echo "2000-01-01" > /etc/xray/license_exp
+    fi
+
+    # Panggil cek-lisensi untuk mengaplikasikan efeknya (disable/enable service)
+    /usr/local/bin/cek-lisensi >/dev/null 2>&1
+fi
+# ------------------------------------------------
+
 BIBlack='\033[1;90m'      # Black
 BIRed='\033[1;91m'        # Red
 BIGreen='\033[1;92m'      # Green
