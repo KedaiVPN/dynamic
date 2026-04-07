@@ -6,7 +6,7 @@
 VERCEL_API_URL="https://YOUR_VERCEL_DOMAIN.vercel.app" # Ganti dengan domain Vercel Anda setelah deploy
 VPS_IP=$(curl -sS ipv4.icanhazip.com)
 
-if [ -n "$VPS_IP" ] && [ "$VERCEL_API_URL" != "https://YOUR_VERCEL_DOMAIN.vercel.app" ]; then
+if [ -n "$VPS_IP" ] && [ "$VERCEL_API_URL" != "https://licence-manager-nu.vercel.app/" ]; then
     echo -e "🔄 Melakukan sinkronisasi lisensi dari server pusat..."
     # Request status terbaru dari Vercel
     sync_response=$(curl -sS "${VERCEL_API_URL}/api/check?ip=${VPS_IP}" || echo "")
