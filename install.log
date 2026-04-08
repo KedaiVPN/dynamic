@@ -1,6 +1,0 @@
-Setting up Service...
-cp: cannot create regular file '/etc/systemd/system/api-backend.service': Permission denied
-Reload daemon failed: Interactive authentication required.
-Failed to enable unit: Interactive authentication required.
-Failed to restart api-backend.service: Interactive authentication required.
-See system logs and 'systemctl status api-backend.service' for details.
