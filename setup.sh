@@ -400,12 +400,14 @@ SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 * * * * * root /usr/bin/xp
 END
+chmod 644 /etc/cron.d/xp_otm
 
 cat > /etc/cron.d/cl_otm <<-END
 SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 2 1 * * * root /usr/bin/clearlog
 END
+chmod 644 /etc/cron.d/cl_otm
 
 cat > /home/re_otm <<-END
 7
