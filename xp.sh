@@ -40,6 +40,8 @@ now_timestamp=$(date +%s)
 # ==========================================
 # 1. PROCESS ACTIVE EXPIRATIONS (Move to Trash)
 # ==========================================
+tmp_file=$(mktemp)
+cp "$EXP_DB" "$tmp_file"
 while read -r line; do
     if [[ -z "$line" ]]; then continue; fi
 
@@ -140,7 +142,8 @@ while read -r line; do
              systemctl restart xray
         fi
     fi
-done < "$EXP_DB"
+done < "$tmp_file"
+rm -f "$tmp_file"
 
 # ==========================================
 # 2. PROCESS TRASH CLEANUP (> 3 Days)
