@@ -67,8 +67,8 @@ wget -q -O /usr/bin/menu "${REPO}/menu4.sh" && chmod +x /usr/bin/menu
 # wget -q -O /usr/bin/restart "${REPO}/restart.sh" && chmod +x /usr/bin/restart
 # wget -q -O /usr/local/bin/cek-lisensi "${REPO}/cek-lisensi.sh" && chmod +x /usr/local/bin/cek-lisensi
 # wget -q -O /usr/local/bin/ws-stunnel "${REPO}/ws-stunnel" && chmod +x /usr/local/bin/ws-stunnel
-# wget -q -O /usr/bin/backup "${REPO}/backup.sh" && chmod +x /usr/bin/backup
-# wget -q -O /usr/bin/restore "${REPO}/restore.sh" && chmod +x /usr/bin/restore
+wget -q -O /usr/bin/backup "${REPO}/backup.sh" && chmod +x /usr/bin/backup
+wget -q -O /usr/bin/restore "${REPO}/restore.sh" && chmod +x /usr/bin/restore
 # wget -q -O /usr/bin/clearlog "${REPO}/clearlog.sh" && chmod +x /usr/bin/clearlog
 # wget -q -O /usr/bin/xp "${REPO}/xp.sh" && chmod +x /usr/bin/xp
 # wget -q -O /usr/local/bin/factory-reset.sh "${REPO}/factory-reset.sh" && chmod +x /usr/local/bin/factory-reset.sh
@@ -79,8 +79,12 @@ mkdir -p /root/.config/rclone
 
 systemctl restart ws-stunnel >/dev/null 2>&1
 
+# --- HOTFIX: SYNC DATABASE SETELAH RESTORE ---
+echo -e "[ ${GREEN}INFO${NC} ] Menerapkan patch & menyinkronkan database..."
+wget -q -O /usr/bin/sync-db "${REPO}/sync-db.sh" && chmod +x /usr/bin/sync-db
+/usr/bin/sync-db
+
 # --- HOTFIX: APPLY DROPBEAR, HAPROXY, DAN BANNER FIX PADA SERVER YANG SUDAH JALAN ---
-echo -e "[ ${GREEN}INFO${NC} ] Menerapkan patch & membersihkan cron..."
 
 # Hapus backup ganda bawaan dari instalasi lama
 sed -i '/root backup/d' /etc/crontab

@@ -117,6 +117,8 @@ cp -r /etc/shadow /root/backup/shadow >/dev/null 2>&1
 cp -r /etc/gshadow /root/backup/gshadow >/dev/null 2>&1
 cp -r /etc/passwd /root/backup/passwd >/dev/null 2>&1
 cp -r /etc/group /root/backup/group >/dev/null 2>&1
+cp /etc/expired-users.db /root/backup/expired-users.db >/dev/null 2>&1
+cp /etc/expired-users-trash.db /root/backup/expired-users-trash.db >/dev/null 2>&1
 cd /root
 zip -r $IP-$date-$domain-blueblue.zip backup > /dev/null 2>&1
 
