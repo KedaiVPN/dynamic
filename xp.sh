@@ -152,6 +152,8 @@ rm -f "$tmp_file"
 TRASH_LIMIT=259200
 
 if [ -f "$TRASH_DB" ]; then
+    tmp_file=$(mktemp)
+    cp "$TRASH_DB" "$tmp_file"
     while read -r line; do
         if [[ -z "$line" ]]; then continue; fi
 
@@ -168,5 +170,6 @@ if [ -f "$TRASH_DB" ]; then
             # Data is already removed from system, just remove from trash db
             grep -v "^$user $type $del_timestamp" "$TRASH_DB" > "${TRASH_DB}.tmp" && mv "${TRASH_DB}.tmp" "$TRASH_DB"
         fi
-    done < "$TRASH_DB"
+    done < "$tmp_file"
+    rm -f "$tmp_file"
 fi

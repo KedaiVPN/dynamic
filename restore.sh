@@ -105,6 +105,8 @@ cp -r /root/backup/shadow /etc/ &> /dev/null
 cp -r /root/backup/gshadow /etc/ &> /dev/null
 cp -r /root/backup/passwd /etc/ &> /dev/null
 cp -r /root/backup/group /etc/ &> /dev/null
+cp /root/backup/expired-users.db /etc/ >/dev/null 2>&1
+cp /root/backup/expired-users-trash.db /etc/ >/dev/null 2>&1
 rm -rf /root/backup
 rm -f backup.zip
 echo ""
