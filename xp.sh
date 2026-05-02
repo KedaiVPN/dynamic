@@ -47,7 +47,17 @@ while read -r line; do
 
     user=$(echo "$line" | awk '{print $1}')
     type=$(echo "$line" | awk '{print $2}')
-    exp_timestamp=$(echo "$line" | awk '{print $3}' | tr -d '\r\n')
+    # If the date contains spaces (e.g. May 02, 2026), awk {print $3} only gets "May"
+    # So we need to capture the rest of the line starting from field 3
+    exp_timestamp=$(echo "$line" | awk '{for (i=3; i<=NF; i++) printf "%s ", $i; print ""}' | sed 's/ *$//' | tr -d '\r\n')
+
+    # Fix: Sometimes database contains date strings instead of timestamps
+    if ! [[ "$exp_timestamp" =~ ^[0-9]+$ ]]; then
+        converted_ts=$(date -d "$exp_timestamp" +%s 2>/dev/null)
+        if [ -n "$converted_ts" ] && [[ "$converted_ts" =~ ^[0-9]+$ ]]; then
+            exp_timestamp="$converted_ts"
+        fi
+    fi
 
     # Ensure exp_timestamp is a valid integer before comparison
     if ! [[ "$exp_timestamp" =~ ^[0-9]+$ ]]; then continue; fi
@@ -159,7 +169,16 @@ if [ -f "$TRASH_DB" ]; then
 
         user=$(echo "$line" | awk '{print $1}')
         type=$(echo "$line" | awk '{print $2}')
-        del_timestamp=$(echo "$line" | awk '{print $3}' | tr -d '\r')
+        # If the date contains spaces, capture everything from field 3
+        del_timestamp=$(echo "$line" | awk '{for (i=3; i<=NF; i++) printf "%s ", $i; print ""}' | sed 's/ *$//' | tr -d '\r\n')
+
+        # Convert to timestamp if it is a date string
+        if ! [[ "$del_timestamp" =~ ^[0-9]+$ ]]; then
+            converted_ts=$(date -d "$del_timestamp" +%s 2>/dev/null)
+            if [ -n "$converted_ts" ] && [[ "$converted_ts" =~ ^[0-9]+$ ]]; then
+                del_timestamp="$converted_ts"
+            fi
+        fi
 
         if [[ ! "$del_timestamp" =~ ^[0-9]+$ ]]; then continue; fi
 
