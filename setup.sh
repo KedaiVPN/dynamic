@@ -25,7 +25,7 @@ function verify_license() {
     local VERCEL_API_URL="https://licence-manager-nu.vercel.app"
 
     local sync_response
-    sync_response=$(curl -sS "${VERCEL_API_URL}/api/check?ip=${SERVER_IP}" || echo "")
+    sync_response=$(curl -sS "${VERCEL_API_URL}/api/check/tunneling?ip=${SERVER_IP}" || echo "")
     
     local is_valid
     is_valid=$(echo "$sync_response" | grep -E -o '"valid"\s*:\s*true')

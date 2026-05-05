@@ -9,7 +9,7 @@ VPS_IP=$(curl -sS ipv4.icanhazip.com)
 if [ -n "$VPS_IP" ]; then
     echo -e "🔄 Melakukan sinkronisasi lisensi dari server pusat..."
     # Request status terbaru dari Vercel
-    sync_response=$(curl -sS "${VERCEL_API_URL}/api/check?ip=${VPS_IP}" || echo "")
+    sync_response=$(curl -sS "${VERCEL_API_URL}/api/check/tunneling?ip=${VPS_IP}" || echo "")
     
     # Ambil nilai JSON menggunakan regex / manipulasi teks (karena jq mungkin tidak terinstall)
     is_valid=$(echo "$sync_response" | grep -E -o '"valid"\s*:\s*true')
