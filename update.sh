@@ -65,7 +65,7 @@ wget -q -O /usr/bin/menu "${REPO}/menu4.sh" && chmod +x /usr/bin/menu
 # # wget -q -O /usr/bin/cek-trafik "${REPO}/cek-trafik.sh" && chmod +x /usr/bin/cek-trafik
  # # wget -q -O /usr/bin/cek-expired "${REPO}/cek-expired.sh" && chmod +x /usr/bin/cek-expired
 # # wget -q -O /usr/bin/menu-vless "${REPO}/menu-vless.sh" && chmod +x /usr/bin/menu-vless
-# # wget -q -O /usr/bin/running "${REPO}/running.sh" && chmod +x /usr/bin/running
+wget -q -O /usr/bin/running "${REPO}/running.sh" && chmod +x /usr/bin/running
 # # wget -q -O /usr/bin/restart "${REPO}/restart.sh" && chmod +x /usr/bin/restart
 # # wget -q -O /usr/local/bin/cek-lisensi "${REPO}/cek-lisensi.sh" && chmod +x /usr/local/bin/cek-lisensi
 # # # wget -q -O /usr/local/bin/ws-stunnel "${REPO}/ws-stunnel" && chmod +x /usr/local/bin/ws-stunnel
