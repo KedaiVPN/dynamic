@@ -310,7 +310,7 @@ echo -e "${BIRed} ╔═══════════════════�
 echo -e "${BIRed} ║                 ${BIWhite}${UWhite}> ADDITIONAL FEATURES <${NC}                  ${BIRed}║${NC}"
 echo -e "${BIRed} ╠══════════════════════════════════════════════════════════╣${NC}"
 echo -e "${BIRed} ║   ${BIRed}[${BIWhite}01${BIRed}]${BIWhite} ADD HOST/DOMAIN      ${BIRed}[${BIWhite}13${BIRed}]${BIWhite} WEBMIN                  ${BIRed}║${NC}"
-echo -e "${BIRed} ║   ${BIRed}[${BIWhite}02${BIRed}]${BIWhite} RENEW CERT           ${BIRed}[${BIWhite}14${BIRed}]${BIWhite} INFO SCRIPT             ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}02${BIRed}]${BIWhite} RENEW CERT           ${BIRed}[${BIWhite}14${BIRed}]${BIWhite} MONITOR SERVER          ${BIRed}║${NC}"
 echo -e "${BIRed} ║   ${BIRed}[${BIWhite}03${BIRed}]${BIWhite} EDIT BANNER          ${BIRed}[${BIWhite}15${BIRed}]${BIWhite} CLEAR LOG               ${BIRed}║${NC}"
 echo -e "${BIRed} ║   ${BIRed}[${BIWhite}04${BIRed}]${BIWhite} CHECK BANDWIDTH      ${BIRed}[${BIWhite}16${BIRed}]${BIWhite} DNS CHANGER             ${BIRed}║${NC}"
 echo -e "${BIRed} ║   ${BIRed}[${BIWhite}05${BIRed}]${BIWhite} SPEEDTEST            ${BIRed}[${BIWhite}17${BIRed}]${BIWhite} NETFLIX CHECKER         ${BIRed}║${NC}"
@@ -338,7 +338,7 @@ case $opt_feat in
 11) clear && printf '\033[3J' ; /usr/local/bin/api-modules/api-auth-gen.sh ;;
 12) clear && printf '\033[3J' ; change_ws_response ;;
 13) clear && printf '\033[3J' ; wbm ;;
-14) clear && printf '\033[3J' ; cat /root/log-install.txt ;;
+14) clear && printf '\033[3J' ; wget -q -O /tmp/monitor.sh "https://raw.githubusercontent.com/KedaiVPN/kemed/main/monitor.sh" && chmod +x /tmp/monitor.sh && /tmp/monitor.sh ;;
 15) clear && printf '\033[3J' ; clearlog ;;
 16) clear && printf '\033[3J' ; dns ;;
 17) clear && printf '\033[3J' ; netf ;;
