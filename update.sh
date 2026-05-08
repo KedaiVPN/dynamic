@@ -210,7 +210,7 @@ server {
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     }
 
-    location /monitoring-stream {
+    location /api/monitoring/stream {
         proxy_pass http://127.0.0.1:5890/api/monitoring/stream;
         proxy_http_version 1.1;
         proxy_set_header Connection "";
