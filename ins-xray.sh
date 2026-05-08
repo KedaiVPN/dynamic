@@ -672,6 +672,19 @@ server {
     server_name 127.0.0.1 localhost $domain;
 
     # gRPC Locations
+    location ^~ /api/monitoring/stream {
+        proxy_pass http://127.0.0.1:5890/api/monitoring/stream;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_buffering off;
+        proxy_cache off;
+        chunked_transfer_encoding off;
+        proxy_read_timeout 24h;
+    }
+
     location ^~ /vless-grpc {
         proxy_redirect off;
         grpc_set_header Host \$host;
