@@ -156,6 +156,14 @@ sed -i 's/127.0.0.1:2020 check/127.0.0.1:2020 check send-proxy/g' /etc/haproxy/h
 sed -i 's/ check send-proxy/ send-proxy/g' /etc/haproxy/haproxy.cfg
 sed -i 's/ check//g' /etc/haproxy/haproxy.cfg
 
+# Meneruskan traffic HTTP murni (SSE/API) ke Nginx, bukan ke Dropbear
+sed -i '/acl is_http2/d' /etc/haproxy/haproxy.cfg
+sed -i '/acl is_http11/d' /etc/haproxy/haproxy.cfg
+sed -i '/use_backend ws_backend if is_http11/d' /etc/haproxy/haproxy.cfg
+
+sed -i '/acl is_websocket_ssl hdr(Upgrade) -i websocket/a \    acl is_http11 ssl_fc_alpn -i http/1.1\n    acl is_http2 ssl_fc_alpn -i h2' /etc/haproxy/haproxy.cfg
+sed -i '/use_backend ws_backend if is_websocket_ssl/a \    use_backend ws_backend if is_http11' /etc/haproxy/haproxy.cfg
+
 systemctl daemon-reload >/dev/null 2>&1
 systemctl enable haproxy >/dev/null 2>&1
 systemctl restart haproxy >/dev/null 2>&1
