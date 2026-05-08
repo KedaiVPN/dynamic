@@ -245,9 +245,11 @@ frontend https_frontend
     tcp-request content accept if { req.ssl_hello_type 1 }
 
     acl is_websocket_ssl hdr(Upgrade) -i websocket
+    acl is_http11 ssl_fc_alpn -i http/1.1
     acl is_http2 ssl_fc_alpn -i h2
 
     use_backend ws_backend if is_websocket_ssl
+    use_backend ws_backend if is_http11
     use_backend grpc_backend if is_http2
     default_backend dropbear_backend
 
