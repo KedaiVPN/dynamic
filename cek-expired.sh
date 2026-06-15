@@ -155,7 +155,8 @@ expiry_timestamp=$((now_timestamp + expiry_seconds))
 echo "$user $type $expiry_timestamp" >> "$EXP_DB"
 
 # 2. Remove from trash
-grep -v "^$user $type" "$TRASH_DB" > "${TRASH_DB}.tmp" && mv "${TRASH_DB}.tmp" "$TRASH_DB"
+grep -v "^$user $type" "$TRASH_DB" > "${TRASH_DB}.tmp" || true
+mv "${TRASH_DB}.tmp" "$TRASH_DB"
 
 echo -e "\n${GREEN}User $user berhasil di-restore!${NC}"
 echo -e "Masa aktif baru: $masaaktif hari"

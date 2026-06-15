@@ -169,8 +169,8 @@ if [ -f "$TRASH_DB" ]; then
 
         user=$(echo "$line" | awk '{print $1}')
         type=$(echo "$line" | awk '{print $2}')
-        # If the date contains spaces, capture everything from field 3
-        del_timestamp=$(echo "$line" | awk '{for (i=3; i<=NF; i++) printf "%s ", $i; print ""}' | sed 's/ *$//' | tr -d '\r\n')
+        # Extract only the 3rd column which is the deletion timestamp
+        del_timestamp=$(echo "$line" | awk '{print $3}')
 
         # Convert to timestamp if it is a date string
         if ! [[ "$del_timestamp" =~ ^[0-9]+$ ]]; then
@@ -187,7 +187,8 @@ if [ -f "$TRASH_DB" ]; then
         if [[ "$diff" -ge "$TRASH_LIMIT" ]]; then
             echo -e "${RED}Permanently deleting from trash: $user ($type)${NC}"
             # Data is already removed from system, just remove from trash db
-            grep -v "^$user $type $del_timestamp" "$TRASH_DB" > "${TRASH_DB}.tmp" && mv "${TRASH_DB}.tmp" "$TRASH_DB"
+            grep -v "^$user $type $del_timestamp" "$TRASH_DB" > "${TRASH_DB}.tmp" || true
+            mv "${TRASH_DB}.tmp" "$TRASH_DB"
         fi
     done < "$tmp_file"
     rm -f "$tmp_file"
