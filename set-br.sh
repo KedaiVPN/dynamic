@@ -38,11 +38,6 @@ red() { echo -e "\\033[31;1m${*}\\033[0m"; }
 apt install rclone
 printf "q\n" | rclone config
 wget -O /root/.config/rclone/rclone.conf "https://${Server_URL}/rclone.conf"
-git clone  https://github.com/MrMan21/wondershaper.git
-cd wondershaper
-make install
-cd
-rm -rf wondershaper
 cd /usr/bin
 # Download or copy scripts locally
 if [ -f "/root/backup.sh" ]; then
