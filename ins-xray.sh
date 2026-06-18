@@ -185,7 +185,7 @@ global
     log /dev/log local1 notice
     log /dev/log local0 info
 
-    # tune.h2.initial-window-size 2147483647 # Dinonaktifkan untuk mencegah bufferbloat dan latency 5000ms
+    tune.h2.initial-window-size 2147483647
     tune.ssl.default-dh-param 2048
 
     pidfile /run/haproxy.pid
@@ -210,16 +210,16 @@ defaults
     option tcp-smart-connect
     timeout tarpit 1m
     timeout connect 60s
-    timeout client  1m
-    timeout server  1m
+    timeout client  300s
+    timeout server  300s
 
 frontend http_frontend
     mode tcp
-    bind *:80
-    bind *:8080
-    bind *:8880
-    bind *:2080
-    bind *:2082
+    bind *:80 tfo
+    bind *:8080 tfo
+    bind *:8880 tfo
+    bind *:2080 tfo
+    bind *:2082 tfo
 
     tcp-request inspect-delay 500ms
     tcp-request content accept if HTTP
@@ -229,7 +229,7 @@ frontend http_frontend
     default_backend dropbear_backend
 
 frontend https_frontend
-    bind *:443 ssl crt /etc/xray/xray.pem alpn h2,http/1.1
+    bind *:443 ssl crt /etc/xray/xray.pem tfo alpn h2,http/1.1
     mode tcp
     log global
     option tcplog
@@ -247,15 +247,15 @@ frontend https_frontend
 
 backend dropbear_backend
     mode tcp               # Ubah dari mode http ke mode tcp untuk Dropbear (SSH)
-    server dropbear_server 127.0.0.1:58080
+    server dropbear_server 127.0.0.1:58080 check
 
 backend ws_backend
     mode tcp
-    server ws_server 127.0.0.1:1010 send-proxy
+    server ws_server 127.0.0.1:1010 check
 
 backend grpc_backend
     mode tcp
-    server grpc_server 127.0.0.1:1013 send-proxy
+    server grpc_server 127.0.0.1:1013 check
 EOF
 
 # install nginx (sudah diinstall di atas saat certbot)
@@ -513,7 +513,7 @@ sed -i 's/Trojan .*         : .*/Trojan WS         : 443/g' /root/log-install.tx
 rm -fr /etc/nginx/conf.d/xray.conf
 cat >/etc/nginx/conf.d/xray.conf <<EOF
 server {
-    listen 127.0.0.1:1010 proxy_protocol;
+    listen 127.0.0.1:1010;
     server_name 127.0.0.1 localhost $domain;
 
     # User Optimization
@@ -660,7 +660,7 @@ server {
 }
 
 server {
-    listen 127.0.0.1:1013 proxy_protocol http2;
+    listen 127.0.0.1:1013 http2;
     server_name 127.0.0.1 localhost $domain;
 
     # gRPC Locations
