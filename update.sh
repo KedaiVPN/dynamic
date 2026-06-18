@@ -209,9 +209,11 @@ sed -i 's/bind \*:2080$/bind *:2080 tfo/g' /etc/haproxy/haproxy.cfg
 sed -i 's/bind \*:2082$/bind *:2082 tfo/g' /etc/haproxy/haproxy.cfg
 sed -i 's/bind \*:443 ssl crt \/etc\/xray\/xray.pem alpn h2,http\/1.1/bind *:443 ssl crt \/etc\/xray\/xray.pem tfo alpn h2,http\/1.1/g' /etc/haproxy/haproxy.cfg
 
-sed -i 's/server dropbear_server 127.0.0.1:58080$/server dropbear_server 127.0.0.1:58080 check/g' /etc/haproxy/haproxy.cfg
-sed -i 's/server ws_server 127.0.0.1:1010 send-proxy/server ws_server 127.0.0.1:1010 check/g' /etc/haproxy/haproxy.cfg
-sed -i 's/server grpc_server 127.0.0.1:1013 send-proxy/server grpc_server 127.0.0.1:1013 check/g' /etc/haproxy/haproxy.cfg
+sed -i 's/server dropbear_server 127.0.0.1:58080 check/server dropbear_server 127.0.0.1:58080/g' /etc/haproxy/haproxy.cfg
+sed -i 's/server ws_server 127.0.0.1:1010 check/server ws_server 127.0.0.1:1010/g' /etc/haproxy/haproxy.cfg
+sed -i 's/server grpc_server 127.0.0.1:1013 check/server grpc_server 127.0.0.1:1013/g' /etc/haproxy/haproxy.cfg
+sed -i 's/server ws_server 127.0.0.1:1010 send-proxy/server ws_server 127.0.0.1:1010/g' /etc/haproxy/haproxy.cfg
+sed -i 's/server grpc_server 127.0.0.1:1013 send-proxy/server grpc_server 127.0.0.1:1013/g' /etc/haproxy/haproxy.cfg
 
 # Hapus proxy protocol dari config Nginx lama jika ada
 sed -i 's/listen 127.0.0.1:1010 proxy_protocol;/listen 127.0.0.1:1010;/g' /etc/nginx/conf.d/xray.conf
