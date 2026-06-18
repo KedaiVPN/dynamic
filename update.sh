@@ -197,12 +197,28 @@ apt-get remove --purge -y wondershaper >/dev/null 2>&1
 rm -fr /root/wondershaper >/dev/null 2>&1
 sed -i 's/wondershaper/# wondershaper/g' /usr/bin/limit-speed >/dev/null 2>&1
 
-# 2. Fix HAProxy HTTP/2 Window Size (Penyebab Ping 5000ms/Bufferbloat)
-sed -i 's/tune.h2.initial-window-size 2147483647/# tune.h2.initial-window-size 2147483647/g' /etc/haproxy/haproxy.cfg
-sed -i 's/timeout connect 60s.*/timeout connect 60s/g' /etc/haproxy/haproxy.cfg
-sed -i 's/timeout client  300s/timeout client  1m/g' /etc/haproxy/haproxy.cfg
-sed -i 's/timeout server  300s/timeout server  1m/g' /etc/haproxy/haproxy.cfg
+# 2. Fix HAProxy HTTP/2 Window Size & haproxy backend check
+sed -i 's/# tune.h2.initial-window-size 2147483647/tune.h2.initial-window-size 2147483647/g' /etc/haproxy/haproxy.cfg
+sed -i 's/timeout client  1m/timeout client  300s/g' /etc/haproxy/haproxy.cfg
+sed -i 's/timeout server  1m/timeout server  300s/g' /etc/haproxy/haproxy.cfg
+
+sed -i 's/bind \*:80$/bind *:80 tfo/g' /etc/haproxy/haproxy.cfg
+sed -i 's/bind \*:8080$/bind *:8080 tfo/g' /etc/haproxy/haproxy.cfg
+sed -i 's/bind \*:8880$/bind *:8880 tfo/g' /etc/haproxy/haproxy.cfg
+sed -i 's/bind \*:2080$/bind *:2080 tfo/g' /etc/haproxy/haproxy.cfg
+sed -i 's/bind \*:2082$/bind *:2082 tfo/g' /etc/haproxy/haproxy.cfg
+sed -i 's/bind \*:443 ssl crt \/etc\/xray\/xray.pem alpn h2,http\/1.1/bind *:443 ssl crt \/etc\/xray\/xray.pem tfo alpn h2,http\/1.1/g' /etc/haproxy/haproxy.cfg
+
+sed -i 's/server dropbear_server 127.0.0.1:58080$/server dropbear_server 127.0.0.1:58080 check/g' /etc/haproxy/haproxy.cfg
+sed -i 's/server ws_server 127.0.0.1:1010 send-proxy/server ws_server 127.0.0.1:1010 check/g' /etc/haproxy/haproxy.cfg
+sed -i 's/server grpc_server 127.0.0.1:1013 send-proxy/server grpc_server 127.0.0.1:1013 check/g' /etc/haproxy/haproxy.cfg
+
+# Hapus proxy protocol dari config Nginx lama jika ada
+sed -i 's/listen 127.0.0.1:1010 proxy_protocol;/listen 127.0.0.1:1010;/g' /etc/nginx/conf.d/xray.conf
+sed -i 's/listen 127.0.0.1:1013 proxy_protocol http2;/listen 127.0.0.1:1013 http2;/g' /etc/nginx/conf.d/xray.conf
+
 systemctl restart haproxy >/dev/null 2>&1
+systemctl restart nginx >/dev/null 2>&1
 
 # 3. Fix BBR Module (Kembalikan ke native BBR, matikan custom bbrplus yang tidak stabil)
 sed -i 's/net.ipv4.tcp_congestion_control=bbrplus/net.ipv4.tcp_congestion_control=bbr/g' /etc/sysctl.conf
@@ -227,7 +243,7 @@ sysctl -p >/dev/null 2>&1
 domain=$(cat /etc/xray/domain)
 cat >/etc/nginx/conf.d/xray.conf <<EOF
 server {
-    listen 127.0.0.1:1010 proxy_protocol;
+    listen 127.0.0.1:1010;
     server_name 127.0.0.1 localhost \$domain;
 
     # User Optimization
@@ -310,7 +326,7 @@ server {
 }
 
 server {
-    listen 127.0.0.1:1013 proxy_protocol http2;
+    listen 127.0.0.1:1013 http2;
     server_name 127.0.0.1 localhost \$domain;
 
     # gRPC Locations
