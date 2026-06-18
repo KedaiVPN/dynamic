@@ -130,6 +130,14 @@ touch /etc/xray/limit/usage-vmess /etc/xray/limit/usage-vless /etc/xray/limit/us
 chown -R www-data:www-data /var/log/xray
 chmod -R 755 /var/log/xray
 
+# Install Wondershaper
+cd /root/
+apt install wondershaper -y
+git clone https://github.com/magnific0/wondershaper.git >/dev/null 2>&1
+cd wondershaper
+make install
+cd
+rm -fr /root/wondershaper
 echo > /home/limit
 
 # nginx for debian & ubuntu
@@ -209,17 +217,17 @@ defaults
     option tcp-smart-accept
     option tcp-smart-connect
     timeout tarpit 1m
-    timeout connect 60s
+    timeout connect 60s          # Timeout connect ditingkatkan untuk mencegah timeout yang terlalu cepat
     timeout client  300s
     timeout server  300s
 
 frontend http_frontend
     mode tcp
-    bind *:80 tfo
-    bind *:8080 tfo
-    bind *:8880 tfo
-    bind *:2080 tfo
-    bind *:2082 tfo
+    bind *:80
+    bind *:8080
+    bind *:8880
+    bind *:2080
+    bind *:2082
 
     tcp-request inspect-delay 500ms
     tcp-request content accept if HTTP
@@ -229,7 +237,7 @@ frontend http_frontend
     default_backend dropbear_backend
 
 frontend https_frontend
-    bind *:443 ssl crt /etc/xray/xray.pem tfo alpn h2,http/1.1
+    bind *:443 ssl crt /etc/xray/xray.pem alpn h2,http/1.1
     mode tcp
     log global
     option tcplog
@@ -251,11 +259,11 @@ backend dropbear_backend
 
 backend ws_backend
     mode tcp
-    server ws_server 127.0.0.1:1010
+    server ws_server 127.0.0.1:1010 send-proxy
 
 backend grpc_backend
     mode tcp
-    server grpc_server 127.0.0.1:1013
+    server grpc_server 127.0.0.1:1013 send-proxy
 EOF
 
 # install nginx (sudah diinstall di atas saat certbot)
@@ -513,7 +521,7 @@ sed -i 's/Trojan .*         : .*/Trojan WS         : 443/g' /root/log-install.tx
 rm -fr /etc/nginx/conf.d/xray.conf
 cat >/etc/nginx/conf.d/xray.conf <<EOF
 server {
-    listen 127.0.0.1:1010;
+    listen 127.0.0.1:1010 proxy_protocol;
     server_name 127.0.0.1 localhost $domain;
 
     # User Optimization
@@ -660,7 +668,7 @@ server {
 }
 
 server {
-    listen 127.0.0.1:1013 http2;
+    listen 127.0.0.1:1013 proxy_protocol http2;
     server_name 127.0.0.1 localhost $domain;
 
     # gRPC Locations
