@@ -85,15 +85,16 @@ echo > /dev/null 2>&1
 else
 echo "Start Configuration"
 sleep 0.5
-wondershaper -a $NIC -d $down -u $up > /dev/null 2>&1
-systemctl enable --now wondershaper.service
+# wondershaper -a $NIC -d $down -u $up > /dev/null 2>&1
+# systemctl enable --now wondershaper.service
+echo "Fitur Limit Bandwidth Dinonaktifkan"
 echo "start" > /home/limit
 echo "Done"
 fi
 }
 function stop () {
-wondershaper -ca $NIC
-systemctl stop wondershaper.service
+# wondershaper -ca $NIC
+# systemctl stop wondershaper.service
 echo "Stop Configuration"
 sleep 0.5
 echo > /home/limit
@@ -121,4 +122,4 @@ else
 clear && printf '\033[3J'
 echo " You Entered The Wrong Number"
 menu
-fi�
+fi

@@ -187,6 +187,28 @@ echo "net.ipv4.tcp_max_tw_buckets = 2000000" >> /etc/sysctl.conf
 echo "net.netfilter.nf_conntrack_max = 2000000" >> /etc/sysctl.conf
 sysctl -p >/dev/null 2>&1
 
+# --- HOTFIX LATENCY 5000MS & SPEED DROP ---
+echo -e "[ ${GREEN}INFO${NC} ] Menerapkan fix latency dan bandwidth limit..."
+
+# 1. Hapus Wondershaper yang mencekik speed
+systemctl stop wondershaper.service >/dev/null 2>&1
+systemctl disable wondershaper.service >/dev/null 2>&1
+apt-get remove --purge -y wondershaper >/dev/null 2>&1
+rm -fr /root/wondershaper >/dev/null 2>&1
+sed -i 's/wondershaper/# wondershaper/g' /usr/bin/limit-speed >/dev/null 2>&1
+
+# 2. Fix HAProxy HTTP/2 Window Size (Penyebab Ping 5000ms/Bufferbloat)
+sed -i 's/tune.h2.initial-window-size 2147483647/# tune.h2.initial-window-size 2147483647/g' /etc/haproxy/haproxy.cfg
+sed -i 's/timeout connect 60s.*/timeout connect 60s/g' /etc/haproxy/haproxy.cfg
+sed -i 's/timeout client  300s/timeout client  1m/g' /etc/haproxy/haproxy.cfg
+sed -i 's/timeout server  300s/timeout server  1m/g' /etc/haproxy/haproxy.cfg
+systemctl restart haproxy >/dev/null 2>&1
+
+# 3. Fix BBR Module (Kembalikan ke native BBR, matikan custom bbrplus yang tidak stabil)
+sed -i 's/net.ipv4.tcp_congestion_control=bbrplus/net.ipv4.tcp_congestion_control=bbr/g' /etc/sysctl.conf
+sysctl -p >/dev/null 2>&1
+# --- END HOTFIX LATENCY ---
+
 # Fix Nginx Xray Routing Proxy (agar Vmess/Vless/Trojan bisa connect dari port 443)
 domain=$(cat /etc/xray/domain)
 cat >/etc/nginx/conf.d/xray.conf <<EOF

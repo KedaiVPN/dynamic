@@ -130,14 +130,6 @@ touch /etc/xray/limit/usage-vmess /etc/xray/limit/usage-vless /etc/xray/limit/us
 chown -R www-data:www-data /var/log/xray
 chmod -R 755 /var/log/xray
 
-# Install Wondershaper
-cd /root/
-apt install wondershaper -y
-git clone https://github.com/magnific0/wondershaper.git >/dev/null 2>&1
-cd wondershaper
-make install
-cd
-rm -fr /root/wondershaper
 echo > /home/limit
 
 # nginx for debian & ubuntu
@@ -193,7 +185,7 @@ global
     log /dev/log local1 notice
     log /dev/log local0 info
 
-    tune.h2.initial-window-size 2147483647
+    # tune.h2.initial-window-size 2147483647 # Dinonaktifkan untuk mencegah bufferbloat dan latency 5000ms
     tune.ssl.default-dh-param 2048
 
     pidfile /run/haproxy.pid
@@ -217,9 +209,9 @@ defaults
     option tcp-smart-accept
     option tcp-smart-connect
     timeout tarpit 1m
-    timeout connect 60s          # Timeout connect ditingkatkan untuk mencegah timeout yang terlalu cepat
-    timeout client  300s
-    timeout server  300s
+    timeout connect 60s
+    timeout client  1m
+    timeout server  1m
 
 frontend http_frontend
     mode tcp
