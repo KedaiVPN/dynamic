@@ -203,6 +203,18 @@ systemctl start rc-local.service >/dev/null 2>&1
 sleep 1
 echo -e "[ ${green}INFO$NC ] Disable ipv6"
 echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6 >/dev/null 2>&1
+echo 1 > /proc/sys/net/ipv6/conf/default/disable_ipv6 >/dev/null 2>&1
+echo 1 > /proc/sys/net/ipv6/conf/lo/disable_ipv6 >/dev/null 2>&1
+
+sed -i '/net.ipv6.conf.all.disable_ipv6/d' /etc/sysctl.conf
+sed -i '/net.ipv6.conf.default.disable_ipv6/d' /etc/sysctl.conf
+sed -i '/net.ipv6.conf.lo.disable_ipv6/d' /etc/sysctl.conf
+
+echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
+echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf
+echo "net.ipv6.conf.lo.disable_ipv6 = 1" >> /etc/sysctl.conf
+sysctl -p >/dev/null 2>&1
+
 sed -i '$ i\echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6' /etc/rc.local >/dev/null 2>&1
 
 # set time GMT +7

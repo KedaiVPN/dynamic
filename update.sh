@@ -206,6 +206,20 @@ systemctl restart haproxy >/dev/null 2>&1
 
 # 3. Fix BBR Module (Kembalikan ke native BBR, matikan custom bbrplus yang tidak stabil)
 sed -i 's/net.ipv4.tcp_congestion_control=bbrplus/net.ipv4.tcp_congestion_control=bbr/g' /etc/sysctl.conf
+sed -i '/net.core.default_qdisc/d' /etc/sysctl.conf
+echo "net.core.default_qdisc = fq" >> /etc/sysctl.conf
+sysctl -p >/dev/null 2>&1
+
+# 4. Disable IPv6 (Mencegah Routing Blackhole/MTU Issue ke server Singapore)
+sed -i '/net.ipv6.conf.all.disable_ipv6/d' /etc/sysctl.conf
+sed -i '/net.ipv6.conf.default.disable_ipv6/d' /etc/sysctl.conf
+sed -i '/net.ipv6.conf.lo.disable_ipv6/d' /etc/sysctl.conf
+sed -i '/net.ipv4.tcp_mtu_probing/d' /etc/sysctl.conf
+
+echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
+echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf
+echo "net.ipv6.conf.lo.disable_ipv6 = 1" >> /etc/sysctl.conf
+echo "net.ipv4.tcp_mtu_probing = 1" >> /etc/sysctl.conf
 sysctl -p >/dev/null 2>&1
 # --- END HOTFIX LATENCY ---
 
