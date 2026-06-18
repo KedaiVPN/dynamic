@@ -247,15 +247,15 @@ frontend https_frontend
 
 backend dropbear_backend
     mode tcp               # Ubah dari mode http ke mode tcp untuk Dropbear (SSH)
-    server dropbear_server 127.0.0.1:58080 check
+    server dropbear_server 127.0.0.1:58080
 
 backend ws_backend
     mode tcp
-    server ws_server 127.0.0.1:1010 check
+    server ws_server 127.0.0.1:1010
 
 backend grpc_backend
     mode tcp
-    server grpc_server 127.0.0.1:1013 check
+    server grpc_server 127.0.0.1:1013
 EOF
 
 # install nginx (sudah diinstall di atas saat certbot)
