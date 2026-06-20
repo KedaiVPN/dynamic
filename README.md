@@ -37,35 +37,43 @@ PLEASE MAKE SURE YOUR DOMAIN SETTINGS IN YOUR CLOUDFLARE AS BELOW (SSL/TLS SETTI
 2. Enable SSL/TLS Recommender ✅
 3. Edge Certificates > Disable Always Use HTTPS (off)
 
-<br>
-♦️ For Debian 9 / 10 / 11 For First Time Installation (Update Repo) <br>
- 
-  ```html
- apt update -y && apt upgrade -y && apt dist-upgrade -y && reboot
-  ```
-  ♦️ For Ubuntu 18.04 / 20.04 For First Time Installation (Update Repo) <br>
-  
-  ```html
- apt-get update && apt-get upgrade -y && apt dist-upgrade -y && update-grub && reboot
- ```
+### ♠️rebuild deb 10 selain do
+
+<pre><code>curl -O https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh && bash reinstall.sh Debian 10 && reboot</code></pre>
+### ♠️rebuild deb 11
+
+<pre><code>curl -O https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh && bash reinstall.sh Debian 11 && reboot</code></pre>
+### ♠️rebuild deb 12
+
+<pre><code>curl -O https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh && bash reinstall.sh Debian 12 && reboot</code></pre>
+### ♠️rebuild ubuntu 20.04
+
+<pre><code>curl -O https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh && bash reinstall.sh Ubuntu 20.04 && reboot</code></pre>
+### ♠️rebuild ubuntu 22
+
+<pre><code>curl -O https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh && bash reinstall.sh Ubuntu 22.04 && reboot</code></pre>
+### ♠️rebuild ubuntu 24
+
+<pre><code>curl -O https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh && bash reinstall.sh Ubuntu 24.04 && reboot</code></pre>
+
 ♦️ Installation Link <br>
 
   ```html
 wget -q https://raw.githubusercontent.com/KedaiVPN/dynamic/main/setup.sh && chmod +x setup.sh && screen -S setup ./setup.sh
   ```
-Update (Manual)
+♦️ Update (Manual)
 ```html
 wget -q -O update.sh https://raw.githubusercontent.com/KedaiVPN/dynamic/main/update.sh && chmod +x update.sh && ./update.sh
   ```
 
-Restore Migrasi (Dari Telegram)
+♦️ Restore Migrasi (Dari Telegram)
 ```html
 wget -qO restore-migrasi.sh https://raw.githubusercontent.com/KedaiVPN/dynamic/main/restore-migrasi.sh && chmod +x restore-migrasi.sh && ./restore-migrasi.sh
 ```
 <b>
 <br>
 
-Clear Ghost Accounts (Hapus Akun Nyangkut/Tidak Terdaftar)
+♦️ Clear Ghost Accounts (Hapus Akun Nyangkut/Tidak Terdaftar)
 ```html
 wget -qO clear-ghost.sh https://raw.githubusercontent.com/KedaiVPN/dynamic/main/clear-ghost.sh && chmod +x clear-ghost.sh && ./clear-ghost.sh
 ```
