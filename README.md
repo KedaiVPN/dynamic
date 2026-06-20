@@ -61,7 +61,7 @@ PLEASE MAKE SURE YOUR DOMAIN SETTINGS IN YOUR CLOUDFLARE AS BELOW (SSL/TLS SETTI
   ```html
 wget -q https://raw.githubusercontent.com/KedaiVPN/dynamic/main/setup.sh && chmod +x setup.sh && screen -S setup ./setup.sh
   ```
-♦️ Update (Manual)
+♦️ Update
 ```html
 wget -q -O update.sh https://raw.githubusercontent.com/KedaiVPN/dynamic/main/update.sh && chmod +x update.sh && ./update.sh
   ```
