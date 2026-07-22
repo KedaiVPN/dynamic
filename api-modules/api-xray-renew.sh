@@ -4,7 +4,7 @@
 
 protocol="$1"
 user="$2"
-add_days="$3"
+add_days=$(echo "$3" | tr -d '\r\n')
 new_quota="$4"
 
 if [[ -z "$protocol" || -z "$user" || -z "$add_days" || -z "$new_quota" ]]; then
@@ -27,6 +27,16 @@ else
      current_exp_sec=$(echo "$db_line" | awk '{print $3}')
 fi
 
+# Fallback if DB contains non-numeric timestamp
+if ! [[ "$current_exp_sec" =~ ^[0-9]+$ ]]; then
+    converted_ts=$(date -d "$current_exp_sec" +%s 2>/dev/null)
+    if [ -n "$converted_ts" ] && [[ "$converted_ts" =~ ^[0-9]+$ ]]; then
+        current_exp_sec="$converted_ts"
+    else
+        current_exp_sec=$(date +%s)
+    fi
+fi
+
 now=$(date +%s)
 if [[ $current_exp_sec -lt $now ]]; then
     base_sec=$now
@@ -34,10 +44,37 @@ else
     base_sec=$current_exp_sec
 fi
 
-add_sec=$((add_days * 86400))
-new_exp_sec=$((base_sec + add_sec))
-new_exp_date=$(date -d "@$new_exp_sec" +"%Y-%m-%d")
-new_exp_display=$(date -d "@$new_exp_sec" +"%Y-%m-%d")
+# Parse add_days (supports days, date string, and unix timestamp)
+if [[ "$add_days" =~ ^[0-9]+$ ]]; then
+  if [ ${#add_days} -ge 10 ]; then
+    # Unix timestamp (absolute target)
+    if [ ${#add_days} -eq 13 ]; then
+      new_exp_sec=$((add_days / 1000))
+    else
+      new_exp_sec=$add_days
+    fi
+  else
+    # Number of days to add
+    add_sec=$((add_days * 86400))
+    new_exp_sec=$((base_sec + add_sec))
+  fi
+else
+  # Date string (absolute target)
+  parsed_ts=$(date -d "$add_days" +%s 2>/dev/null)
+  if [ -n "$parsed_ts" ]; then
+    new_exp_sec=$parsed_ts
+  else
+    echo '{"status": "error", "message": "Invalid renewal date format"}'
+    exit 1
+  fi
+fi
+
+new_exp_date=$(date -d "@$new_exp_sec" +"%Y-%m-%d" 2>/dev/null)
+if [[ -z "$new_exp_date" ]]; then
+  echo '{"status": "error", "message": "Failed to parse renewal date"}'
+  exit 1
+fi
+new_exp_display="$new_exp_date"
 
 # Update DB
 sed -i "/^$user $protocol /d" /etc/expired-users.db
