@@ -4,7 +4,7 @@
 
 raw_user="$1"
 pass="$2"
-exp_days="$3"
+exp_days=$(echo "$3" | tr -d '\r\n')
 quota="$4"
 iplimit="$5"
 
@@ -23,15 +23,43 @@ if id "$user" >/dev/null 2>&1; then
   exit 1
 fi
 
-# Set Expiry
-exp_date=$(date -d "+${exp_days} days" +"%Y-%m-%d")
+# Parse Expiry (supports days, date string, and unix timestamp)
+now=$(date +%s)
+if [[ "$exp_days" =~ ^[0-9]+$ ]]; then
+  if [ ${#exp_days} -ge 10 ]; then
+    # Unix timestamp
+    if [ ${#exp_days} -eq 13 ]; then
+      # milliseconds
+      exp_timestamp=$((exp_days / 1000))
+    else
+      # seconds
+      exp_timestamp=$exp_days
+    fi
+    exp_date=$(date -d "@$exp_timestamp" +"%Y-%m-%d" 2>/dev/null)
+  else
+    # Number of days
+    exp_date=$(date -d "+${exp_days} days" +"%Y-%m-%d" 2>/dev/null)
+    exp_timestamp=$((now + exp_days * 86400))
+  fi
+else
+  # Date string
+  exp_timestamp=$(date -d "$exp_days" +%s 2>/dev/null)
+  if [ -n "$exp_timestamp" ]; then
+    exp_date=$(date -d "$exp_days" +"%Y-%m-%d" 2>/dev/null)
+  else
+    echo '{"status": "error", "message": "Invalid expiration date format"}'
+    exit 1
+  fi
+fi
+
+if [[ -z "$exp_date" ]]; then
+  echo '{"status": "error", "message": "Failed to parse expiration date"}'
+  exit 1
+fi
+
 useradd -e "$exp_date" -s /bin/false -M "$user" >/dev/null 2>&1
 echo -e "${pass}\n${pass}\n" | passwd "$user" >/dev/null 2>&1
 
-# Add to expiry database (seconds)
-now=$(date +%s)
-exp_seconds=$((exp_days * 86400))
-exp_timestamp=$((now + exp_seconds))
 echo "$user ssh $exp_timestamp" >> /etc/expired-users.db
 
 # Set IP Limit

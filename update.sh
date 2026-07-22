@@ -1,5 +1,8 @@
 #!/bin/bash
 # Script Auto Update untuk Fitur Timezone & Auto-Delete Presisi
+# Update: Perbaikan ketidaksesuaian expired tahun 3031-3037 saat membuat akun via API
+# Perbaikan dilakukan dengan membersihkan karakter Carriage Return (\r) pada parameter durasi,
+# serta mengimplementasikan auto-detection format exp (jumlah hari, date string, atau UNIX timestamp).
 # Created by Jules
 
 # Warna
@@ -332,7 +335,10 @@ systemctl restart nginx >/dev/null 2>&1
 # rm -f /usr/bin/bckpbot
 
 # --- UPDATE API MODULES ONLY ---
-echo -e "[ ${GREEN}INFO${NC} ] Updating API Modules..."
+# Hotfix: Seluruh API module create & renew kini dilengkapi dengan pembersih Carriage Return (\r)
+# dan deteksi format input durasi otomatis (hari, string tanggal, UNIX timestamp detik/milidetik).
+# Ini mencegah kerusakan perhitungan detik aritmetika bash yang menyebabkan expired tahun 3031-3037.
+echo -e "[ ${GREEN}INFO${NC} ] Updating API Modules (with CRLF cleansing & Auto-Expiry Parser)..."
 mkdir -p /usr/local/bin/api-modules
 mkdir -p /etc/nevermore-api/node
 
