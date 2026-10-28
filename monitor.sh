@@ -8,6 +8,14 @@ if [ "${EUID}" -ne 0 ]; then
     exit 1
 fi
 
+# Idempotent: jika service sudah terpasang & berjalan, jangan reinstall.
+# Ini mencegah service monitoring existing (server lama) tertimpa saat
+# script ini dipanggil ulang dari installer otomatis.
+if systemctl is-active --quiet vps-monitor 2>/dev/null && [ -f /etc/vps-monitor/server.js ]; then
+    echo -e "\033[0;33m[INFO]\033[0m Service 'vps-monitor' sudah terpasang & berjalan. Skip (idempotent)."
+    exit 0
+fi
+
 echo -e "\033[0;32m[INFO]\033[0m Menginstal System Monitor (SSE)..."
 
 mkdir -p /etc/vps-monitor

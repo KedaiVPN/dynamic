@@ -59,8 +59,19 @@ function verify_license() {
 verify_license
 
 # // Cek old script
+# Mode AUTO_INSTALL (dari daemon): re-install hanya bila FORCE_REINSTALL=1.
+# Tanpa FORCE -> berhenti dengan exit code 10 (needs_confirmation) agar
+# data server lama tidak pernah dihapus tanpa konfirmasi eksplisit.
 if [[ -r /etc/xray/domain ]]; then
 echo -e "[ \033[0;33mINFO\033[0m ] Having Script Detected !"
+if [[ -n "$AUTO_INSTALL" ]]; then
+    if [[ -z "$FORCE_REINSTALL" ]]; then
+        echo -e "[ \033[0;31mSTOP\033[0m ] Script sudah terpasang. Kirim FORCE_REINSTALL=1 untuk ganti."
+        exit 10
+    fi
+    echo -e "[ \033[0;33mINFO\033[0m ] FORCE_REINSTALL aktif, replacing script!"
+    rm -rf /var/lib/scrz-prem
+else
 echo -e "[ \033[0;33mINFO\033[0m ] If You Replacing Script, All Client Data On This VPS Will Be Cleanup !"
 read -p "Are You Sure Wanna Replace Script ? (Y/N) " josdong
 if [[ $josdong == "Y" ]] || [[ $josdong == "y" ]]; then
@@ -73,6 +84,7 @@ elif [[ $josdong == "N" ]] || [[ $josdong == "n" ]]; then
 else
     echo -e "[ \033[0;31mERROR\033[0m ] Your Input Is Wrong !"
     exit 1
+fi
 fi
 clear && printf '\033[3J'
 fi
@@ -100,7 +112,13 @@ mkdir -p /usr/local/etc/xray
 echo -e "\033[0;34m┌─────────────────────────────────────────┐\033[0m"
 echo -e "                          ⇱ INSTALL DOMAIN ⇲            "
 echo -e "\033[0;34m└─────────────────────────────────────────┘\033[0m"
-read -rp "Masukkan Domain Anda: " domain
+if [[ -n "$AUTO_INSTALL" && -n "$DOMAIN" ]]; then
+    # Mode otomatis dari daemon installer — domain sudah dikirim via env
+    domain="$DOMAIN"
+    echo -e "[ \033[0;32mOKEY\033[0m ] Domain diterima dari env: $domain"
+else
+    read -rp "Masukkan Domain Anda: " domain
+fi
 echo "IP=$domain" > /var/lib/scrz-prem/ipvps.conf
 echo $domain > /etc/xray/domain
 
@@ -500,15 +518,33 @@ echo "===============-[ Script Mod By NEVERMORESSH TUNNELING ]-==============="
 echo -e ""
 echo ""
 echo "" | tee -a log-install.txt
+# // Install Monitoring service di akhir (idempotent, aman untuk server baru/lama)
+echo -e "\033[0;32m[INFO]\033[0m Menjalankan installer VPS Monitor (SSE)..."
+if [ -f "monitor.sh" ]; then
+    chmod +x monitor.sh && ./monitor.sh
+else
+    wget -q https://raw.githubusercontent.com/KedaiVPN/dynamic/main/monitor.sh && chmod +x monitor.sh && ./monitor.sh
+fi
+
 rm -fr /root/weleh.sh 
 rm -fr /root/vnstat.sh 
 rm -fr /root/ssh-vpn.sh
 rm -fr /root/udp-custom.sh
 rm -fr /root/ins-xray.sh
+rm -fr /root/monitor.sh
 rm -fr /root/setup.sh
 rm -fr /root/domain
 
 history -c
 
-read -p "$( echo -e "Press ${orange}[ ${NC}${green}Enter${NC} ${CYAN}]${NC} For Reboot") "
-reboot
+# Mode manual tetap menunggu Enter seperti sebelumnya.
+# Mode AUTO_INSTALL tidak boleh menggantung di prompt; reboot terjadwal agar
+# SSH stream dapat selesai (exit 0) dan daemon menerima status sukses.
+if [[ -n "$AUTO_INSTALL" ]]; then
+    echo -e "[ \033[0;32mOKEY\033[0m ] Instalasi otomatis selesai. Reboot dalam 10 detik."
+    nohup bash -c 'sleep 10; reboot' >/dev/null 2>&1 &
+    exit 0
+else
+    read -p "$( echo -e "Press ${orange}[ ${NC}${green}Enter${NC} ${CYAN}]${NC} For Reboot") "
+    reboot
+fi
