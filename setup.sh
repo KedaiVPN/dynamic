@@ -347,7 +347,10 @@ chmod +x /usr/local/bin/factory-reset.sh
 
 download_or_copy "install-api.sh" "/usr/bin/install-api"
 chmod +x /usr/bin/install-api
-/usr/bin/install-api
+if ! /usr/bin/install-api; then
+    echo "ERROR: Failed to install API backend!"
+    exit 1
+fi
 chmod +x /usr/bin/add-ws
 chmod +x /usr/bin/add-ssws
 chmod +x /usr/bin/add-socks

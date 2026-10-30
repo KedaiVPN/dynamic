@@ -2,10 +2,8 @@
 # Install API Backend and Modules
 # Updated to download dependencies directly
 
-if [ "${EUID}" -ne 0 ]; then
-    echo "Please Run This Script As Root User !"
-    exit 1
-fi
+set -e
+# NOTE: Run as root
 
 REPO="https://raw.githubusercontent.com/KedaiVPN/dynamic/main"
 
