@@ -6,37 +6,10 @@ const path = require('path');
 
 const app = express();
 const PORT = 5888;
-const AUTH_FILE = '/etc/nevermore-api/auth.key';
 const SCRIPT_DIR = '/usr/local/bin/api-modules';
 
 app.use(cors());
 app.use(express.json());
-
-// Authentication Middleware
-const authenticate = (req, res, next) => {
-    const authKey = req.query.auth;
-
-    if (!authKey) {
-        return res.status(401).json({ status: 'error', message: 'Missing auth parameter' });
-    }
-
-    try {
-        if (!fs.existsSync(AUTH_FILE)) {
-            return res.status(500).json({ status: 'error', message: 'Auth key not configured on server' });
-        }
-        const serverKey = fs.readFileSync(AUTH_FILE, 'utf8').trim();
-
-        if (authKey !== serverKey) {
-            return res.status(403).json({ status: 'error', message: 'Invalid auth key' });
-        }
-        next();
-    } catch (err) {
-        console.error("Auth Error:", err);
-        return res.status(500).json({ status: 'error', message: 'Internal server error during auth' });
-    }
-};
-
-app.use(authenticate);
 
 // Helper to execute bash script
 const runScript = (scriptName, args, res) => {
