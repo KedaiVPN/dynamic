@@ -11,6 +11,37 @@ const SCRIPT_DIR = '/usr/local/bin/api-modules';
 app.use(cors());
 app.use(express.json());
 
+// Auth middleware: optional for /callback/licence (webhook from License Manager),
+// required for all other API endpoints (create/delete/renew SSH, VMess, VLess, Trojan, etc.)
+const requireAuth = (req, res, next) => {
+    // Webhook endpoint is public — License Manager sends without auth key
+    if (req.path.startsWith('/callback/licence')) {
+        return next();
+    }
+
+    const authKey = req.query.auth;
+    if (!authKey) {
+        return res.status(401).json({ status: 'error', message: 'Missing auth parameter' });
+    }
+
+    const AUTH_FILE = '/etc/nevermore-api/auth.key';
+    try {
+        if (!fs.existsSync(AUTH_FILE)) {
+            return res.status(500).json({ status: 'error', message: 'Auth key not configured on server' });
+        }
+        const serverKey = fs.readFileSync(AUTH_FILE, 'utf8').trim();
+        if (authKey !== serverKey) {
+            return res.status(403).json({ status: 'error', message: 'Invalid auth key' });
+        }
+        next();
+    } catch (err) {
+        console.error("Auth Error:", err);
+        return res.status(500).json({ status: 'error', message: 'Internal server error during auth' });
+    }
+};
+
+app.use(requireAuth);
+
 // Helper to execute bash script
 const runScript = (scriptName, args, res) => {
     const scriptPath = path.join(SCRIPT_DIR, scriptName);
