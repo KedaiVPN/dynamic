@@ -521,7 +521,7 @@ sed -i 's/Trojan .*         : .*/Trojan WS         : 443/g' /root/log-install.tx
 rm -fr /etc/nginx/conf.d/xray.conf
 cat >/etc/nginx/conf.d/xray.conf <<EOF
 server {
-    listen 127.0.0.1:1010 proxy_protocol;
+    listen 1010 so_keepalive=on reuseport;
     server_name 127.0.0.1 localhost $domain;
 
     # User Optimization
@@ -668,7 +668,7 @@ server {
 }
 
 server {
-    listen 127.0.0.1:1013 proxy_protocol http2;
+    listen 1013 http2 so_keepalive=on reuseport;
     server_name 127.0.0.1 localhost $domain;
 
     # gRPC Locations
