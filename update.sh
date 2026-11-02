@@ -148,6 +148,8 @@ sed -i '/option dontlognull/a \    maxconn 100000\n    option tcp-smart-accept\n
 
 
 # HAProxy backend already configured correctly without send-proxy
+sed -i 's/ send-proxy send-proxy send-proxy send-proxy//g' /etc/haproxy/haproxy.cfg
+sed -i 's/ send-proxy//g' /etc/haproxy/haproxy.cfg
 
 # Meneruskan traffic HTTP murni (SSE/API) ke Nginx, bukan ke Dropbear
 sed -i '/acl is_http2/d' /etc/haproxy/haproxy.cfg
