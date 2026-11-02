@@ -224,7 +224,10 @@ server {
         proxy_read_timeout 24h;
     }
 
-    location /vless {
+    location ~ /vless {
+        if (\$http_upgrade != "Websocket") {
+            rewrite /(.*) /vless break;
+        }
         proxy_redirect off;
         proxy_pass http://127.0.0.1:10001;
         proxy_http_version 1.1;
@@ -235,7 +238,10 @@ server {
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     }
 
-    location /vmess {
+    location ~ /vmess {
+        if (\$http_upgrade != "Websocket") {
+            rewrite /(.*) /vmess break;
+        }
         proxy_redirect off;
         proxy_pass http://127.0.0.1:10002;
         proxy_http_version 1.1;
@@ -246,7 +252,10 @@ server {
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     }
 
-    location /trojan-ws {
+    location ~ /trojan-ws {
+        if (\$http_upgrade != "Websocket") {
+            rewrite /(.*) /trojan-ws break;
+        }
         proxy_redirect off;
         proxy_pass http://127.0.0.1:10003;
         proxy_http_version 1.1;
@@ -257,7 +266,10 @@ server {
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     }
 
-    location /ss-ws {
+    location ~ /ss-ws {
+        if (\$http_upgrade != "Websocket") {
+            rewrite /(.*) /ss-ws break;
+        }
         proxy_redirect off;
         proxy_pass http://127.0.0.1:10004;
         proxy_http_version 1.1;
