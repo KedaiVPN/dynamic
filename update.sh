@@ -147,14 +147,7 @@ sed -i '/stats socket/i \    maxconn 100000\n    ulimit-n 250000' /etc/haproxy/h
 sed -i '/option dontlognull/a \    maxconn 100000\n    option tcp-smart-accept\n    option tcp-smart-connect\n    timeout tarpit 1m' /etc/haproxy/haproxy.cfg
 
 
-# Kembalikan send-proxy untuk backend xray agar tidak error 521/400
-sed -i 's/127.0.0.1:1010 check/127.0.0.1:1010 check send-proxy/g' /etc/haproxy/haproxy.cfg
-sed -i 's/127.0.0.1:1013 check/127.0.0.1:1013 check send-proxy/g' /etc/haproxy/haproxy.cfg
-sed -i 's/127.0.0.1:2020 check/127.0.0.1:2020 check send-proxy/g' /etc/haproxy/haproxy.cfg
-
-# Hapus check untuk mencegah backend down saat idle/restart
-sed -i 's/ check send-proxy/ send-proxy/g' /etc/haproxy/haproxy.cfg
-sed -i 's/ check//g' /etc/haproxy/haproxy.cfg
+# HAProxy backend already configured correctly without send-proxy
 
 # Meneruskan traffic HTTP murni (SSE/API) ke Nginx, bukan ke Dropbear
 sed -i '/acl is_http2/d' /etc/haproxy/haproxy.cfg

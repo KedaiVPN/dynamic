@@ -259,11 +259,11 @@ backend dropbear_backend
 
 backend ws_backend
     mode tcp
-    server ws_server 127.0.0.1:1010 send-proxy
+    server ws_server 127.0.0.1:1010
 
 backend grpc_backend
     mode tcp
-    server grpc_server 127.0.0.1:1013 send-proxy
+    server grpc_server 127.0.0.1:1013
 EOF
 
 # install nginx (sudah diinstall di atas saat certbot)
