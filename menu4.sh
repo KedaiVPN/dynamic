@@ -323,7 +323,7 @@ echo -e "${BIRed} ║   ${BIRed}[${BIWhite}11${BIRed}]${BIWhite} GENERATE API KE
 echo -e "${BIRed} ║   ${BIRed}[${BIWhite}12${BIRed}]${BIWhite} EDIT WS RESPONSE     ${BIRed}[${BIWhite}24${BIRed}]${BIWhite} FACTORY RESET           ${BIRed}║${NC}"
 echo -e "${BIRed} ╚══════════════════════════════════════════════════════════╝${NC}"
 echo
-read -p " Select menu : " opt_feat
+read -p " Select menu [Type x to menu]: " opt_feat
 case $opt_feat in
 1) clear && printf '\033[3J' ; addhost ;;
 2) clear && printf '\033[3J' ; genssl ;;
