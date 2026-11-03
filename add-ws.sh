@@ -19,6 +19,8 @@ ICyan='\033[0;96m'        # Cyan
 IWhite='\033[0;97m'       # White
 NC='\e[0m'
 
+. /usr/lib/xray-paths.sh
+
 # // Export Color & Information
 export RED='\033[0;31m'
 export GREEN='\033[0;32m'
@@ -138,7 +140,7 @@ asu=`cat<<EOF
       "id": "${uuid}",
       "aid": "0",
       "net": "ws",
-      "path": "/vmess",
+      "path": "${VMESS_WS_PATH}",
       "type": "none",
       "host": "${domain}",
       "tls": "tls"
@@ -153,7 +155,7 @@ ask=`cat<<EOF
       "id": "${uuid}",
       "aid": "0",
       "net": "ws",
-      "path": "/vmess",
+      "path": "${VMESS_WS_PATH}",
       "type": "none",
       "host": "${domain}",
       "tls": "none"

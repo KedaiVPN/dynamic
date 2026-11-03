@@ -3,6 +3,8 @@
 # Args: protocol
 # Updated for complete link formats (gRPC, Trojan-Go) and consistent usernames
 
+. /usr/lib/xray-paths.sh
+
 protocol="$1"
 duration_min=30
 
@@ -59,8 +61,8 @@ case $protocol in
     sed -i '/#vmessgrpc$/a\#vmsg '"$user $exp_date"'\
 },{"id": "'""$uuid""'","alterId": 0,"email": "'""$user""'"' /etc/xray/config.json
 
-    json_tls="{\"v\":\"2\",\"ps\":\"${user}\",\"add\":\"${domain}\",\"port\":\"443\",\"id\":\"${uuid}\",\"aid\":\"0\",\"net\":\"ws\",\"path\":\"/vmess\",\"type\":\"none\",\"host\":\"${domain}\",\"tls\":\"tls\"}"
-    json_nontls="{\"v\":\"2\",\"ps\":\"${user}\",\"add\":\"${domain}\",\"port\":\"80\",\"id\":\"${uuid}\",\"aid\":\"0\",\"net\":\"ws\",\"path\":\"/vmess\",\"type\":\"none\",\"host\":\"${domain}\",\"tls\":\"none\"}"
+    json_tls="{\"v\":\"2\",\"ps\":\"${user}\",\"add\":\"${domain}\",\"port\":\"443\",\"id\":\"${uuid}\",\"aid\":\"0\",\"net\":\"ws\",\"path\":\"${VMESS_WS_PATH}\",\"type\":\"none\",\"host\":\"${domain}\",\"tls\":\"tls\"}"
+    json_nontls="{\"v\":\"2\",\"ps\":\"${user}\",\"add\":\"${domain}\",\"port\":\"80\",\"id\":\"${uuid}\",\"aid\":\"0\",\"net\":\"ws\",\"path\":\"${VMESS_WS_PATH}\",\"type\":\"none\",\"host\":\"${domain}\",\"tls\":\"none\"}"
     json_grpc="{\"v\":\"2\",\"ps\":\"${user}\",\"add\":\"${domain}\",\"port\":\"443\",\"id\":\"${uuid}\",\"aid\":\"0\",\"net\":\"grpc\",\"path\":\"vmess-grpc\",\"type\":\"none\",\"host\":\"${domain}\",\"tls\":\"tls\"}"
     
     link_tls="vmess://$(echo -n "$json_tls" | base64 -w 0)"
@@ -75,8 +77,8 @@ case $protocol in
     sed -i '/#vlessgrpc$/a\#vlsg '"$user $exp_date"'\
 },{"id": "'""$uuid""'","email": "'""$user""'"' /etc/xray/config.json
 
-    link_tls="vless://${uuid}@${domain}:443?type=ws&encryption=none&security=tls&host=${domain}&path=/vless&allowInsecure=1&sni=${domain}#${user}"
-    link_nontls="vless://${uuid}@${domain}:80?type=ws&encryption=none&security=none&host=${domain}&path=/vless#${user}"
+    link_tls="vless://${uuid}@${domain}:443?type=ws&encryption=none&security=tls&host=${domain}&path=${VLESS_WS_PATH}&allowInsecure=1&sni=${domain}#${user}"
+    link_nontls="vless://${uuid}@${domain}:80?type=ws&encryption=none&security=none&host=${domain}&path=${VLESS_WS_PATH}#${user}"
     link_grpc="vless://${uuid}@${domain}:443?mode=gun&security=tls&encryption=none&type=grpc&serviceName=vless-grpc&path=vless-grpc&sni=${domain}#${user}"
     
     data_out="\"vless_tls_link\": \"$link_tls\", \"vless_nontls_link\": \"$link_nontls\", \"vless_grpc_link\": \"$link_grpc\", \"uuid\": \"$uuid\""
@@ -87,8 +89,8 @@ case $protocol in
     sed -i '/#trojangrpc$/a\#trg '"$user $exp_date"'\
 },{"password": "'""$uuid""'","email": "'""$user""'"' /etc/xray/config.json
 
-    link_tls="trojan://${uuid}@${domain}:443?path=%2Ftrojan-ws&security=tls&host=${domain}&type=ws&sni=${domain}#${user}"
-    link_go="trojan-go://${uuid}@${domain}:443?path=%2Ftrojan-ws&security=tls&host=${domain}&type=ws&sni=${domain}#${user}"
+    link_tls="trojan://${uuid}@${domain}:443?path=${TROJAN_WS_PATH_ENCODED}&security=tls&host=${domain}&type=ws&sni=${domain}#${user}"
+    link_go="trojan-go://${uuid}@${domain}:443?path=${TROJAN_WS_PATH_ENCODED}&security=tls&host=${domain}&type=ws&sni=${domain}#${user}"
     link_grpc="trojan://${uuid}@${domain}:443?mode=gun&security=tls&type=grpc&serviceName=trojan-grpc&path=trojan-grpc&sni=${domain}#${user}"
     
     data_out="\"trojan_tls_link\": \"$link_tls\", \"trojan_go_link\": \"$link_go\", \"trojan_grpc_link\": \"$link_grpc\", \"uuid\": \"$uuid\""

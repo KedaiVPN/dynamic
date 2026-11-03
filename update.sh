@@ -42,6 +42,8 @@ echo -e "[ ${GREEN}INFO${NC} ] Mendownload script terbaru..."
 
 # Update menu & ws-stunnel untuk perbaikan kompatibilitas Ubuntu 22/Debian 12
 wget -q -O /usr/bin/menu "${REPO}/menu4.sh" && chmod +x /usr/bin/menu
+wget -q -O /usr/bin/custom-path "${REPO}/custom-path.sh" && chmod +x /usr/bin/custom-path
+wget -q -O /usr/lib/xray-paths.sh "${REPO}/xray-paths.sh" && chmod 644 /usr/lib/xray-paths.sh
 # # wget -q -O /usr/bin/xray-limit "${REPO}/xray-limit.sh" && chmod +x /usr/bin/xray-limit
 # wget -q -O /home/.ver "${REPO}/test/versions"
 # # wget -q -O /usr/bin/tendang "${REPO}/tendang.sh" && chmod +x /usr/bin/tendang
@@ -186,6 +188,10 @@ echo "net.netfilter.nf_conntrack_max = 2000000" >> /etc/sysctl.conf
 sysctl -p >/dev/null 2>&1
 
 # Fix Nginx Xray Routing Proxy (agar Vmess/Vless/Trojan bisa connect dari port 443)
+# Preserve custom aliases independently when rewriting the base template.
+mkdir -p /etc/nginx/conf.d
+touch /etc/nginx/conf.d/xray-custom-paths.inc
+chmod 644 /etc/nginx/conf.d/xray-custom-paths.inc
 domain=$(cat /etc/xray/domain)
 cat >/etc/nginx/conf.d/xray.conf <<EOF
 server {
@@ -225,6 +231,9 @@ server {
         chunked_transfer_encoding off;
         proxy_read_timeout 24h;
     }
+
+    # Additive custom WebSocket aliases; default routes below remain unchanged.
+    include /etc/nginx/conf.d/xray-custom-paths.inc;
 
     location ~ /vless {
         if (\$http_upgrade != "Websocket") {

@@ -321,6 +321,7 @@ echo -e "${BIRed} ║   ${BIRed}[${BIWhite}09${BIRed}]${BIWhite} RESTART        
 echo -e "${BIRed} ║   ${BIRed}[${BIWhite}10${BIRed}]${BIWhite} RAM MONITOR          ${BIRed}[${BIWhite}22${BIRed}]${BIWhite} INSTALL BOT TELE        ${BIRed}║${NC}"
 echo -e "${BIRed} ║   ${BIRed}[${BIWhite}11${BIRed}]${BIWhite} GENERATE API KEY     ${BIRed}[${BIWhite}23${BIRed}]${BIWhite} FACTORY RESET           ${BIRed}║${NC}"
 echo -e "${BIRed} ║   ${BIRed}[${BIWhite}12${BIRed}]${BIWhite} EDIT WS RESPONSE     ${BIRed}[${BIWhite} x${BIRed}]${BIWhite} BACK TO MENU            ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}24${BIRed}]${BIWhite} CUSTOM PATH                                            ${BIRed}║${NC}"
 echo -e "${BIRed} ╚══════════════════════════════════════════════════════════╝${NC}"
 echo
 read -p " Select menu : " opt_feat
@@ -348,6 +349,7 @@ case $opt_feat in
 21) clear && printf '\033[3J' ; wget -q -O /usr/bin/swapram "https://raw.githubusercontent.com/NevermoreSSH/swapram/main/swapram.sh" && chmod +x /usr/bin/swapram && swapram ;;
 22) clear && printf '\033[3J' ; /usr/local/bin/api-modules/api-bot-manager.sh ;;
 23) clear && printf '\033[3J' ; factory-reset.sh ;;
+24) clear && printf '\033[3J' ; custom-path ;;
 x) menu ;;
 *) menu ;;
 esac

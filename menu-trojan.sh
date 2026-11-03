@@ -18,6 +18,8 @@ IPurple='\033[0;95m'      # Purple
 ICyan='\033[0;96m'        # Cyan
 IWhite='\033[0;97m'       # White
 NC='\e[0m'
+
+. /usr/lib/xray-paths.sh
 green() { echo -e "\\033[32;1m${*}\\033[0m"; }
 red() { echo -e "\\033[31;1m${*}\\033[0m"; }
 
@@ -423,8 +425,8 @@ function trialtrojan(){
     tr="$(cat ~/log-install.txt | grep -w "Trojan WS " | cut -d: -f2|sed 's/ //g')"
     if [[ -z "$tr" ]]; then tr="443"; fi
 
-    trojanlink1="trojan://${uuid}@${domain}:${tr}?path=%2Ftrojan-ws&security=tls&host=${domain}&type=ws&sni=${domain}#TROJAN_WS_${user}"
-    trojanlink2="trojan-go://${uuid}@${domain}:${tr}?path=%2Ftrojan-ws&security=tls&host=${domain}&type=ws&sni=${domain}#TROJANGO_${user}"
+    trojanlink1="trojan://${uuid}@${domain}:${tr}?path=${TROJAN_WS_PATH_ENCODED}&security=tls&host=${domain}&type=ws&sni=${domain}#TROJAN_WS_${user}"
+    trojanlink2="trojan-go://${uuid}@${domain}:${tr}?path=${TROJAN_WS_PATH_ENCODED}&security=tls&host=${domain}&type=ws&sni=${domain}#TROJANGO_${user}"
     trojanlink4="trojan://${uuid}@${domain}:${tr}?mode=gun&security=tls&type=grpc&serviceName=trojan-grpc&path=trojan-grpc&sni=${domain}#TROJAN_GRPC_${user}"
 
     # Restart Xray

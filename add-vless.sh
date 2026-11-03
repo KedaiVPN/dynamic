@@ -19,6 +19,8 @@ ICyan='\033[0;96m'        # Cyan
 IWhite='\033[0;97m'       # White
 NC='\e[0m'
 
+. /usr/lib/xray-paths.sh
+
 # // Export Color & Information
 export RED='\033[0;31m'
 export GREEN='\033[0;32m'
@@ -137,9 +139,9 @@ cat > /home/vps/public_html/vless-$user.txt <<-END
 _______________________________________________________
               Link Vless Account
 _______________________________________________________
-Link TLS : vless://${uuid}@${domain}:443?type=ws&encryption=none&security=tls&host=${domain}&path=/vless&allowInsecure=1&sni=${domain}#XRAY_VLESS_TLS_${user}
+Link TLS : vless://${uuid}@${domain}:443?type=ws&encryption=none&security=tls&host=${domain}&path=${VLESS_WS_PATH}&allowInsecure=1&sni=${domain}#XRAY_VLESS_TLS_${user}
 _______________________________________________________
-Link none TLS : vless://${uuid}@${domain}:80?type=ws&encryption=none&security=none&host=${domain}&path=/vless#XRAY_VLESS_NTLS_${user}
+Link none TLS : vless://${uuid}@${domain}:80?type=ws&encryption=none&security=none&host=${domain}&path=${VLESS_WS_PATH}#XRAY_VLESS_NTLS_${user}
 _______________________________________________________
 Link GRPC : vless://${uuid}@${domain}:$tls?mode=gun&security=tls&encryption=none&type=grpc&serviceName=vless-grpc&path=vless-grpc&sni=${domain}#VLESS_GRPC_${user}
 _______________________________________________________
@@ -147,8 +149,8 @@ Expired On : $exp
 _______________________________________________________
 
 END
-vlesslink1="vless://${uuid}@${domain}:443?type=ws&encryption=none&security=tls&host=${domain}&path=/vless&allowInsecure=1&sni=${domain}#XRAY_VLESS_TLS_${user}"
-vlesslink2="vless://${uuid}@${domain}:80?type=ws&encryption=none&security=none&host=${domain}&path=/vless#XRAY_VLESS_NTLS_${user}"
+vlesslink1="vless://${uuid}@${domain}:443?type=ws&encryption=none&security=tls&host=${domain}&path=${VLESS_WS_PATH}&allowInsecure=1&sni=${domain}#XRAY_VLESS_TLS_${user}"
+vlesslink2="vless://${uuid}@${domain}:80?type=ws&encryption=none&security=none&host=${domain}&path=${VLESS_WS_PATH}#XRAY_VLESS_NTLS_${user}"
 vlesslink3="vless://${uuid}@${domain}:$tls?mode=gun&security=tls&encryption=none&type=grpc&serviceName=vless-grpc&path=vless-grpc&sni=${domain}#VLESS_GRPC_${user}"
 systemctl restart xray
 clear && printf '\033[3J'
@@ -163,7 +165,7 @@ echo -e "id : ${uuid}" | tee -a /etc/log-create-user.log
 echo -e "Network : ws/grpc" | tee -a /etc/log-create-user.log
 echo -e "Encryption : none" | tee -a /etc/log-create-user.log
 echo -e "Limit Bandwidth : ${quota} GB" | tee -a /etc/log-create-user.log
-echo -e "Path : /vless" | tee -a /etc/log-create-user.log
+echo -e "Path : ${VLESS_WS_PATH}" | tee -a /etc/log-create-user.log
 echo -e "Path : vless-grpc" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
 echo -e "Link TLS : ${vlesslink1}" | tee -a /etc/log-create-user.log
