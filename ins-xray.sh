@@ -518,6 +518,10 @@ sed -i 's/Vless None TLS    : .*/Vless None TLS    : 80/g' /root/log-install.txt
 sed -i 's/Trojan .*         : .*/Trojan WS         : 443/g' /root/log-install.txt
 
 # nginx xray.conf - Behind HAProxy
+# Keep custom aliases separate from the generated base configuration.
+mkdir -p /etc/nginx/conf.d
+touch /etc/nginx/conf.d/xray-custom-paths.inc
+chmod 644 /etc/nginx/conf.d/xray-custom-paths.inc
 rm -fr /etc/nginx/conf.d/xray.conf
 cat >/etc/nginx/conf.d/xray.conf <<EOF
 server {
@@ -551,6 +555,9 @@ server {
         fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
     }
+
+    # Additive custom WebSocket aliases; default routes below remain unchanged.
+    include /etc/nginx/conf.d/xray-custom-paths.inc;
 
     # WebSocket Locations
     location ~ /vless {

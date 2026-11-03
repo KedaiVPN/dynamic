@@ -19,6 +19,8 @@ ICyan='\033[0;96m'        # Cyan
 IWhite='\033[0;97m'       # White
 NC='\e[0m'
 
+. /usr/lib/xray-paths.sh
+
 # // Export Color & Information
 export RED='\033[0;31m'
 export GREEN='\033[0;32m'
@@ -137,17 +139,17 @@ cat > /home/vps/public_html/trojan-$user.txt <<-END
 _______________________________________________________
               Link Trojan Account
 _______________________________________________________
-Link WS : trojan://${uuid}@${domain}:${tr}?path=%2Ftrojan-ws&security=tls&host=${domain}&type=ws&sni=${domain}#TROJAN_WS_${user}
+Link WS : trojan://${uuid}@${domain}:${tr}?path=${TROJAN_WS_PATH_ENCODED}&security=tls&host=${domain}&type=ws&sni=${domain}#TROJAN_WS_${user}
 _______________________________________________________
-Link GO : trojan-go://${uuid}@${domain}:${tr}?path=%2Ftrojan-ws&security=tls&host=${domain}&type=ws&sni=${domain}#TROJANGO_${user}
+Link GO : trojan-go://${uuid}@${domain}:${tr}?path=${TROJAN_WS_PATH_ENCODED}&security=tls&host=${domain}&type=ws&sni=${domain}#TROJANGO_${user}
 _______________________________________________________
 Link GRPC : trojan://${uuid}@${domain}:${tr}?mode=gun&security=tls&type=grpc&serviceName=trojan-grpc&path=trojan-grpc&sni=${domain}#TROJAN_GRPC_${user}
 _______________________________________________________
 Expired On : $exp
 
 END
-trojanlink1="trojan://${uuid}@${domain}:${tr}?path=%2Ftrojan-ws&security=tls&host=${domain}&type=ws&sni=${domain}#TROJAN_WS_${user}"
-trojanlink2="trojan-go://${uuid}@${domain}:${tr}?path=%2Ftrojan-ws&security=tls&host=${domain}&type=ws&sni=${domain}#TROJANGO_${user}"
+trojanlink1="trojan://${uuid}@${domain}:${tr}?path=${TROJAN_WS_PATH_ENCODED}&security=tls&host=${domain}&type=ws&sni=${domain}#TROJAN_WS_${user}"
+trojanlink2="trojan-go://${uuid}@${domain}:${tr}?path=${TROJAN_WS_PATH_ENCODED}&security=tls&host=${domain}&type=ws&sni=${domain}#TROJANGO_${user}"
 trojanlink4="trojan://${uuid}@${domain}:${tr}?mode=gun&security=tls&type=grpc&serviceName=trojan-grpc&path=trojan-grpc&sni=${domain}#TROJAN_GRPC_${user}"
 clear && printf '\033[3J'
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
@@ -159,7 +161,7 @@ echo -e "port : ${tr}" | tee -a /etc/log-create-user.log
 echo -e "Key : ${uuid}" | tee -a /etc/log-create-user.log
 echo -e "Network : ws/grpc" | tee -a /etc/log-create-user.log
 echo -e "Limit Bandwidth : ${quota} GB" | tee -a /etc/log-create-user.log
-echo -e "Path : /trojan-ws" | tee -a /etc/log-create-user.log
+echo -e "Path : ${TROJAN_WS_PATH}" | tee -a /etc/log-create-user.log
 echo -e "ServiceName : trojan-grpc" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
 echo -e "Link WS : " | tee -a /etc/log-create-user.log

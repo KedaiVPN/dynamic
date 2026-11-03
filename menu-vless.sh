@@ -18,6 +18,8 @@ IPurple='\033[0;95m'      # Purple
 ICyan='\033[0;96m'        # Cyan
 IWhite='\033[0;97m'       # White
 NC='\e[0m'
+
+. /usr/lib/xray-paths.sh
 green() { echo -e "\\033[32;1m${*}\\033[0m"; }
 red() { echo -e "\\033[31;1m${*}\\033[0m"; }
 
@@ -422,8 +424,8 @@ function trialvless(){
         domain=$(curl -s https://ipinfo.io/ip/)
     fi
 
-    vlesslink1="vless://${uuid}@${domain}:443?type=ws&encryption=none&security=tls&host=${domain}&path=/vless&allowInsecure=1&sni=${domain}#XRAY_VLESS_TLS_${user}"
-    vlesslink2="vless://${uuid}@${domain}:80?type=ws&encryption=none&security=none&host=${domain}&path=/vless#XRAY_VLESS_NTLS_${user}"
+    vlesslink1="vless://${uuid}@${domain}:443?type=ws&encryption=none&security=tls&host=${domain}&path=${VLESS_WS_PATH}&allowInsecure=1&sni=${domain}#XRAY_VLESS_TLS_${user}"
+    vlesslink2="vless://${uuid}@${domain}:80?type=ws&encryption=none&security=none&host=${domain}&path=${VLESS_WS_PATH}#XRAY_VLESS_NTLS_${user}"
     vlesslink3="vless://${uuid}@${domain}:443?mode=gun&security=tls&encryption=none&type=grpc&serviceName=vless-grpc&path=vless-grpc&sni=${domain}#VLESS_GRPC_${user}"
 
     # Restart Xray
