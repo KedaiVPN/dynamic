@@ -11,6 +11,18 @@ readonly DEFAULT_VMESS_PATH="/vmess"
 readonly DEFAULT_VLESS_PATH="/vless"
 readonly DEFAULT_TROJAN_PATH="/trojan-ws"
 
+# Keep the custom-path screen consistent with Dynamic's existing menu4.sh UI.
+BIRed='\033[1;91m'
+BIGreen='\033[1;92m'
+BIYellow='\033[1;93m'
+BICyan='\033[1;96m'
+BIWhite='\033[1;97m'
+UWhite='\033[4;37m'
+IGreen='\033[0;92m'
+IYellow='\033[0;93m'
+IWhite='\033[0;97m'
+NC='\e[0m'
+
 fail() {
     printf 'ERROR: %s\n' "$*" >&2
     return 1
@@ -202,30 +214,90 @@ list_aliases() {
     fi
 }
 
+box_top() { echo -e "${BIRed} ╔══════════════════════════════════════════════════════════╗${NC}"; }
+box_separator() { echo -e "${BIRed} ╠══════════════════════════════════════════════════════════╣${NC}"; }
+box_bottom() { echo -e "${BIRed} ╚══════════════════════════════════════════════════════════╝${NC}"; }
+
+# One renderer owns every inner line. The fixed 58-cell content area prevents
+# the right border from shifting on mobile terminals.
+box_line() {
+    printf '%b ║%b%-58s%b║%b\n' "$BIRed" "$BIWhite" "$1" "$BIRed" "$NC"
+}
+
+box_default_path_line() {
+    local protocol="$1" path="$2" label_padding spaces
+    # Protocol labels use a fixed six-cell column; ANSI colors never affect padding.
+    label_padding=$((6 - ${#protocol}))
+    spaces=$((58 - 3 - 6 - 3 - ${#path}))
+    printf '%b ║   %b%s%*s%b : %b%s%*s%b║%b\n' \
+        "$BIRed" "$BIGreen" "$protocol" "$label_padding" '' "$BIWhite" "$BICyan" "$path" "$spaces" '' "$BIRed" "$NC"
+}
+
+print_default_paths_panel() {
+    # Static display only; it intentionally does not reveal or mutate active aliases.
+    box_separator
+    box_line "                       DEFAULT PATH"
+    box_default_path_line "VMESS" "/vmess"
+    box_default_path_line "VLESS" "/vless"
+    box_default_path_line "TROJAN" "/trojan-ws"
+}
+
+print_custom_path_menu() {
+    clear && printf '\033[3J'
+    box_top
+    box_line "                    > CUSTOM PATH <"
+    print_default_paths_panel
+    box_separator
+    box_line "   [01] EDIT PATH VMESS      [03] EDIT PATH TROJAN"
+    box_line "   [02] EDIT PATH VLESS      [04] LIST CUSTOM PATH"
+    box_line ""
+    box_line "   [ x] BACK TO FEATURES"
+    box_bottom
+    echo
+}
+
+print_aliases_panel() {
+    clear && printf '\033[3J'
+    box_top
+    box_line "                  > CUSTOM PATH LIST <"
+    box_separator
+    if [[ -s "$ALIAS_CONFIG" ]]; then
+        while IFS='|' read -r protocol public_path internal_path port; do
+            [[ -n "$protocol" ]] || continue
+            box_line "   ${protocol^^} : ${public_path} > ${internal_path}"
+        done < "$ALIAS_CONFIG"
+    else
+        box_line "             NO CUSTOM PATH CONFIGURED"
+    fi
+    box_bottom
+    echo
+}
+
 interactive_menu() {
     local choice protocol path
     while true; do
-        clear 2>/dev/null || true
-        echo '================ CUSTOM PATH ================'
-        show_paths
-        echo '---------------------------------------------'
-        echo '[1] Set active VMESS path'
-        echo '[2] Set active VLESS path'
-        echo '[3] Set active TROJAN path'
-        echo '[4] List custom aliases'
-        echo '[x] Back'
-        read -r -p 'Select menu: ' choice
+        ensure_files
+        print_custom_path_menu
+        read -r -p "$(echo -e " ${BIWhite}Select menu${BIRed} : ${NC}")" choice
         case "$choice" in
             1) protocol=vmess ;;
             2) protocol=vless ;;
             3) protocol=trojan ;;
-            4) list_aliases; read -r -p 'Press Enter to continue...'; continue ;;
+            4) print_aliases_panel; read -r -p ' Press Enter to return...'; continue ;;
             x|X) return ;;
-            *) echo 'Invalid menu.'; sleep 1; continue ;;
+            *) echo -e "${BIYellow} Invalid menu.${NC}"; sleep 1; continue ;;
         esac
-        read -r -p "New ${protocol} path (example: /${protocol}-lea): " path
-        set_path "$protocol" "$path" || true
-        read -r -p 'Press Enter to continue...'
+
+        box_top
+        box_line "   EDIT ${protocol^^} PATH"
+        box_bottom
+        read -r -p "$(echo -e " ${BIWhite}New path${BIRed} [${BICyan}/${protocol}-lea${BIRed}]${BIWhite} : ${NC}")" path
+        if set_path "$protocol" "$path"; then
+            echo -e "${IGreen} Path saved. New ${protocol^^} accounts will use ${path}.${NC}"
+        else
+            echo -e "${BIYellow} Path was not changed. Check the error above.${NC}"
+        fi
+        read -r -p ' Press Enter to return...'
     done
 }
 
