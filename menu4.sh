@@ -309,22 +309,21 @@ clear && printf '\033[3J'
 echo -e "${BIRed} ╔══════════════════════════════════════════════════════════╗${NC}"
 echo -e "${BIRed} ║                 ${BIWhite}${UWhite}> ADDITIONAL FEATURES <${NC}                  ${BIRed}║${NC}"
 echo -e "${BIRed} ╠══════════════════════════════════════════════════════════╣${NC}"
-echo -e "${BIRed} ║   ${BIRed}[${BIWhite}01${BIRed}]${BIWhite} ADD HOST/DOMAIN      ${BIRed}[${BIWhite}13${BIRed}]${BIWhite} WEBMIN                  ${BIRed}║${NC}"
-echo -e "${BIRed} ║   ${BIRed}[${BIWhite}02${BIRed}]${BIWhite} RENEW CERT           ${BIRed}[${BIWhite}14${BIRed}]${BIWhite} MONITOR SERVER          ${BIRed}║${NC}"
-echo -e "${BIRed} ║   ${BIRed}[${BIWhite}03${BIRed}]${BIWhite} EDIT BANNER          ${BIRed}[${BIWhite}15${BIRed}]${BIWhite} CLEAR LOG               ${BIRed}║${NC}"
-echo -e "${BIRed} ║   ${BIRed}[${BIWhite}04${BIRed}]${BIWhite} CHECK BANDWIDTH      ${BIRed}[${BIWhite}16${BIRed}]${BIWhite} DNS CHANGER             ${BIRed}║${NC}"
-echo -e "${BIRed} ║   ${BIRed}[${BIWhite}05${BIRed}]${BIWhite} SPEEDTEST            ${BIRed}[${BIWhite}17${BIRed}]${BIWhite} NETFLIX CHECKER         ${BIRed}║${NC}"
-echo -e "${BIRed} ║   ${BIRed}[${BIWhite}06${BIRed}]${BIWhite} LIMIT SPEED          ${BIRed}[${BIWhite}18${BIRed}]${BIWhite} TENDANG                 ${BIRed}║${NC}"
-echo -e "${BIRed} ║   ${BIRed}[${BIWhite}07${BIRed}]${BIWhite} AUTO REBOOT          ${BIRed}[${BIWhite}19${BIRed}]${BIWhite} XRAY-CORE MENU          ${BIRed}║${NC}"
-echo -e "${BIRed} ║   ${BIRed}[${BIWhite}08${BIRed}]${BIWhite} REBOOT               ${BIRed}[${BIWhite}20${BIRed}]${BIWhite} INSTALL BBRPLUS         ${BIRed}║${NC}"
-echo -e "${BIRed} ║   ${BIRed}[${BIWhite}09${BIRed}]${BIWhite} RESTART              ${BIRed}[${BIWhite}21${BIRed}]${BIWhite} SWAPRAM MENU            ${BIRed}║${NC}"
-echo -e "${BIRed} ║   ${BIRed}[${BIWhite}10${BIRed}]${BIWhite} RAM MONITOR          ${BIRed}[${BIWhite}22${BIRed}]${BIWhite} INSTALL BOT TELE        ${BIRed}║${NC}"
-echo -e "${BIRed} ║   ${BIRed}[${BIWhite}11${BIRed}]${BIWhite} GENERATE API KEY     ${BIRed}[${BIWhite}23${BIRed}]${BIWhite} FACTORY RESET           ${BIRed}║${NC}"
-echo -e "${BIRed} ║   ${BIRed}[${BIWhite}12${BIRed}]${BIWhite} EDIT WS RESPONSE     ${BIRed}[${BIWhite} x${BIRed}]${BIWhite} BACK TO MENU            ${BIRed}║${NC}"
-echo -e "${BIRed} ║   ${BIRed}[${BIWhite}24${BIRed}]${BIWhite} CUSTOM PATH                                            ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}01${BIRed}]${BIWhite} ADD HOST/DOMAIN      ${BIRed}[${BIWhite}13${BIRed}]${BIWhite} CUSTOM PATH             ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}02${BIRed}]${BIWhite} RENEW CERT           ${BIRed}[${BIWhite}14${BIRed}]${BIWhite} WEBMIN                  ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}03${BIRed}]${BIWhite} EDIT BANNER          ${BIRed}[${BIWhite}15${BIRed}]${BIWhite} MONITOR SERVER          ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}04${BIRed}]${BIWhite} CHECK BANDWIDTH      ${BIRed}[${BIWhite}16${BIRed}]${BIWhite} CLEAR LOG               ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}05${BIRed}]${BIWhite} SPEEDTEST            ${BIRed}[${BIWhite}17${BIRed}]${BIWhite} DNS CHANGER             ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}06${BIRed}]${BIWhite} LIMIT SPEED          ${BIRed}[${BIWhite}18${BIRed}]${BIWhite} NETFLIX CHECKER         ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}07${BIRed}]${BIWhite} AUTO REBOOT          ${BIRed}[${BIWhite}19${BIRed}]${BIWhite} TENDANG                 ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}08${BIRed}]${BIWhite} REBOOT               ${BIRed}[${BIWhite}20${BIRed}]${BIWhite} XRAY-CORE MENU          ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}09${BIRed}]${BIWhite} RESTART              ${BIRed}[${BIWhite}21${BIRed}]${BIWhite} INSTALL BBRPLUS         ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}10${BIRed}]${BIWhite} RAM MONITOR          ${BIRed}[${BIWhite}22${BIRed}]${BIWhite} SWAPRAM MENU            ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}11${BIRed}]${BIWhite} GENERATE API KEY     ${BIRed}[${BIWhite}23${BIRed}]${BIWhite} INSTALL BOT TELE        ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}12${BIRed}]${BIWhite} EDIT WS RESPONSE     ${BIRed}[${BIWhite}24${BIRed}]${BIWhite} FACTORY RESET           ${BIRed}║${NC}"
 echo -e "${BIRed} ╚══════════════════════════════════════════════════════════╝${NC}"
 echo
-read -p " Select menu : " opt_feat
+read -p " Select menu [Type x to menu]: " opt_feat
 case $opt_feat in
 1) clear && printf '\033[3J' ; addhost ;;
 2) clear && printf '\033[3J' ; genssl ;;
@@ -338,18 +337,18 @@ case $opt_feat in
 10) clear && printf '\033[3J' ; gotop ;;
 11) clear && printf '\033[3J' ; /usr/local/bin/api-modules/api-auth-gen.sh ;;
 12) clear && printf '\033[3J' ; change_ws_response ;;
-13) clear && printf '\033[3J' ; wbm ;;
-14) clear && printf '\033[3J' ; wget -q -O /tmp/monitor.sh "https://raw.githubusercontent.com/KedaiVPN/kemed/main/monitor.sh" && chmod +x /tmp/monitor.sh && /tmp/monitor.sh ;;
-15) clear && printf '\033[3J' ; clearlog ;;
-16) clear && printf '\033[3J' ; dns ;;
-17) clear && printf '\033[3J' ; netf ;;
-18) clear && printf '\033[3J' ; tendang ;;
-19) clear && printf '\033[3J' ; wget -q -O /usr/bin/xraychanger "https://raw.githubusercontent.com/NevermoreSSH/Xcore-custompath/main/xraychanger.sh" && chmod +x /usr/bin/xraychanger && xraychanger ;;
-20) clear && printf '\033[3J' ; bbr ;;
-21) clear && printf '\033[3J' ; wget -q -O /usr/bin/swapram "https://raw.githubusercontent.com/NevermoreSSH/swapram/main/swapram.sh" && chmod +x /usr/bin/swapram && swapram ;;
-22) clear && printf '\033[3J' ; /usr/local/bin/api-modules/api-bot-manager.sh ;;
-23) clear && printf '\033[3J' ; factory-reset.sh ;;
-24) clear && printf '\033[3J' ; custom-path ;;
+13) clear && printf '\033[3J' ; custom-path ; menu_features ;;
+14) clear && printf '\033[3J' ; wbm ;;
+15) clear && printf '\033[3J' ; wget -q -O /tmp/monitor.sh "https://raw.githubusercontent.com/KedaiVPN/kemed/main/monitor.sh" && chmod +x /tmp/monitor.sh && /tmp/monitor.sh ;;
+16) clear && printf '\033[3J' ; clearlog ;;
+17) clear && printf '\033[3J' ; dns ;;
+18) clear && printf '\033[3J' ; netf ;;
+19) clear && printf '\033[3J' ; tendang ;;
+20) clear && printf '\033[3J' ; wget -q -O /usr/bin/xraychanger "https://raw.githubusercontent.com/NevermoreSSH/Xcore-custompath/main/xraychanger.sh" && chmod +x /usr/bin/xraychanger && xraychanger ;;
+21) clear && printf '\033[3J' ; bbr ;;
+22) clear && printf '\033[3J' ; wget -q -O /usr/bin/swapram "https://raw.githubusercontent.com/NevermoreSSH/swapram/main/swapram.sh" && chmod +x /usr/bin/swapram && swapram ;;
+23) clear && printf '\033[3J' ; /usr/local/bin/api-modules/api-bot-manager.sh ;;
+24) clear && printf '\033[3J' ; factory-reset.sh ;;
 x) menu ;;
 *) menu ;;
 esac
