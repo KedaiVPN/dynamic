@@ -34,16 +34,48 @@ wget -q -O /usr/bin/xp "${REPO}/xp.sh" && chmod +x /usr/bin/xp
 REPO="https://raw.githubusercontent.com/KedaiVPN/dynamic/main"
 
 echo -e "[ ${GREEN}INFO${NC} ] Mendownload script terbaru..."
-# # wget -q -O /usr/bin/add-vless "${REPO}/add-vless.sh" && chmod +x /usr/bin/add-vless
-# # wget -q -O /usr/bin/add-tr "${REPO}/add-tr.sh" && chmod +x /usr/bin/add-tr
-# # wget -q -O /usr/bin/menu-vless "${REPO}/menu-vless.sh" && chmod +x /usr/bin/menu-vless
-# # wget -q -O /usr/bin/menu-trojan "${REPO}/menu-trojan.sh" && chmod +x /usr/bin/menu-trojan
-# # wget -q -O /usr/bin/user-xrays "${REPO}/user-xrays.sh" && chmod +x /usr/bin/user-xrays
 
-# Update menu & ws-stunnel untuk perbaikan kompatibilitas Ubuntu 22/Debian 12
-wget -q -O /usr/bin/menu "${REPO}/menu4.sh" && chmod +x /usr/bin/menu
-wget -q -O /usr/bin/custom-path "${REPO}/custom-path.sh" && chmod +x /usr/bin/custom-path
-wget -q -O /usr/lib/xray-paths.sh "${REPO}/xray-paths.sh" && chmod 644 /usr/lib/xray-paths.sh
+# Download to the target filesystem, validate Bash syntax, then atomically
+# replace. Existing account generators remain usable if fetch/validation fails.
+update_local_script() {
+    local script_name="$1"
+    local target_file="$2"
+    local tmp_file
+
+    tmp_file=$(mktemp "${target_file}.update.XXXXXX")
+    if wget -q -O "$tmp_file" "${REPO}/${script_name}?v=$(date +%s)" && bash -n "$tmp_file"; then
+        chmod 755 "$tmp_file"
+        mv "$tmp_file" "$target_file"
+        echo -e "[ ${GREEN}OK${NC} ] ${script_name} updated."
+    else
+        rm -f "$tmp_file"
+        echo -e "[ ${RED}ERROR${NC} ] Failed to update ${script_name}; existing file was kept."
+        return 1
+    fi
+}
+
+# Refresh every terminal-side VMESS/VLESS/Trojan creator. Older servers used
+# stale hardcoded /vmess,/vless,/trojan-ws values even after custom-path itself
+# was installed; these scripts must read /usr/lib/xray-paths.sh too.
+update_local_script "add-ws.sh" "/usr/bin/add-ws" || true
+update_local_script "add-vless.sh" "/usr/bin/add-vless" || true
+update_local_script "add-tr.sh" "/usr/bin/add-tr" || true
+update_local_script "menu-vmess.sh" "/usr/bin/menu-vmess" || true
+update_local_script "menu-vless.sh" "/usr/bin/menu-vless" || true
+update_local_script "menu-trojan.sh" "/usr/bin/menu-trojan" || true
+update_local_script "menu4.sh" "/usr/bin/menu" || true
+update_local_script "custom-path.sh" "/usr/bin/custom-path" || true
+
+# Helper is data-only shell code, but still validate it before installing.
+tmp_xray_paths=$(mktemp /usr/lib/xray-paths.sh.update.XXXXXX)
+if wget -q -O "$tmp_xray_paths" "${REPO}/xray-paths.sh?v=$(date +%s)" && bash -n "$tmp_xray_paths"; then
+    chmod 644 "$tmp_xray_paths"
+    mv "$tmp_xray_paths" /usr/lib/xray-paths.sh
+    echo -e "[ ${GREEN}OK${NC} ] xray-paths.sh updated."
+else
+    rm -f "$tmp_xray_paths"
+    echo -e "[ ${RED}ERROR${NC} ] Failed to update xray-paths.sh; existing file was kept."
+fi
 # # wget -q -O /usr/bin/xray-limit "${REPO}/xray-limit.sh" && chmod +x /usr/bin/xray-limit
 # wget -q -O /home/.ver "${REPO}/test/versions"
 # # wget -q -O /usr/bin/tendang "${REPO}/tendang.sh" && chmod +x /usr/bin/tendang
