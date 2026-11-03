@@ -69,16 +69,26 @@ update_local_script "xray-limit.sh" "/usr/bin/xray-limit" || true
 update_local_script "menu4.sh" "/usr/bin/menu" || true
 update_local_script "custom-path.sh" "/usr/bin/custom-path" || true
 
-# Helper is data-only shell code, but still validate it before installing.
-tmp_xray_paths=$(mktemp /usr/lib/xray-paths.sh.update.XXXXXX)
-if wget -q -O "$tmp_xray_paths" "${REPO}/xray-paths.sh?v=$(date +%s)" && bash -n "$tmp_xray_paths"; then
-    chmod 644 "$tmp_xray_paths"
-    mv "$tmp_xray_paths" /usr/lib/xray-paths.sh
-    echo -e "[ ${GREEN}OK${NC} ] xray-paths.sh updated."
-else
-    rm -f "$tmp_xray_paths"
-    echo -e "[ ${RED}ERROR${NC} ] Failed to update xray-paths.sh; existing file was kept."
-fi
+# Data-only helper scripts are also syntax-validated before installing.
+update_library_script() {
+    local script_name="$1"
+    local target_file="$2"
+    local tmp_file
+
+    tmp_file=$(mktemp "${target_file}.update.XXXXXX")
+    if wget -q -O "$tmp_file" "${REPO}/${script_name}?v=$(date +%s)" && bash -n "$tmp_file"; then
+        chmod 644 "$tmp_file"
+        mv "$tmp_file" "$target_file"
+        echo -e "[ ${GREEN}OK${NC} ] ${script_name} updated."
+    else
+        rm -f "$tmp_file"
+        echo -e "[ ${RED}ERROR${NC} ] Failed to update ${script_name}; existing file was kept."
+        return 1
+    fi
+}
+
+update_library_script "xray-paths.sh" "/usr/lib/xray-paths.sh" || true
+update_library_script "xray-account-detail.sh" "/usr/lib/xray-account-detail.sh" || true
 # # wget -q -O /usr/bin/xray-limit "${REPO}/xray-limit.sh" && chmod +x /usr/bin/xray-limit
 # wget -q -O /home/.ver "${REPO}/test/versions"
 # # wget -q -O /usr/bin/tendang "${REPO}/tendang.sh" && chmod +x /usr/bin/tendang
