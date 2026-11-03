@@ -115,8 +115,10 @@ touch /var/log/xray/access2.log
 touch /var/log/xray/error2.log
 # Make Log Autokill & Log Autoreboot
 rm -fr /root/log-limit.txt
+rm -fr /root/log-xray-limit.txt
 rm -fr /root/log-reboot.txt
 touch /root/log-limit.txt
+touch /root/log-xray-limit.txt
 touch /root/log-reboot.txt
 touch /home/limit
 echo "" > /root/log-limit.txt

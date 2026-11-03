@@ -160,13 +160,13 @@ for user in "${!USER_IP_COUNT[@]}"; do
              rm -f "$lock_file"
         fi
 
-        # Immediate Action (No Tolerance)
-        date_log=`date +"%Y-%m-%d %X"`
-        echo "$date_log - $user - $count IPs (Limit: $limit) - LOCKED" >> "$LOG_FILE"
-
+        # Only record a violation when this run actually locks the user.
+        # Otherwise each cron pass produces duplicate history for the same lock.
         if passwd -S "$user" 2>/dev/null | awk '{print $2}' | grep -q "L"; then
              : # Already locked
         else
+             date_log=`date +"%Y-%m-%d %X"`
+             echo "$date_log - $user - $count IPs (Limit: $limit) - LOCKED" >> "$LOG_FILE"
              touch "$lock_file"
              usermod -L "$user"
 
