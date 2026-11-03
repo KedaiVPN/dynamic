@@ -20,6 +20,7 @@ IWhite='\033[0;97m'       # White
 NC='\e[0m'
 
 . /usr/lib/xray-paths.sh
+. /usr/lib/xray-account-detail.sh
 green() { echo -e "\\033[32;1m${*}\\033[0m"; }
 red() { echo -e "\\033[31;1m${*}\\033[0m"; }
 
@@ -120,16 +121,6 @@ menu
 }
 function detailws() {
 clear && printf '\033[3J'
-NUMBER_OF_CLIENTS=$(grep -c -E "^#trg " "/etc/xray/config.json")
-	if [[ ${NUMBER_OF_CLIENTS} == '0' ]]; then
-		echo ""
-		echo "You have no existing clients!"
-		echo ""
-		read -n 1 -s -r -p "Press any key to back on menu"
-		menu
-	fi
-
-clear && printf '\033[3J'
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 echo -e "\\E[0;41;36m       Detail Trojan Account      \E[0m"
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
@@ -140,12 +131,38 @@ read -rp "Input Username : " user
 if [ -z "$user" ]; then
 menu
 fi
-if [ -f "/home/vps/public_html/trojan-$user.txt" ]; then
-clear && printf '\033[3J'
-cat "/home/vps/public_html/trojan-$user.txt"
+
+if xray_account_detail_lookup trojan "$user"; then
+    domain=$(cat /etc/xray/domain 2>/dev/null)
+    if [[ -z "$domain" ]]; then domain=$(curl -s https://ipinfo.io/ip/); fi
+    tr="$(cat ~/log-install.txt | grep -w "Trojan WS " | cut -d: -f2 | sed 's/ //g')"
+    [[ -n "$tr" ]] || tr=443
+
+    link_tls="trojan://${DETAIL_UUID}@${domain}:${tr}?path=${TROJAN_WS_PATH_ENCODED}&security=tls&host=${domain}&type=ws&sni=${domain}#TROJAN_WS_${user}"
+    link_go="trojan-go://${DETAIL_UUID}@${domain}:${tr}?path=${TROJAN_WS_PATH_ENCODED}&security=tls&host=${domain}&type=ws&sni=${domain}#TROJANGO_${user}"
+    link_grpc="trojan://${DETAIL_UUID}@${domain}:${tr}?mode=gun&security=tls&type=grpc&serviceName=trojan-grpc&path=trojan-grpc&sni=${domain}#TROJAN_GRPC_${user}"
+
+    clear && printf '\033[3J'
+    echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+    echo -e "\\E[0;41;36m       Detail Trojan Account      \E[0m"
+    echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+    echo -e "Remarks : ${user}"
+    echo -e "Domain : ${domain}"
+    echo -e "Status : ${DETAIL_STATE}"
+    echo -e "Expired On : ${DETAIL_EXP}"
+    echo -e "Limit Bandwidth : ${DETAIL_QUOTA} GB"
+    echo -e "IP Limit : ${DETAIL_IP_LIMIT}"
+    echo -e "Path : ${TROJAN_WS_PATH}"
+    echo -e "ServiceName : trojan-grpc"
+    echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+    echo -e "Link WS : ${link_tls}"
+    echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+    echo -e "Link GO : ${link_go}"
+    echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+    echo -e "Link GRPC : ${link_grpc}"
 else
-echo ""
-echo "Account not found or detail file missing."
+    echo ""
+    echo "Account not found in Xray account data."
 fi
 echo ""
 read -n 1 -s -r -p "Press any key to back on menu"

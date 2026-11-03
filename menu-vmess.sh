@@ -20,6 +20,7 @@ IWhite='\033[0;97m'       # White
 NC='\e[0m'
 
 . /usr/lib/xray-paths.sh
+. /usr/lib/xray-account-detail.sh
 green() { echo -e "\\033[32;1m${*}\\033[0m"; }
 red() { echo -e "\\033[31;1m${*}\\033[0m"; }
 
@@ -121,16 +122,6 @@ menu
 }
 function detailws() {
 clear && printf '\033[3J'
-NUMBER_OF_CLIENTS=$(grep -c -E "^#vmsg " "/etc/xray/config.json")
-	if [[ ${NUMBER_OF_CLIENTS} == '0' ]]; then
-		echo ""
-		echo "You have no existing clients!"
-		echo ""
-		read -n 1 -s -r -p "Press any key to back on menu"
-		menu
-	fi
-
-clear && printf '\033[3J'
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 echo -e "\\E[0;41;36m        Detail Vmess Account      \E[0m"
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
@@ -141,12 +132,43 @@ read -rp "Input Username : " user
 if [ -z "$user" ]; then
 menu
 fi
-if [ -f "/home/vps/public_html/vmess-$user.txt" ]; then
-clear && printf '\033[3J'
-cat "/home/vps/public_html/vmess-$user.txt"
+
+if xray_account_detail_lookup vmess "$user"; then
+    domain=$(cat /etc/xray/domain 2>/dev/null)
+    if [[ -z "$domain" ]]; then domain=$(curl -s https://ipinfo.io/ip/); fi
+    tls="$(cat ~/log-install.txt | grep -w "Vmess TLS" | cut -d: -f2 | sed 's/ //g')"
+    none="$(cat ~/log-install.txt | grep -w "Vmess None TLS" | cut -d: -f2 | sed 's/ //g')"
+    [[ -n "$tls" ]] || tls=443
+    [[ -n "$none" ]] || none=80
+
+    json_tls="{\"v\":\"2\",\"ps\":\"VMESS_TLS_${user}\",\"add\":\"${domain}\",\"port\":\"${tls}\",\"id\":\"${DETAIL_UUID}\",\"aid\":\"0\",\"net\":\"ws\",\"path\":\"${VMESS_WS_PATH}\",\"type\":\"none\",\"host\":\"${domain}\",\"tls\":\"tls\"}"
+    json_nontls="{\"v\":\"2\",\"ps\":\"VMESS_NTLS_${user}\",\"add\":\"${domain}\",\"port\":\"${none}\",\"id\":\"${DETAIL_UUID}\",\"aid\":\"0\",\"net\":\"ws\",\"path\":\"${VMESS_WS_PATH}\",\"type\":\"none\",\"host\":\"${domain}\",\"tls\":\"none\"}"
+    json_grpc="{\"v\":\"2\",\"ps\":\"VMESS_GRPC_${user}\",\"add\":\"${domain}\",\"port\":\"${tls}\",\"id\":\"${DETAIL_UUID}\",\"aid\":\"0\",\"net\":\"grpc\",\"path\":\"vmess-grpc\",\"type\":\"none\",\"host\":\"${domain}\",\"tls\":\"tls\"}"
+    vmess_tls_link="vmess://$(printf '%s' "$json_tls" | base64 -w 0)"
+    vmess_nontls_link="vmess://$(printf '%s' "$json_nontls" | base64 -w 0)"
+    vmess_grpc_link="vmess://$(printf '%s' "$json_grpc" | base64 -w 0)"
+
+    clear && printf '\033[3J'
+    echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+    echo -e "\\E[0;41;36m        Detail Vmess Account      \E[0m"
+    echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+    echo -e "Remarks : ${user}"
+    echo -e "Domain : ${domain}"
+    echo -e "Status : ${DETAIL_STATE}"
+    echo -e "Expired On : ${DETAIL_EXP}"
+    echo -e "Limit Bandwidth : ${DETAIL_QUOTA} GB"
+    echo -e "IP Limit : ${DETAIL_IP_LIMIT}"
+    echo -e "Path : ${VMESS_WS_PATH}"
+    echo -e "ServiceName : vmess-grpc"
+    echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+    echo -e "Link TLS : ${vmess_tls_link}"
+    echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+    echo -e "Link none TLS : ${vmess_nontls_link}"
+    echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+    echo -e "Link GRPC : ${vmess_grpc_link}"
 else
-echo ""
-echo "Account not found or detail file missing."
+    echo ""
+    echo "Account not found in Xray account data."
 fi
 echo ""
 read -n 1 -s -r -p "Press any key to back on menu"
