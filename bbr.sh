@@ -4,7 +4,7 @@
 # //	Author:	elliez667
 # //	Dscription: Xray Menu Management
 # //	email: elliez667@gmail.com
-# //  telegram: https://t.me/todfix667
+# //  website: https://monitoring.kedaivpn.my.id
 # //====================================================
 
 source /etc/os-release

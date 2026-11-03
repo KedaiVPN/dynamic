@@ -8,7 +8,7 @@ fi
 # =========================================
 # Quick Setup | Script Setup Manager
 # Edition : Stable Edition V1.0
-# Auther  : NevermoreSSH
+# Auther  : Kedai SSH
 # (C) Copyright 2022
 # =========================================
 

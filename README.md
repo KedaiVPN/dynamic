@@ -3,7 +3,7 @@
 
 <h2 align="center">
 Auto Script Install XRAY/SSH Websocket Service
-Mod By NevermoreSSH
+Mod By Kedai SSH
 <img src="https://img.shields.io/badge/Release-v3.0-red.svg"></h2>
 
 </p> 
