@@ -8,7 +8,7 @@ fi
 # =========================================
 # Quick Setup | Script Setup Manager
 # Edition : Stable Edition V1.0
-# Auther  : NevermoreSSH
+# Auther  : Kedai SSH
 # (C) Copyright 2022
 # =========================================
 
@@ -97,7 +97,7 @@ IP=$(curl -sS ifconfig.me )
 date=$(date +"%Y-%m-%d-%H:%M:%S")
 domain=$(cat /etc/xray/domain)
 clear && printf '\033[3J'
-echo " VPS Data Backup By NevermoreSSH "
+echo " VPS Data Backup By Kedai SSH "
 sleep 1
 echo -e "[ ${green}INFO${NC} ] Processing . . . "
 mkdir -p /root/backup
@@ -245,8 +245,8 @@ Semua konfigurasi rclone (dr, dr1, dr2, dr3, dr4) gagal mengupload file backup, 
 fi
 
 clear && printf '\033[3J'
-echo -e "\033[1;37mVPS Data Backup By NevermoreSSH\033[0m
-\033[1;37mTelegram : https://t.me/todfix667 / @NevermoreSSH\033[0m"
+echo -e "\033[1;37mVPS Data Backup By Kedai SSH\033[0m
+\033[1;37mWebsite  : https://monitoring.kedaivpn.my.id\033[0m"
 echo ""
 echo "Please Copy Link/Id File Below & Save In Notepad"
 echo ""

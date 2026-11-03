@@ -489,7 +489,7 @@ fi
 echo "1.1" >> /home/.ver
 curl -sS ifconfig.me > /etc/myipvps
 echo " "
-echo "====================-[ NevermoreSSH TUNNELING ]-===================="
+echo "====================-[ Kedai SSH TUNNELING ]-===================="
 echo ""
 echo "------------------------------------------------------------"
 echo ""
@@ -532,7 +532,7 @@ echo ""
 echo ""
 echo "------------------------------------------------------------"
 echo ""
-echo "===============-[ Script Mod By NEVERMORESSH TUNNELING ]-==============="
+echo "===============-[ Script Mod By KEDAI SSH TUNNELING ]-==============="
 echo -e ""
 echo ""
 echo "" | tee -a log-install.txt
