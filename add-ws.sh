@@ -288,7 +288,7 @@ echo -e "alterId : 0" | tee -a /etc/log-create-user.log
 echo -e "Security : auto" | tee -a /etc/log-create-user.log
 echo -e "Limit Bandwidth : ${quota} GB" | tee -a /etc/log-create-user.log
 echo -e "Network : ws/grpc" | tee -a /etc/log-create-user.log
-echo -e "Path : /vmess" | tee -a /etc/log-create-user.log
+echo -e "Path : ${VMESS_WS_PATH}" | tee -a /etc/log-create-user.log
 #echo -e "Path : /worryfree" | tee -a /etc/log-create-user.log
 #echo -e "Path : /kuota-habis" | tee -a /etc/log-create-user.log
 echo -e "ServiceName : vmess-grpc" | tee -a /etc/log-create-user.log
