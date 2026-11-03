@@ -349,7 +349,7 @@ case $opt_feat in
 21) clear && printf '\033[3J' ; wget -q -O /usr/bin/swapram "https://raw.githubusercontent.com/NevermoreSSH/swapram/main/swapram.sh" && chmod +x /usr/bin/swapram && swapram ;;
 22) clear && printf '\033[3J' ; /usr/local/bin/api-modules/api-bot-manager.sh ;;
 23) clear && printf '\033[3J' ; factory-reset.sh ;;
-24) clear && printf '\033[3J' ; custom-path ;;
+24) clear && printf '\033[3J' ; custom-path ; menu_features ;;
 x) menu ;;
 *) menu ;;
 esac
