@@ -57,6 +57,7 @@ echo -e " \033[1;94m[3/5]\033[0m \033[1;97mMengosongkan database expired dan log
 echo "" > /etc/expired-users.db
 echo "" > /etc/expired-users-trash.db
 echo "" > /root/log-limit.txt
+echo "" > /root/log-xray-limit.txt
 
 # 4. Kosongkan Limit History dan Kuota Xray
 echo -e " \033[1;94m[4/5]\033[0m \033[1;97mMenghapus limit user dan kuota...\033[0m"

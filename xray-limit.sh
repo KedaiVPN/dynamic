@@ -15,7 +15,8 @@ if [[ ! -x "$xray_bin" ]]; then
 fi
 
 limit_dir="/etc/xray/limit"
-limit_log="/root/log-limit.txt"
+# Kept separate from SSH multi-login history (/root/log-limit.txt).
+limit_log="/root/log-xray-limit.txt"
 
 mkdir -p "$limit_dir"
 touch "$limit_dir/vmess" "$limit_dir/vless" "$limit_dir/trojan"
@@ -122,6 +123,11 @@ process_limits() {
     fi
     if ! [[ "$reset_bytes" =~ ^[0-9]+$ ]]; then
       reset_bytes=0
+    fi
+    # Locked users are already removed from config and recorded in lock-<proto>.
+    # Skip them so the 5-minute cron does not append duplicate lock events.
+    if awk -v u="$user" '$1==u { found=1; exit } END { exit !found }' "$lock_file"; then
+      continue
     fi
     usage="$(get_usage_bytes "$user")"
     read -r offset last_seen <<< "$(get_usage_record "$usage_file" "$user")"

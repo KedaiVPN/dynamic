@@ -63,6 +63,9 @@ update_local_script "add-tr.sh" "/usr/bin/add-tr" || true
 update_local_script "menu-vmess.sh" "/usr/bin/menu-vmess" || true
 update_local_script "menu-vless.sh" "/usr/bin/menu-vless" || true
 update_local_script "menu-trojan.sh" "/usr/bin/menu-trojan" || true
+update_local_script "menu-ssh.sh" "/usr/bin/menu-ssh" || true
+update_local_script "tendang.sh" "/usr/bin/tendang" || true
+update_local_script "xray-limit.sh" "/usr/bin/xray-limit" || true
 update_local_script "menu4.sh" "/usr/bin/menu" || true
 update_local_script "custom-path.sh" "/usr/bin/custom-path" || true
 

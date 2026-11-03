@@ -160,11 +160,19 @@ clear && printf '\033[3J'
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 echo -e "\E[0;41;36m         CHECK USER MULTI SSH        \E[0m"
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-if [ -e "/root/log-limit.txt" ]; then
+ssh_log="/root/log-limit.txt"
+if [ -s "$ssh_log" ]; then
 echo "User Who Violate The Maximum Limit";
 echo "Time - Username - Number of Multilogin"
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-cat /root/log-limit.txt
+# Legacy versions mixed Xray bandwidth events into this file. Display only
+# the SSH multi-login format so old records cannot pollute this SSH submenu.
+ssh_records=$(awk '/^[0-9]{4}-[0-9]{2}-[0-9]{2} .* - .* - [0-9]+ IPs \(Limit: [0-9]+\) - LOCKED$/' "$ssh_log")
+if [ -n "$ssh_records" ]; then
+    printf '%s\n' "$ssh_records"
+else
+    echo " No user has committed a SSH multi-login violation"
+fi
 else
 echo " No user has committed a violation"
 echo " "
