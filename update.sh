@@ -77,6 +77,35 @@ update_local_script "xray-limit.sh" "/usr/bin/xray-limit" || true
 update_local_script "menu4.sh" "/usr/bin/menu" || true
 update_local_script "custom-path.sh" "/usr/bin/custom-path" || true
 
+# Refresh all other account creators, menus, and utilities so branding & URLs are fully synced
+update_local_script "add-trgo.sh" "/usr/bin/add-trgo" || true
+update_local_script "add-ssws.sh" "/usr/bin/add-ssws" || true
+update_local_script "add-socks.sh" "/usr/bin/add-socks" || true
+update_local_script "usernew.sh" "/usr/bin/usernew" || true
+update_local_script "menu-ss.sh" "/usr/bin/menu-ss" || true
+update_local_script "menu-socks.sh" "/usr/bin/menu-socks" || true
+update_local_script "menu-trgo.sh" "/usr/bin/menu-trgo" || true
+update_local_script "autoreboot.sh" "/usr/bin/autoreboot" || true
+update_local_script "restart.sh" "/usr/bin/restart" || true
+update_local_script "clearlog.sh" "/usr/bin/clearlog" || true
+update_local_script "logcleaner.sh" "/usr/bin/cleaner" || true
+update_local_script "running.sh" "/usr/bin/running" || true
+update_local_script "cek-trafik.sh" "/usr/bin/cek-trafik" || true
+update_local_script "cek-bandwidth.sh" "/usr/bin/cek-bandwidth" || true
+update_local_script "cek-expired.sh" "/usr/bin/cek-expired" || true
+update_local_script "ram.sh" "/usr/bin/cek-ram" || true
+update_local_script "limit-speed.sh" "/usr/bin/limit-speed" || true
+update_local_script "bckpbot.sh" "/usr/bin/bckp" || true
+update_local_script "backup.sh" "/usr/bin/backup" || true
+update_local_script "restore.sh" "/usr/bin/restore" || true
+update_local_script "webmin.sh" "/usr/bin/wbm" || true
+update_local_script "xp.sh" "/usr/bin/xp" || true
+update_local_script "dns.sh" "/usr/bin/dns" || true
+update_local_script "netf.sh" "/usr/bin/netf" || true
+update_local_script "bbr.sh" "/usr/bin/bbr" || true
+update_local_script "factory-reset.sh" "/usr/local/bin/factory-reset.sh" || true
+update_local_script "update.sh" "/usr/bin/update" || true
+
 # Data-only helper scripts are also syntax-validated before installing.
 update_library_script() {
     local script_name="$1"
@@ -118,16 +147,7 @@ update_library_script "xray-account-detail.sh" "/usr/lib/xray-account-detail.sh"
 # # wget -q -O /usr/bin/menu-trojan "${REPO}/menu-trojan.sh" && chmod +x /usr/bin/menu-trojan
 # # wget -q -O /usr/bin/menu-ss "${REPO}/menu-ss.sh" && chmod +x /usr/bin/menu-ss
 # # wget -q -O /usr/bin/cek-trafik "${REPO}/cek-trafik.sh" && chmod +x /usr/bin/cek-trafik
-wget -q -O /usr/bin/cek-expired "${REPO}/cek-expired.sh" && chmod +x /usr/bin/cek-expired
-# # wget -q -O /usr/bin/menu-vless "${REPO}/menu-vless.sh" && chmod +x /usr/bin/menu-vless
-wget -q -O /usr/bin/running "${REPO}/running.sh" && chmod +x /usr/bin/running
-# # wget -q -O /usr/bin/restart "${REPO}/restart.sh" && chmod +x /usr/bin/restart
-# # wget -q -O /usr/local/bin/cek-lisensi "${REPO}/cek-lisensi.sh" && chmod +x /usr/local/bin/cek-lisensi
-# # # wget -q -O /usr/local/bin/ws-stunnel "${REPO}/ws-stunnel" && chmod +x /usr/local/bin/ws-stunnel
-wget -q -O /usr/bin/backup "${REPO}/backup.sh" && chmod +x /usr/bin/backup
-wget -q -O /usr/bin/restore "${REPO}/restore.sh" && chmod +x /usr/bin/restore
-# # wget -q -O /usr/bin/clearlog "${REPO}/clearlog.sh" && chmod +x /usr/bin/clearlog
- wget -q -O /usr/bin/xp "${REPO}/xp.sh" && chmod +x /usr/bin/xp
+# Scripts previously updated here are now handled safely with syntax validation by update_local_script above
 # # wget -q -O /usr/local/bin/factory-reset.sh "${REPO}/factory-reset.sh" && chmod +x /usr/local/bin/factory-reset.sh
 
 echo -e "[ ${GREEN}INFO${NC} ] Mengupdate rclone.conf..."

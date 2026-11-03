@@ -20,6 +20,11 @@ assert_contains 'update_local_script "add-tr.sh" "/usr/bin/add-tr"'
 assert_contains 'update_local_script "menu-vmess.sh" "/usr/bin/menu-vmess"'
 assert_contains 'update_local_script "menu-vless.sh" "/usr/bin/menu-vless"'
 assert_contains 'update_local_script "menu-trojan.sh" "/usr/bin/menu-trojan"'
+assert_contains 'update_local_script "usernew.sh" "/usr/bin/usernew"'
+assert_contains 'update_local_script "dns.sh" "/usr/bin/dns"'
+assert_contains 'update_local_script "backup.sh" "/usr/bin/backup"'
+assert_contains 'update_local_script "running.sh" "/usr/bin/running"'
+assert_contains 'update_local_script "update.sh" "/usr/bin/update"'
 
 # Updates must validate the downloaded shell script before replacing a running
 # server's executable, so a fetch failure cannot silently install an error page.
