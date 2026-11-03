@@ -26,6 +26,14 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 END
 chmod 644 /etc/cron.d/xp_otm
 
+# Clear only Xray bandwidth-lock history at 07:00. Keep SSH lock history intact.
+cat > /etc/cron.d/clear-xray-limit <<-END
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+0 7 * * * root : > /root/log-xray-limit.txt
+END
+chmod 644 /etc/cron.d/clear-xray-limit
+
 # 1.6 Fix script xp.sh agar tidak modifikasi file secara langsung saat loop baca
 wget -q -O /usr/bin/xp "${REPO}/xp.sh" && chmod +x /usr/bin/xp
 

@@ -436,6 +436,15 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 END
 chmod 644 /etc/cron.d/cl_otm
 
+# Keep Xray bandwidth-lock history for the day, then clear only this history
+# at 07:00 local server time. SSH multi-login history is intentionally untouched.
+cat > /etc/cron.d/clear-xray-limit <<-END
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+0 7 * * * root : > /root/log-xray-limit.txt
+END
+chmod 644 /etc/cron.d/clear-xray-limit
+
 cat > /home/re_otm <<-END
 7
 END
