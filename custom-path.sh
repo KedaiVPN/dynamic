@@ -214,48 +214,62 @@ list_aliases() {
     fi
 }
 
-print_active_paths_panel() {
-    local vmess_path vless_path trojan_path
-    vmess_path=$(active_path VMESS_WS_PATH "$DEFAULT_VMESS_PATH")
-    vless_path=$(active_path VLESS_WS_PATH "$DEFAULT_VLESS_PATH")
-    trojan_path=$(active_path TROJAN_WS_PATH "$DEFAULT_TROJAN_PATH")
+box_top() { echo -e "${BIRed} ╔══════════════════════════════════════════════════════════╗${NC}"; }
+box_separator() { echo -e "${BIRed} ╠══════════════════════════════════════════════════════════╣${NC}"; }
+box_bottom() { echo -e "${BIRed} ╚══════════════════════════════════════════════════════════╝${NC}"; }
 
-    echo -e "${BIRed} ╠══════════════════════════════════════════════════════════╣${NC}"
-    echo -e "${BIRed} ║             ${BIWhite}ACTIVE PATH CONFIGURATION${NC}                    ${BIRed}║${NC}"
-    printf '\033[1;91m ║   \033[1;92mVMESS \033[1;97m : \033[1;96m%-40s \033[1;91m║\033[0m\n' "$vmess_path"
-    printf '\033[1;91m ║   \033[1;92mVLESS \033[1;97m : \033[1;96m%-40s \033[1;91m║\033[0m\n' "$vless_path"
-    printf '\033[1;91m ║   \033[1;92mTROJAN\033[1;97m : \033[1;96m%-40s \033[1;91m║\033[0m\n' "$trojan_path"
+# One renderer owns every inner line. The fixed 58-cell content area prevents
+# the right border from shifting on mobile terminals.
+box_line() {
+    printf '%b ║%b%-58s%b║%b\n' "$BIRed" "$BIWhite" "$1" "$BIRed" "$NC"
+}
+
+box_default_path_line() {
+    local protocol="$1" path="$2" label_padding spaces
+    # Protocol labels use a fixed six-cell column; ANSI colors never affect padding.
+    label_padding=$((6 - ${#protocol}))
+    spaces=$((58 - 3 - 6 - 3 - ${#path}))
+    printf '%b ║   %b%s%*s%b : %b%s%*s%b║%b\n' \
+        "$BIRed" "$BIGreen" "$protocol" "$label_padding" '' "$BIWhite" "$BICyan" "$path" "$spaces" '' "$BIRed" "$NC"
+}
+
+print_default_paths_panel() {
+    # Static display only; it intentionally does not reveal or mutate active aliases.
+    box_separator
+    box_line "                       DEFAULT PATH"
+    box_default_path_line "VMESS" "/vmess"
+    box_default_path_line "VLESS" "/vless"
+    box_default_path_line "TROJAN" "/trojan-ws"
 }
 
 print_custom_path_menu() {
     clear && printf '\033[3J'
-    echo -e "${BIRed} ╔══════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BIRed} ║                    ${BIWhite}${UWhite}> CUSTOM PATH <${NC}                    ${BIRed}║${NC}"
-    print_active_paths_panel
-    echo -e "${BIRed} ╠══════════════════════════════════════════════════════════╣${NC}"
-    echo -e "${BIRed} ║   ${BIRed}[${BIWhite}01${BIRed}]${BIWhite} EDIT PATH VMESS      ${BIRed}[${BIWhite}03${BIRed}]${BIWhite} EDIT PATH TROJAN        ${BIRed}║${NC}"
-    echo -e "${BIRed} ║   ${BIRed}[${BIWhite}02${BIRed}]${BIWhite} EDIT PATH VLESS      ${BIRed}[${BIWhite}04${BIRed}]${BIWhite} LIST CUSTOM PATH        ${BIRed}║${NC}"
-    echo -e "${BIRed} ║                                                          ${BIRed}║${NC}"
-    echo -e "${BIRed} ║   ${BIRed}[${BIWhite} x${BIRed}]${BIWhite} BACK TO FEATURES                                ${BIRed}║${NC}"
-    echo -e "${BIRed} ╚══════════════════════════════════════════════════════════╝${NC}"
+    box_top
+    box_line "                    > CUSTOM PATH <"
+    print_default_paths_panel
+    box_separator
+    box_line "   [01] EDIT PATH VMESS      [03] EDIT PATH TROJAN"
+    box_line "   [02] EDIT PATH VLESS      [04] LIST CUSTOM PATH"
+    box_line ""
+    box_line "   [ x] BACK TO FEATURES"
+    box_bottom
     echo
 }
 
 print_aliases_panel() {
     clear && printf '\033[3J'
-    echo -e "${BIRed} ╔══════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BIRed} ║                  ${BIWhite}${UWhite}> CUSTOM PATH LIST <${NC}                 ${BIRed}║${NC}"
-    echo -e "${BIRed} ╠══════════════════════════════════════════════════════════╣${NC}"
+    box_top
+    box_line "                  > CUSTOM PATH LIST <"
+    box_separator
     if [[ -s "$ALIAS_CONFIG" ]]; then
         while IFS='|' read -r protocol public_path internal_path port; do
             [[ -n "$protocol" ]] || continue
-            printf '\033[1;91m ║   \033[1;92m%-6s\033[1;97m : \033[1;96m%-18s\033[1;97m > %-11s \033[1;91m║\033[0m\n' \
-                "${protocol^^}" "$public_path" "$internal_path"
+            box_line "   ${protocol^^} : ${public_path} > ${internal_path}"
         done < "$ALIAS_CONFIG"
     else
-        echo -e "${BIRed} ║             ${IYellow}NO CUSTOM PATH CONFIGURED${NC}                 ${BIRed}║${NC}"
+        box_line "             NO CUSTOM PATH CONFIGURED"
     fi
-    echo -e "${BIRed} ╚══════════════════════════════════════════════════════════╝${NC}"
+    box_bottom
     echo
 }
 
@@ -274,9 +288,9 @@ interactive_menu() {
             *) echo -e "${BIYellow} Invalid menu.${NC}"; sleep 1; continue ;;
         esac
 
-        echo -e "${BIRed} ╔══════════════════════════════════════════════════════════╗${NC}"
-        printf '\033[1;91m ║   \033[1;97mEDIT %-48s \033[1;91m║\033[0m\n' "${protocol^^} PATH"
-        echo -e "${BIRed} ╚══════════════════════════════════════════════════════════╝${NC}"
+        box_top
+        box_line "   EDIT ${protocol^^} PATH"
+        box_bottom
         read -r -p "$(echo -e " ${BIWhite}New path${BIRed} [${BICyan}/${protocol}-lea${BIRed}]${BIWhite} : ${NC}")" path
         if set_path "$protocol" "$path"; then
             echo -e "${IGreen} Path saved. New ${protocol^^} accounts will use ${path}.${NC}"
