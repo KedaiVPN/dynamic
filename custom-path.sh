@@ -11,6 +11,18 @@ readonly DEFAULT_VMESS_PATH="/vmess"
 readonly DEFAULT_VLESS_PATH="/vless"
 readonly DEFAULT_TROJAN_PATH="/trojan-ws"
 
+# Keep the custom-path screen consistent with Dynamic's existing menu4.sh UI.
+BIRed='\033[1;91m'
+BIGreen='\033[1;92m'
+BIYellow='\033[1;93m'
+BICyan='\033[1;96m'
+BIWhite='\033[1;97m'
+UWhite='\033[4;37m'
+IGreen='\033[0;92m'
+IYellow='\033[0;93m'
+IWhite='\033[0;97m'
+NC='\e[0m'
+
 fail() {
     printf 'ERROR: %s\n' "$*" >&2
     return 1
@@ -202,30 +214,76 @@ list_aliases() {
     fi
 }
 
+print_active_paths_panel() {
+    local vmess_path vless_path trojan_path
+    vmess_path=$(active_path VMESS_WS_PATH "$DEFAULT_VMESS_PATH")
+    vless_path=$(active_path VLESS_WS_PATH "$DEFAULT_VLESS_PATH")
+    trojan_path=$(active_path TROJAN_WS_PATH "$DEFAULT_TROJAN_PATH")
+
+    echo -e "${BIRed} ╠══════════════════════════════════════════════════════════╣${NC}"
+    echo -e "${BIRed} ║             ${BIWhite}ACTIVE PATH CONFIGURATION${NC}                    ${BIRed}║${NC}"
+    printf '\033[1;91m ║   \033[1;92mVMESS \033[1;97m : \033[1;96m%-40s \033[1;91m║\033[0m\n' "$vmess_path"
+    printf '\033[1;91m ║   \033[1;92mVLESS \033[1;97m : \033[1;96m%-40s \033[1;91m║\033[0m\n' "$vless_path"
+    printf '\033[1;91m ║   \033[1;92mTROJAN\033[1;97m : \033[1;96m%-40s \033[1;91m║\033[0m\n' "$trojan_path"
+}
+
+print_custom_path_menu() {
+    clear && printf '\033[3J'
+    echo -e "${BIRed} ╔══════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${BIRed} ║                    ${BIWhite}${UWhite}> CUSTOM PATH <${NC}                    ${BIRed}║${NC}"
+    print_active_paths_panel
+    echo -e "${BIRed} ╠══════════════════════════════════════════════════════════╣${NC}"
+    echo -e "${BIRed} ║   ${BIRed}[${BIWhite}01${BIRed}]${BIWhite} EDIT PATH VMESS      ${BIRed}[${BIWhite}03${BIRed}]${BIWhite} EDIT PATH TROJAN        ${BIRed}║${NC}"
+    echo -e "${BIRed} ║   ${BIRed}[${BIWhite}02${BIRed}]${BIWhite} EDIT PATH VLESS      ${BIRed}[${BIWhite}04${BIRed}]${BIWhite} LIST CUSTOM PATH        ${BIRed}║${NC}"
+    echo -e "${BIRed} ║                                                          ${BIRed}║${NC}"
+    echo -e "${BIRed} ║   ${BIRed}[${BIWhite} x${BIRed}]${BIWhite} BACK TO FEATURES                                ${BIRed}║${NC}"
+    echo -e "${BIRed} ╚══════════════════════════════════════════════════════════╝${NC}"
+    echo
+}
+
+print_aliases_panel() {
+    clear && printf '\033[3J'
+    echo -e "${BIRed} ╔══════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${BIRed} ║                  ${BIWhite}${UWhite}> CUSTOM PATH LIST <${NC}                 ${BIRed}║${NC}"
+    echo -e "${BIRed} ╠══════════════════════════════════════════════════════════╣${NC}"
+    if [[ -s "$ALIAS_CONFIG" ]]; then
+        while IFS='|' read -r protocol public_path internal_path port; do
+            [[ -n "$protocol" ]] || continue
+            printf '\033[1;91m ║   \033[1;92m%-6s\033[1;97m : \033[1;96m%-18s\033[1;97m > %-11s \033[1;91m║\033[0m\n' \
+                "${protocol^^}" "$public_path" "$internal_path"
+        done < "$ALIAS_CONFIG"
+    else
+        echo -e "${BIRed} ║             ${IYellow}NO CUSTOM PATH CONFIGURED${NC}                 ${BIRed}║${NC}"
+    fi
+    echo -e "${BIRed} ╚══════════════════════════════════════════════════════════╝${NC}"
+    echo
+}
+
 interactive_menu() {
     local choice protocol path
     while true; do
-        clear 2>/dev/null || true
-        echo '================ CUSTOM PATH ================'
-        show_paths
-        echo '---------------------------------------------'
-        echo '[1] Set active VMESS path'
-        echo '[2] Set active VLESS path'
-        echo '[3] Set active TROJAN path'
-        echo '[4] List custom aliases'
-        echo '[x] Back'
-        read -r -p 'Select menu: ' choice
+        ensure_files
+        print_custom_path_menu
+        read -r -p "$(echo -e " ${BIWhite}Select menu${BIRed} : ${NC}")" choice
         case "$choice" in
             1) protocol=vmess ;;
             2) protocol=vless ;;
             3) protocol=trojan ;;
-            4) list_aliases; read -r -p 'Press Enter to continue...'; continue ;;
+            4) print_aliases_panel; read -r -p ' Press Enter to return...'; continue ;;
             x|X) return ;;
-            *) echo 'Invalid menu.'; sleep 1; continue ;;
+            *) echo -e "${BIYellow} Invalid menu.${NC}"; sleep 1; continue ;;
         esac
-        read -r -p "New ${protocol} path (example: /${protocol}-lea): " path
-        set_path "$protocol" "$path" || true
-        read -r -p 'Press Enter to continue...'
+
+        echo -e "${BIRed} ╔══════════════════════════════════════════════════════════╗${NC}"
+        printf '\033[1;91m ║   \033[1;97mEDIT %-48s \033[1;91m║\033[0m\n' "${protocol^^} PATH"
+        echo -e "${BIRed} ╚══════════════════════════════════════════════════════════╝${NC}"
+        read -r -p "$(echo -e " ${BIWhite}New path${BIRed} [${BICyan}/${protocol}-lea${BIRed}]${BIWhite} : ${NC}")" path
+        if set_path "$protocol" "$path"; then
+            echo -e "${IGreen} Path saved. New ${protocol^^} accounts will use ${path}.${NC}"
+        else
+            echo -e "${BIYellow} Path was not changed. Check the error above.${NC}"
+        fi
+        read -r -p ' Press Enter to return...'
     done
 }
 
