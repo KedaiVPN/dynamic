@@ -22,6 +22,7 @@ done
 # VMESS values are embedded before Base64 encoding, while VLESS/Trojan values
 # are URL parameters. gRPC must remain intentionally unchanged.
 assert_contains add-ws.sh '"path": "${VMESS_WS_PATH}"'
+assert_contains add-ws.sh 'Path : ${VMESS_WS_PATH}'
 assert_contains menu-vmess.sh '"path": "${VMESS_WS_PATH}"'
 assert_contains api-modules/api-xray-create.sh '\"path\":\"${VMESS_WS_PATH}\"'
 assert_contains api-modules/api-xray-trial.sh '\"path\":\"${VMESS_WS_PATH}\"'
