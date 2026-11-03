@@ -16,11 +16,11 @@ assert_contains() {
 assert_contains ins-xray.sh 'include /etc/nginx/conf.d/xray-custom-paths.inc;'
 assert_contains update.sh 'include /etc/nginx/conf.d/xray-custom-paths.inc;'
 
-# Fresh installation must deploy manager and parser; update must refresh both.
+# Fresh installation deploys manager/parser; update refreshes them atomically.
 assert_contains setup.sh 'download_or_copy "custom-path.sh" "/usr/bin/custom-path"'
 assert_contains setup.sh 'download_or_copy "xray-paths.sh" "/usr/lib/xray-paths.sh"'
-assert_contains update.sh 'wget -q -O /usr/bin/custom-path "${REPO}/custom-path.sh"'
-assert_contains update.sh 'wget -q -O /usr/lib/xray-paths.sh "${REPO}/xray-paths.sh"'
+assert_contains update.sh 'update_local_script "custom-path.sh" "/usr/bin/custom-path"'
+assert_contains update.sh 'mv "$tmp_xray_paths" /usr/lib/xray-paths.sh'
 
 # The Features menu exposes the locally installed manager, not an external URL.
 assert_contains menu4.sh 'CUSTOM PATH'
