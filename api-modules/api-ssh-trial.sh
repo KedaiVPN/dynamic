@@ -21,6 +21,14 @@ limit_file="/etc/ssh/limit-user.conf"
 mkdir -p /etc/ssh
 echo "$user 1" >> "$limit_file"
 
+# Optional SlowDNS account metadata.
+slowdns_json=""
+if [[ -r /usr/lib/slowdns-config.sh ]]; then
+    # shellcheck disable=SC1091
+    source /usr/lib/slowdns-config.sh
+    slowdns_json=$(slowdns_json_fields)
+fi
+
 domain=$(cat /etc/xray/domain 2>/dev/null)
 if [[ -z "$domain" ]]; then domain=$(curl -s https://ipinfo.io/ip/); fi
 ssh_ws=$(grep -w "SSH Websocket" /root/log-install.txt | cut -d: -f2 | awk '{print $1}')
@@ -40,7 +48,7 @@ cat <<EOF
     "quota": "0",
     "ssh_ws_port": "$ssh_ws",
     "ssh_ssl_port": "$ssh_ssl",
-    "ssl_port": "$ssl_port"
+    "ssl_port": "$ssl_port"$slowdns_json
   }
 }
 EOF

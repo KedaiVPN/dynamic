@@ -48,6 +48,13 @@ export Server_IP="underfined"
 export Script_Mode="Stable"
 export Auther=".geovpn"
 
+# SlowDNS account metadata is optional and only appears while the service is active.
+if [[ -r /usr/lib/slowdns-config.sh ]]; then
+    # shellcheck disable=SC1091
+    source /usr/lib/slowdns-config.sh
+    slowdns_load_config
+fi
+
 # // Root Checking
 if [ "${EUID}" -ne 0 ]; then
 		echo -e "${EROR} Please Run This Script As Root User !"
@@ -126,6 +133,11 @@ fi
 echo "$Login $limitlogin" >> "$limit_file"
 PID=`ps -ef |grep -v grep | grep sshws |awk '{print $2}'`
 
+slowdns_info=""
+if slowdns_is_active; then
+    slowdns_info=$(slowdns_account_fields)
+fi
+
 cat > /home/vps/public_html/ssh-$Login.txt <<-END
 ====================================================================
              P R O J E C T  O F  K E D A I  S S H
@@ -145,6 +157,7 @@ Expired On : $exp
 ====================================================================
 IP Address : $IP
 Host : $domen
+$slowdns_info
 OpenSSH : $opensh
 Dropbear : $db
 SSH-WS : $portsshws

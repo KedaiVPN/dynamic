@@ -50,6 +50,13 @@ export Server_IP="underfined"
 export Script_Mode="Stable"
 export Auther=".geovpn"
 
+# SlowDNS account metadata is optional and only appears while the service is active.
+if [[ -r /usr/lib/slowdns-config.sh ]]; then
+    # shellcheck disable=SC1091
+    source /usr/lib/slowdns-config.sh
+    slowdns_load_config
+fi
+
 # // Root Checking
 if [ "${EUID}" -ne 0 ]; then
 		echo -e "${EROR} Please Run This Script As Root User !"
@@ -612,7 +619,14 @@ function trialssh(){
     echo -e "Password   : $pass"
     echo -e "Expired    : $masa_aktif_menit Menit"
     echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+    slowdns_info=""
+    if slowdns_is_active; then
+        slowdns_info=$(slowdns_account_fields)
+    fi
     echo -e "Host       : $domain"
+    if [[ -n "$slowdns_info" ]]; then
+        echo -e "$slowdns_info"
+    fi
     echo -e "OpenSSH    : $opensh"
     echo -e "Dropbear   : $db"
     echo -e "SSH-WS     : $portsshws"
@@ -643,6 +657,7 @@ echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 8${BIRed}]${BIWhite} Check Member SS
 echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 9${BIRed}]${BIWhite} Edit Limit Login SSH                         ${BIRed}║${NC}"
 echo -e "${BIRed} ║   ${BIRed}[${BIWhite}10${BIRed}]${BIWhite} Lock/Unlock User SSH                         ${BIRed}║${NC}"
 echo -e "${BIRed} ║   ${BIRed}[${BIWhite}11${BIRed}]${BIWhite} Trial Account SSH                            ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}12${BIRed}]${BIWhite} SLOWDNS                                     ${BIRed}║${NC}"
 echo -e "${BIRed} ╚═════════════════════════════════════════════════════╝${NC}"
 echo -e "     ${BIYellow}Press x or [ Ctrl+C ] • To-${BIWhite}Exit${NC}"
 echo ""
@@ -660,6 +675,7 @@ case $opt in
 9) clear && printf '\033[3J' ; editlimit ;;
 10) clear && printf '\033[3J' ; manual_lock_unlock ;;
 11) clear && printf '\033[3J' ; trialssh ;;
+12) clear && printf '\033[3J' ; slowdns ;;
 0) clear && printf '\033[3J' ; menu ;;
 x) exit ;;
 *) echo -e "" ; echo "Press any key to back on menu" ; sleep 1 ; menu ;;

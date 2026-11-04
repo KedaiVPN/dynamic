@@ -336,6 +336,8 @@ download_or_copy "bckpbot.sh" "/usr/bin/bckp"
 download_or_copy "usernew.sh" "/usr/bin/usernew"
 download_or_copy "menu4.sh" "/usr/bin/menu"
 download_or_copy "custom-path.sh" "/usr/bin/custom-path"
+download_or_copy "slowdns.sh" "/usr/bin/slowdns"
+download_or_copy "slowdns-config.sh" "/usr/lib/slowdns-config.sh"
 download_or_copy "xray-paths.sh" "/usr/lib/xray-paths.sh"
 download_or_copy "xray-account-detail.sh" "/usr/lib/xray-account-detail.sh"
 download_or_copy "webmin.sh" "/usr/bin/wbm"
@@ -361,6 +363,8 @@ chmod +x /usr/bin/add-vless
 chmod +x /usr/bin/add-tr
 chmod +x /usr/bin/add-trgo
 chmod +x /usr/bin/custom-path
+chmod +x /usr/bin/slowdns
+chmod 644 /usr/lib/slowdns-config.sh
 chmod 644 /usr/lib/xray-paths.sh
 chmod 644 /usr/lib/xray-account-detail.sh
 chmod +x /usr/bin/usernew
