@@ -77,8 +77,16 @@ fi
 # Hapus config individual di public_html
 rm -f /home/vps/public_html/*.txt > /dev/null 2>&1
 
-# 5. Restart Services
-echo -e " \033[1;94m[5/5]\033[0m \033[1;97mMerestart layanan sistem...\033[0m"
+# 5. Disable and remove optional SlowDNS state without touching Xray/Nginx.
+echo -e " \033[1;94m[5/5]\033[0m \033[1;97mMenonaktifkan layanan SlowDNS...\033[0m"
+if command -v /usr/bin/slowdns >/dev/null 2>&1; then
+    /usr/bin/slowdns disable >/dev/null 2>&1 || true
+fi
+rm -f /etc/systemd/system/slowdns.service /etc/slowdns/config /etc/slowdns/server.key /etc/slowdns/server.pub /etc/slowdns/dnstt-server
+systemctl daemon-reload >/dev/null 2>&1 || true
+
+# 6. Restart Services
+echo -e " \033[1;94m[6/6]\033[0m \033[1;97mMerestart layanan sistem...\033[0m"
 systemctl restart xray > /dev/null 2>&1
 systemctl restart ssh > /dev/null 2>&1
 systemctl restart sshd > /dev/null 2>&1

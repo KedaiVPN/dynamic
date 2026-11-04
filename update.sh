@@ -105,6 +105,7 @@ update_local_script "netf.sh" "/usr/bin/netf" || true
 update_local_script "bbr.sh" "/usr/bin/bbr" || true
 update_local_script "factory-reset.sh" "/usr/local/bin/factory-reset.sh" || true
 update_local_script "update.sh" "/usr/bin/update" || true
+update_local_script "slowdns.sh" "/usr/bin/slowdns" || true
 
 # Data-only helper scripts are also syntax-validated before installing.
 update_library_script() {
@@ -124,6 +125,7 @@ update_library_script() {
     fi
 }
 
+update_library_script "slowdns-config.sh" "/usr/lib/slowdns-config.sh" || true
 update_library_script "xray-paths.sh" "/usr/lib/xray-paths.sh" || true
 update_library_script "xray-account-detail.sh" "/usr/lib/xray-account-detail.sh" || true
 # # wget -q -O /usr/bin/xray-limit "${REPO}/xray-limit.sh" && chmod +x /usr/bin/xray-limit

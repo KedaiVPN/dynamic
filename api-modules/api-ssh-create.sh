@@ -72,6 +72,14 @@ if [[ -n "$iplimit" && "$iplimit" -gt 0 ]]; then
     echo "$user $iplimit" >> "$limit_file"
 fi
 
+# Optional SlowDNS account metadata.
+slowdns_json=""
+if [[ -r /usr/lib/slowdns-config.sh ]]; then
+    # shellcheck disable=SC1091
+    source /usr/lib/slowdns-config.sh
+    slowdns_json=$(slowdns_json_fields)
+fi
+
 # Get Domain
 domain=$(cat /etc/xray/domain 2>/dev/null)
 if [[ -z "$domain" ]]; then
@@ -97,7 +105,7 @@ cat <<EOF
     "quota": "$quota",
     "ssh_ws_port": "$ssh_ws",
     "ssh_ssl_port": "$ssh_ssl",
-    "ssl_port": "$ssl_port"
+    "ssl_port": "$ssl_port"$slowdns_json
   }
 }
 EOF
