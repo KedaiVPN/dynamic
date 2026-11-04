@@ -22,14 +22,29 @@ assert_contains usernew.sh 'slowdns_load_config'
 assert_contains menu-ssh.sh 'slowdns_load_config'
 assert_contains api-modules/api-ssh-create.sh 'slowdns_json_fields'
 assert_contains api-modules/api-ssh-trial.sh 'slowdns_json_fields'
+assert_contains slowdns.sh 'SLOWDNS_BIN=${SLOWDNS_BIN:-$SLOWDNS_DIR/slowdns}'
+assert_contains slowdns.sh 'SLOWDNS_BINARY_SHA256='
+assert_contains slowdns.sh 'SLOWDNS_BINARY_URL='
+assert_contains slowdns.sh 'SLOWDNS_UDP_ADDR'
+assert_contains slowdns.sh 'SLOWDNS_NS_DOMAIN=${SLOWDNS_NS_DOMAIN_OVERRIDE:-ns-${domain}}'
+assert_contains slowdns.sh '--notrack'
+assert_contains slowdns.sh 'udp --dport 1:52'
+assert_contains slowdns.sh 'udp --dport 54:65535'
 assert_contains slowdns-config.sh 'SLOWDNS_RESOLVER'
-assert_contains slowdns-config.sh 'DNS       :'
-assert_contains factory-reset.sh '/etc/slowdns'
+assert_contains slowdns-config.sh 'SLOWDNS_DIR:-/root/slowdns'
+assert_contains slowdns-config.sh 'slowdns.env'
+assert_contains factory-reset.sh '/root/slowdns'
 assert_contains factory-reset.sh 'slowdns disable'
+assert_contains setup.sh 'slowdns enable'
 assert_contains setup.sh 'chmod +x /usr/bin/slowdns'
 assert_contains update.sh 'update_local_script "update.sh" "/usr/bin/update"'
 assert_contains update.sh 'update_library_script "slowdns-config.sh" "/usr/lib/slowdns-config.sh"'
+assert_contains update.sh '/usr/bin/slowdns enable'
 
+if grep -nE 'dnstt-server|dnstt\.network|SLOWDNS_INTERNAL_PORT' slowdns.sh >/dev/null; then
+    echo 'FAIL: SlowDNS manager still contains legacy DNSTT implementation' >&2
+    exit 1
+fi
 if grep -nE 'config\.json|nginx\.conf|xray\.conf' slowdns.sh >/dev/null; then
     echo 'FAIL: SlowDNS manager must not modify Xray/Nginx configuration' >&2
     exit 1
