@@ -44,17 +44,40 @@ echo -e "[ ${GREEN}INFO${NC} ] Mendownload script yang termasuk dalam daftar upd
 update_local_script() {
     local script_name="$1"
     local target_file="$2"
+    local kind="${3:-bash}"
     local tmp_file
 
     tmp_file=$(mktemp "${target_file}.update.XXXXXX")
-    if wget -q -O "$tmp_file" "${REPO}/${script_name}?v=$(date +%s)" && [ -s "$tmp_file" ] && bash -n "$tmp_file"; then
-        chmod 755 "$tmp_file"
-        mv "$tmp_file" "$target_file"
-        echo -e "[ ${GREEN}OK${NC} ] ${script_name} updated."
-    else
+    if ! wget -q -O "$tmp_file" "${REPO}/${script_name}?v=$(date +%s)" || [ ! -s "$tmp_file" ]; then
         rm -f "$tmp_file"
-        echo -e "[ ${RED}SKIP${NC} ] ${script_name}: source unavailable or invalid; existing file was kept."
+        echo -e "[ ${RED}SKIP${NC} ] ${script_name}: source unavailable; existing file was kept."
+        return 0
     fi
+    case "$kind" in
+        bash)
+            if ! bash -n "$tmp_file"; then
+                rm -f "$tmp_file"
+                echo -e "[ ${RED}SKIP${NC} ] ${script_name}: Bash validation failed; existing file was kept."
+                return 0
+            fi
+            ;;
+        python)
+            if ! python3 -m py_compile "$tmp_file"; then
+                rm -f "$tmp_file" "${tmp_file}c"
+                echo -e "[ ${RED}SKIP${NC} ] ${script_name}: Python validation failed; existing file was kept."
+                return 0
+            fi
+            rm -f "${tmp_file}c"
+            ;;
+        *)
+            rm -f "$tmp_file"
+            echo -e "[ ${RED}SKIP${NC} ] ${script_name}: unknown validator; existing file was kept."
+            return 0
+            ;;
+    esac
+    chmod 755 "$tmp_file"
+    mv "$tmp_file" "$target_file"
+    echo -e "[ ${GREEN}OK${NC} ] ${script_name} updated."
 }
 
 # Refresh every terminal-side VMESS/VLESS/Trojan creator. Older servers used
@@ -88,8 +111,10 @@ update_local_script "running.sh" "/usr/bin/running" || true
 update_local_script "cek-trafik.sh" "/usr/bin/cek-trafik" || true
 update_local_script "cek-bandwidth.sh" "/usr/bin/cek-bandwidth" || true
 update_local_script "cek-expired.sh" "/usr/bin/cek-expired" || true
-# ram.sh, limit-speed.sh, and bckpbot.sh are intentionally excluded from
-# this updater cycle; their existing installed versions remain untouched.
+# ram.sh is Python and limit-speed.sh is Bash; use their correct validators.
+update_local_script "ram.sh" "/usr/bin/cek-ram" python || true
+update_local_script "limit-speed.sh" "/usr/bin/limit-speed" bash || true
+# bckpbot.sh has no source file in this repository; do not request it.
 update_local_script "backup.sh" "/usr/bin/backup" || true
 update_local_script "restore.sh" "/usr/bin/restore" || true
 update_local_script "webmin.sh" "/usr/bin/wbm" || true
