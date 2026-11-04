@@ -119,4 +119,4 @@ else
 clear && printf '\033[3J'
 echo " You Entered The Wrong Number"
 menu
-fi�
+fi
