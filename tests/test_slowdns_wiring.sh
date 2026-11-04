@@ -51,6 +51,7 @@ if grep -nE 'config\.json|nginx\.conf|xray\.conf' slowdns.sh >/dev/null; then
 fi
 
 bash -n slowdns.sh usernew.sh menu-ssh.sh api-modules/api-ssh-create.sh api-modules/api-ssh-trial.sh
-bash -n tests/test_slowdns_wiring.sh
+bash -n tests/test_slowdns_wiring.sh tests/test_slowdns_fresh_server.sh
+bash tests/test_slowdns_fresh_server.sh
 
 echo 'PASS: SlowDNS wiring and route isolation'

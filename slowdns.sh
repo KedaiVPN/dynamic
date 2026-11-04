@@ -4,6 +4,7 @@ set -euo pipefail
 # Official HTTP Custom SlowDNS package manager.
 # The bundled package is the ePro release compatible with HC 8.0.10.914.
 SLOWDNS_DIR=${SLOWDNS_DIR:-/root/slowdns}
+SLOWDNS_LEGACY_DIR=${SLOWDNS_LEGACY_DIR:-/etc/slowdns}
 SLOWDNS_ENV_FILE=${SLOWDNS_ENV_FILE:-$SLOWDNS_DIR/slowdns.env}
 SLOWDNS_BIN=${SLOWDNS_BIN:-$SLOWDNS_DIR/slowdns}
 SLOWDNS_KEY=${SLOWDNS_KEY:-$SLOWDNS_DIR/server.key}
@@ -78,23 +79,29 @@ download_package() {
 }
 
 install_binary() {
-    local tmpdir tmpbin
+    local tmpdir tmpbin status=1
     download_package || return 1
     tmpdir=$(mktemp -d "$SLOWDNS_DIR/.extract.XXXXXX")
-    trap 'rm -rf -- "$tmpdir"' RETURN
-    tar -xzf "$SLOWDNS_PACKAGE" -C "$tmpdir" slowdns
-    tmpbin="$tmpdir/slowdns"
-    [[ -x "$tmpbin" ]] || { red 'Binary slowdns tidak ditemukan dalam paket resmi.'; return 1; }
-    [[ "$(sha256sum "$tmpbin" | awk '{print $1}')" == "$SLOWDNS_BINARY_SHA256" ]] || {
-        red 'Checksum binary SlowDNS resmi tidak cocok.'
-        return 1
-    }
-    install -d -m 0700 "$SLOWDNS_DIR"
-    install -m 0755 "$tmpbin" "$SLOWDNS_BIN"
+    if tar -xzf "$SLOWDNS_PACKAGE" -C "$tmpdir" slowdns; then
+        tmpbin="$tmpdir/slowdns"
+        if [[ ! -x "$tmpbin" ]]; then
+            red 'Binary slowdns tidak ditemukan dalam paket resmi.'
+        elif [[ "$(sha256sum "$tmpbin" | awk '{print $1}')" != "$SLOWDNS_BINARY_SHA256" ]]; then
+            red 'Checksum binary SlowDNS resmi tidak cocok.'
+        else
+            install -d -m 0700 "$SLOWDNS_DIR"
+            install -m 0755 "$tmpbin" "$SLOWDNS_BIN"
+            status=0
+        fi
+    else
+        red 'Paket SlowDNS resmi tidak dapat diekstrak.'
+    fi
+    rm -rf -- "$tmpdir"
+    return "$status"
 }
 
 migrate_keys() {
-    local old_dir=/etc/slowdns
+    local old_dir=$SLOWDNS_LEGACY_DIR
     install -d -m 0700 "$SLOWDNS_DIR"
     if [[ ! -s "$SLOWDNS_KEY" && -s "$old_dir/server.key" ]]; then
         install -m 0600 "$old_dir/server.key" "$SLOWDNS_KEY"
@@ -235,7 +242,7 @@ enable_slowdns() {
     install_network_rules "$ipaddr" "$iface" || return 1
     systemctl enable slowdns.service >/dev/null
     systemctl restart slowdns.service
-    if ! systemctl is-active --quiet slowdns.service || ! ss -lunH 2>/dev/null | awk '{print $5}' | grep -Fq "$ipaddr:53"; then
+    if ! systemctl is-active --quiet slowdns.service || ! ss -lunH 2>/dev/null | awk '{print $4}' | grep -Fq "$ipaddr:53"; then
         red 'SlowDNS gagal aktif. Periksa: journalctl -u slowdns.service -n 50'
         return 1
     fi
