@@ -4,6 +4,7 @@
 SLOWDNS_DIR=${SLOWDNS_DIR:-/etc/slowdns}
 SLOWDNS_CONFIG=${SLOWDNS_CONFIG:-${SLOWDNS_DIR}/config}
 SLOWDNS_KEY_FILE=${SLOWDNS_KEY_FILE:-${SLOWDNS_DIR}/server.pub}
+SLOWDNS_RESOLVER=${SLOWDNS_RESOLVER:-1.1.1.1:53}
 
 slowdns_load_config() {
     SLOWDNS_ENABLED=0
@@ -53,6 +54,7 @@ slowdns_is_active() {
 slowdns_account_fields() {
     slowdns_load_config
     if slowdns_is_active; then
+        printf 'DNS       : %s\n' "$SLOWDNS_RESOLVER"
         printf 'Ns-Domain : %s\n' "$SLOWDNS_NS_DOMAIN"
         printf 'Pubkey    : %s\n' "$SLOWDNS_PUBKEY"
     fi
@@ -61,6 +63,6 @@ slowdns_account_fields() {
 slowdns_json_fields() {
     slowdns_load_config
     if slowdns_is_active; then
-        printf ',\n    "ns_domain": "%s",\n    "pubkey": "%s"' "$SLOWDNS_NS_DOMAIN" "$SLOWDNS_PUBKEY"
+        printf ',\n    "dns": "%s",\n    "ns_domain": "%s",\n    "pubkey": "%s"' "$SLOWDNS_RESOLVER" "$SLOWDNS_NS_DOMAIN" "$SLOWDNS_PUBKEY"
     fi
 }
