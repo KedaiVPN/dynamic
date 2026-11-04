@@ -39,9 +39,20 @@ slowdns_load_config() {
         SLOWDNS_PUBKEY=$(tr -d '[:space:]' < "$SLOWDNS_KEY_FILE")
     fi
 
-    if [[ ! "$SLOWDNS_DOMAIN" =~ ^[A-Za-z0-9][A-Za-z0-9.-]*[A-Za-z0-9]$ ]]; then SLOWDNS_DOMAIN=""; fi
-    if [[ ! "$SLOWDNS_NS_DOMAIN" =~ ^[A-Za-z0-9][A-Za-z0-9.-]*[A-Za-z0-9]$ ]]; then SLOWDNS_NS_DOMAIN=""; fi
-    if [[ ! "$SLOWDNS_PUBKEY" =~ ^[0-9a-fA-F]{64}$ ]]; then SLOWDNS_PUBKEY=""; fi
+    if [[ ! "$SLOWDNS_DOMAIN" =~ ^[A-Za-z0-9][A-Za-z0-9.-]*[A-Za-z0-9]$ ]]; then
+        SLOWDNS_DOMAIN=""
+    fi
+    if [[ ! "$SLOWDNS_NS_DOMAIN" =~ ^[A-Za-z0-9][A-Za-z0-9.-]*[A-Za-z0-9]$ ]]; then
+        SLOWDNS_NS_DOMAIN=""
+    fi
+    if [[ ! "$SLOWDNS_PUBKEY" =~ ^[0-9a-fA-F]{64}$ ]]; then
+        SLOWDNS_PUBKEY=""
+    fi
+    # HTTP Custom must query the VPS address on UDP/53. Do not expose a
+    # recursive public resolver from a stale SlowDNS env file in account data.
+    if [[ -n "$SLOWDNS_DOMAIN" ]]; then
+        SLOWDNS_RESOLVER="${SLOWDNS_DOMAIN}:53"
+    fi
 }
 
 slowdns_is_active() {
