@@ -12,27 +12,24 @@ assert_contains() {
     }
 }
 
-assert_contains 'github_file_changed_within_days()'
-assert_contains 'DYNAMIC_UPDATE_DAYS=3'
-assert_contains 'github_file_changed_within_days "$script_name"'
-assert_contains 'python3 -m py_compile "$tmp_file"'
-assert_contains 'update_local_script "ram.sh" "/usr/bin/cek-ram" python'
-assert_contains 'bash -n "$tmp_file"'
-assert_contains 'source unavailable; existing file was kept.'
-assert_contains 'validation failed; existing file was kept.'
+# These scripts are intentionally not part of the static update list. They
+# are not being actively maintained in this update cycle and previously caused
+# false errors (Python checked as Bash, broken legacy shell, missing source).
+for forbidden in \
+    'update_local_script "ram.sh"' \
+    'update_local_script "limit-speed.sh"' \
+    'update_local_script "bckpbot.sh"' \
+    'DYNAMIC_UPDATE_DAYS' \
+    'github_file_changed_within_days'; do
+    if grep -Fq -- "$forbidden" "$UPDATER"; then
+        printf 'FAIL: update.sh still contains forbidden updater entry %q\n' "$forbidden" >&2
+        exit 1
+    fi
+done
 
-# These paths do not exist in the repository and must not be requested by update.sh.
-if grep -Fq 'update_local_script "cek-ram.sh"' "$UPDATER" || \
-   grep -Fq 'update_local_script "bckpbot.sh"' "$UPDATER"; then
-    echo 'FAIL: updater requests source files absent from repository' >&2
-    exit 1
-fi
-
-# The real RAM source is Python despite its .sh filename.
-assert_contains 'update_local_script "ram.sh" "/usr/bin/cek-ram"'
-
+# The sources themselves remain valid for fresh-install/use outside update.sh.
 bash -n "$UPDATER"
 python3 -m py_compile "$ROOT/ram.sh"
 bash -n "$ROOT/limit-speed.sh"
 
-echo 'PASS: updater uses three-day freshness and type-aware validation'
+echo 'PASS: updater uses a static list and skips inactive legacy files'
