@@ -34,32 +34,71 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 END
 chmod 644 /etc/cron.d/clear-xray-limit
 
-# 1.6 Fix script xp.sh agar tidak modifikasi file secara langsung saat loop baca
-wget -q -O /usr/bin/xp "${REPO}/xp.sh" && chmod +x /usr/bin/xp
-
 # 2. Download Script Baru
-# Pastikan URL ini sesuai dengan raw repository Anda
 REPO="https://raw.githubusercontent.com/KedaiVPN/dynamic/main"
+# Default policy: DYNAMIC_UPDATE_DAYS=3
+DYNAMIC_UPDATE_DAYS="${DYNAMIC_UPDATE_DAYS:-3}"
 
-echo -e "[ ${GREEN}INFO${NC} ] Mendownload script terbaru..."
+echo -e "[ ${GREEN}INFO${NC} ] Mendownload script terbaru (perubahan ${DYNAMIC_UPDATE_DAYS} hari terakhir)..."
 
-# Download to the target filesystem, validate Bash syntax, then atomically
+# Query the GitHub commit history for one path. A missing file or API failure
+# means the updater skips it instead of replacing a working local executable.
+github_file_changed_within_days() {
+    local script_name="$1"
+    local cutoff last_commit last_epoch
+    cutoff=$(date -d "-${DYNAMIC_UPDATE_DAYS} days" +%s)
+    last_commit=$(curl -fsSL --max-time 15 \
+        "https://api.github.com/repos/KedaiVPN/dynamic/commits?path=${script_name}&sha=main&per_page=1" \
+        | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d[0]["commit"]["committer"]["date"] if d else "")' \
+        2>/dev/null) || return 1
+    [[ -n "$last_commit" ]] || return 1
+    last_epoch=$(date -d "$last_commit" +%s 2>/dev/null) || return 1
+    (( last_epoch >= cutoff ))
+}
+
+# Download and validate according to the actual file type, then atomically
 # replace. Existing account generators remain usable if fetch/validation fails.
 update_local_script() {
     local script_name="$1"
     local target_file="$2"
+    local kind="${3:-bash}"
     local tmp_file
 
-    tmp_file=$(mktemp "${target_file}.update.XXXXXX")
-    if wget -q -O "$tmp_file" "${REPO}/${script_name}?v=$(date +%s)" && bash -n "$tmp_file"; then
-        chmod 755 "$tmp_file"
-        mv "$tmp_file" "$target_file"
-        echo -e "[ ${GREEN}OK${NC} ] ${script_name} updated."
-    else
-        rm -f "$tmp_file"
-        echo -e "[ ${RED}ERROR${NC} ] Failed to update ${script_name}; existing file was kept."
-        return 1
+    if ! github_file_changed_within_days "$script_name"; then
+        echo -e "[ ${YELLOW:-${GREEN}}SKIP${NC} ] ${script_name}: no repository change within ${DYNAMIC_UPDATE_DAYS} days."
+        return 0
     fi
+    tmp_file=$(mktemp "${target_file}.update.XXXXXX")
+    if ! wget -q -O "$tmp_file" "${REPO}/${script_name}?v=$(date +%s)" || [ ! -s "$tmp_file" ]; then
+        rm -f "$tmp_file"
+        echo -e "[ ${RED}SKIP${NC} ] ${script_name}: source unavailable; existing file was kept."
+        return 0
+    fi
+    case "$kind" in
+        bash)
+            if ! bash -n "$tmp_file"; then
+                rm -f "$tmp_file"
+                echo -e "[ ${RED}SKIP${NC} ] ${script_name}: validation failed; existing file was kept."
+                return 0
+            fi
+            ;;
+        python)
+            if ! python3 -m py_compile "$tmp_file"; then
+                rm -f "$tmp_file" "${tmp_file}c"
+                echo -e "[ ${RED}SKIP${NC} ] ${script_name}: validation failed; existing file was kept."
+                return 0
+            fi
+            rm -f "${tmp_file}c"
+            ;;
+        *)
+            echo -e "[ ${RED}SKIP${NC} ] ${script_name}: unknown validator $kind."
+            rm -f "$tmp_file"
+            return 0
+            ;;
+    esac
+    chmod 755 "$tmp_file"
+    mv "$tmp_file" "$target_file"
+    echo -e "[ ${GREEN}OK${NC} ] ${script_name} updated."
 }
 
 # Refresh every terminal-side VMESS/VLESS/Trojan creator. Older servers used
@@ -93,9 +132,9 @@ update_local_script "running.sh" "/usr/bin/running" || true
 update_local_script "cek-trafik.sh" "/usr/bin/cek-trafik" || true
 update_local_script "cek-bandwidth.sh" "/usr/bin/cek-bandwidth" || true
 update_local_script "cek-expired.sh" "/usr/bin/cek-expired" || true
-update_local_script "ram.sh" "/usr/bin/cek-ram" || true
+update_local_script "ram.sh" "/usr/bin/cek-ram" python || true
 update_local_script "limit-speed.sh" "/usr/bin/limit-speed" || true
-update_local_script "bckpbot.sh" "/usr/bin/bckp" || true
+# bckpbot.sh is not present in the repository; do not request a nonexistent source file.
 update_local_script "backup.sh" "/usr/bin/backup" || true
 update_local_script "restore.sh" "/usr/bin/restore" || true
 update_local_script "webmin.sh" "/usr/bin/wbm" || true

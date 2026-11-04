@@ -182,6 +182,9 @@ echo -e "Password : $Pass" | tee -a /etc/log-create-user.log
 echo -e "Expired On : $expe1" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
 echo -e "Host : $domen" | tee -a /etc/log-create-user.log
+if [[ -n "$slowdns_info" ]]; then
+    echo -e "$slowdns_info" | tee -a /etc/log-create-user.log
+fi
 echo -e "SSH-WS : $portsshws" | tee -a /etc/log-create-user.log
 echo -e "SSH-SSL-WS : $wsssl" | tee -a /etc/log-create-user.log
 echo -e "SSL/TLS :  $ssl" | tee -a /etc/log-create-user.log
@@ -210,6 +213,9 @@ echo -e "Password : $Pass" | tee -a /etc/log-create-user.log
 echo -e "Expired On : $expe1" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
 echo -e "Host : $domen" | tee -a /etc/log-create-user.log
+if [[ -n "$slowdns_info" ]]; then
+    echo -e "$slowdns_info" | tee -a /etc/log-create-user.log
+fi
 echo -e "SSH-WS : $portsshws" | tee -a /etc/log-create-user.log
 echo -e "SSH-SSL-WS : $wsssl" | tee -a /etc/log-create-user.log
 echo -e "SSL/TLS :  $ssl" | tee -a /etc/log-create-user.log
