@@ -144,12 +144,9 @@ update_library_script() {
     fi
 }
 
+# Update only the manager and metadata reader. SlowDNS remains opt-in: users
+# activate or migrate it explicitly from menu SSH → SLOWDNS.
 update_library_script "slowdns-config.sh" "/usr/lib/slowdns-config.sh" || true
-# Migrate existing servers and refresh new servers to the official HTTP Custom
-# SlowDNS package. The manager preserves the existing SlowDNS key pair.
-if command -v /usr/bin/slowdns >/dev/null 2>&1; then
-    /usr/bin/slowdns enable || echo -e "[ ${RED}WARN${NC} ] SlowDNS resmi gagal diperbarui; konfigurasi lama dipertahankan."
-fi
 update_library_script "xray-paths.sh" "/usr/lib/xray-paths.sh" || true
 update_library_script "xray-account-detail.sh" "/usr/lib/xray-account-detail.sh" || true
 # # wget -q -O /usr/bin/xray-limit "${REPO}/xray-limit.sh" && chmod +x /usr/bin/xray-limit

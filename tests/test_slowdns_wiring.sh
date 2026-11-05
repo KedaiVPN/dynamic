@@ -42,7 +42,11 @@ assert_contains setup.sh 'slowdns enable'
 assert_contains setup.sh 'chmod +x /usr/bin/slowdns'
 assert_contains update.sh 'update_local_script "update.sh" "/usr/bin/update"'
 assert_contains update.sh 'update_library_script "slowdns-config.sh" "/usr/lib/slowdns-config.sh"'
-assert_contains update.sh '/usr/bin/slowdns enable'
+
+if grep -nE '(/usr/bin/slowdns|slowdns)[[:space:]]+(enable|on)' update.sh >/dev/null; then
+    echo 'FAIL: updater must not auto-enable or migrate SlowDNS' >&2
+    exit 1
+fi
 
 if grep -nE 'dnstt-server|dnstt\.network|SLOWDNS_INTERNAL_PORT' slowdns.sh >/dev/null; then
     echo 'FAIL: SlowDNS manager still contains legacy DNSTT implementation' >&2
