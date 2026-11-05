@@ -48,10 +48,10 @@ slowdns_load_config() {
     if [[ ! "$SLOWDNS_PUBKEY" =~ ^[0-9a-fA-F]{64}$ ]]; then
         SLOWDNS_PUBKEY=""
     fi
-    # HTTP Custom must query the VPS address on UDP/53. Do not expose a
-    # recursive public resolver from a stale SlowDNS env file in account data.
-    if [[ -n "$SLOWDNS_DOMAIN" ]]; then
-        SLOWDNS_RESOLVER="${SLOWDNS_DOMAIN}:53"
+    # HTTP Custom must query the actual SlowDNS listener, not a recursive
+    # resolver or a hostname whose DNS delegation may still be cached.
+    if [[ "$SLOWDNS_UDP_ADDR" =~ ^[0-9]+(\.[0-9]+){3}:53$ ]]; then
+        SLOWDNS_RESOLVER="$SLOWDNS_UDP_ADDR"
     fi
 }
 
