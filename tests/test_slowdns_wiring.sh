@@ -63,8 +63,12 @@ assert_contains slowdns-config.sh 'Pubkey    : %s'
 assert_contains slowdns-config.sh 'slowdns.env'
 assert_contains factory-reset.sh '/root/slowdns'
 assert_contains factory-reset.sh 'slowdns disable'
-assert_contains setup.sh 'slowdns enable'
 assert_contains setup.sh 'chmod +x /usr/bin/slowdns'
+
+if grep -nE '(/usr/bin/slowdns|slowdns)[[:space:]]+(enable|on)' setup.sh >/dev/null; then
+    echo 'FAIL: fresh installation must not auto-enable SlowDNS' >&2
+    exit 1
+fi
 assert_contains update.sh 'update_local_script "update.sh" "/usr/bin/update"'
 assert_contains update.sh 'update_library_script "slowdns-config.sh" "/usr/lib/slowdns-config.sh"'
 

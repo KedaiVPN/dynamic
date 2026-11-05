@@ -365,12 +365,8 @@ chmod +x /usr/bin/add-trgo
 chmod +x /usr/bin/custom-path
 chmod +x /usr/bin/slowdns
 chmod 644 /usr/lib/slowdns-config.sh
-# Install the official HTTP Custom SlowDNS package on new servers. The manager
-# preserves any existing key pair and excludes UDP/53 from UDP Custom NAT.
-if ! /usr/bin/slowdns enable; then
-    echo "[ ERROR ] SlowDNS resmi HTTP Custom gagal diaktifkan."
-    exit 1
-fi
+# SlowDNS is optional. Fresh installs deploy the manager only; the operator
+# enables it later from menu SSH → SLOWDNS after DNS delegation is configured.
 chmod 644 /usr/lib/xray-paths.sh
 chmod 644 /usr/lib/xray-account-detail.sh
 chmod +x /usr/bin/usernew

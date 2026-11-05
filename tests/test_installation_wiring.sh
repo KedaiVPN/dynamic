@@ -20,6 +20,14 @@ assert_contains update.sh 'include /etc/nginx/conf.d/xray-custom-paths.inc;'
 assert_contains setup.sh 'download_or_copy "custom-path.sh" "/usr/bin/custom-path"'
 assert_contains setup.sh 'download_or_copy "xray-paths.sh" "/usr/lib/xray-paths.sh"'
 assert_contains setup.sh 'download_or_copy "xray-account-detail.sh" "/usr/lib/xray-account-detail.sh"'
+assert_contains setup.sh 'download_or_copy "slowdns.sh" "/usr/bin/slowdns"'
+assert_contains setup.sh 'download_or_copy "slowdns-config.sh" "/usr/lib/slowdns-config.sh"'
+
+if grep -nE '(/usr/bin/slowdns|slowdns)[[:space:]]+(enable|on)' "$ROOT/setup.sh" >/dev/null; then
+    echo 'FAIL: fresh installation must not auto-enable SlowDNS' >&2
+    exit 1
+fi
+
 assert_contains update.sh 'update_local_script "custom-path.sh" "/usr/bin/custom-path"'
 assert_contains update.sh 'update_library_script "xray-account-detail.sh" "/usr/lib/xray-account-detail.sh"'
 
