@@ -82,7 +82,10 @@ echo -e " \033[1;94m[5/5]\033[0m \033[1;97mMenonaktifkan layanan SlowDNS...\033[
 if command -v /usr/bin/slowdns >/dev/null 2>&1; then
     /usr/bin/slowdns disable >/dev/null 2>&1 || true
 fi
-rm -f /etc/systemd/system/slowdns.service /etc/slowdns/config /etc/slowdns/server.key /etc/slowdns/server.pub /etc/slowdns/dnstt-server
+rm -f /etc/systemd/system/slowdns.service
+rm -rf /root/slowdns /root/slowdns-linux-amd64.tar.gz
+# Remove legacy DNSTT state left by older dynamic releases.
+rm -rf /etc/slowdns
 systemctl daemon-reload >/dev/null 2>&1 || true
 
 # 6. Restart Services
