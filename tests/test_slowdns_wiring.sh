@@ -26,6 +26,31 @@ assert_contains slowdns.sh 'SLOWDNS_BIN=${SLOWDNS_BIN:-$SLOWDNS_DIR/slowdns}'
 assert_contains slowdns.sh 'SLOWDNS_BINARY_SHA256='
 assert_contains slowdns.sh 'SLOWDNS_BINARY_URL='
 assert_contains slowdns.sh 'SLOWDNS_UDP_ADDR'
+assert_contains slowdns.sh 'slowdns-linux-amd64'
+[[ -f slowdns-linux-amd64 ]]
+[[ ! -e slowdns-linux-amd64.tar.gz ]]
+[[ "$(sha256sum slowdns-linux-amd64 | awk '{print $1}')" == 'a9d19e39ae23261628e8f21dac79548b31dceb45f959017bc50300e7ebfcad7d' ]]
+
+if grep -nE 'SLOWDNS_PACKAGE|tar -xzf|slowdns-linux-amd64\.tar\.gz' slowdns.sh >/dev/null; then
+    echo 'FAIL: manager must distribute only the audited runtime binary, not the vendor archive/installer bundle' >&2
+    exit 1
+fi
+
+if git ls-files --error-unmatch slowdns-linux-amd64.tar.gz >/dev/null 2>&1; then
+    echo 'FAIL: repository must not track the vendor SlowDNS archive bundle' >&2
+    exit 1
+fi
+
+git ls-files --error-unmatch slowdns-linux-amd64 >/dev/null
+
+git check-ignore -q slowdns-linux-amd64 && {
+    echo 'FAIL: official runtime binary is ignored instead of tracked' >&2
+    exit 1
+} || true
+
+git check-ignore -q slowdns-linux-amd64.tar.gz || true
+
+assert_contains slowdns.sh 'SLOWDNS_UDP_ADDR'
 assert_contains slowdns.sh 'SLOWDNS_NS_DOMAIN=${SLOWDNS_NS_DOMAIN_OVERRIDE:-ns-${domain}}'
 assert_contains slowdns.sh '--notrack'
 assert_contains slowdns.sh 'udp --dport 1:52'

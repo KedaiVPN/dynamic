@@ -10,9 +10,7 @@ SLOWDNS_BIN=${SLOWDNS_BIN:-$SLOWDNS_DIR/slowdns}
 SLOWDNS_KEY=${SLOWDNS_KEY:-$SLOWDNS_DIR/server.key}
 SLOWDNS_PUB=${SLOWDNS_PUB:-$SLOWDNS_DIR/server.pub}
 SLOWDNS_SERVICE=${SLOWDNS_SERVICE:-/etc/systemd/system/slowdns.service}
-SLOWDNS_PACKAGE=${SLOWDNS_PACKAGE:-/root/slowdns-linux-amd64.tar.gz}
-SLOWDNS_BINARY_URL=${SLOWDNS_BINARY_URL:-https://raw.githubusercontent.com/KedaiVPN/dynamic/main/slowdns-linux-amd64.tar.gz}
-SLOWDNS_PACKAGE_SHA256=${SLOWDNS_PACKAGE_SHA256:-6aa42455cd142953270a342e3c24c9c946fdc4ef3cad1e5c02f27711ffc6ad41}
+SLOWDNS_BINARY_URL=${SLOWDNS_BINARY_URL:-https://raw.githubusercontent.com/KedaiVPN/dynamic/main/slowdns-linux-amd64}
 SLOWDNS_BINARY_SHA256=${SLOWDNS_BINARY_SHA256:-a9d19e39ae23261628e8f21dac79548b31dceb45f959017bc50300e7ebfcad7d}
 SLOWDNS_RESOLVER=${SLOWDNS_RESOLVER:-1.1.1.1:53}
 SLOWDNS_UPSTREAM=${SLOWDNS_UPSTREAM:-127.0.0.1:22}
@@ -54,50 +52,23 @@ discover_bind_ip() {
     ip -4 route get 1.1.1.1 2>/dev/null | awk '{for (i=1; i<=NF; i++) if ($i=="src") {print $(i+1); exit}}'
 }
 
-package_ready() {
-    [[ -s "$SLOWDNS_PACKAGE" ]] || return 1
-    [[ "$(sha256sum "$SLOWDNS_PACKAGE" | awk '{print $1}')" == "$SLOWDNS_PACKAGE_SHA256" ]]
-}
-
-download_package() {
-    local tmp
-    mkdir -p "$SLOWDNS_DIR"
-    if package_ready; then return 0; fi
-    tmp=$(mktemp "$SLOWDNS_DIR/package.XXXXXX")
-    if ! wget -q -O "$tmp" "$SLOWDNS_BINARY_URL"; then
-        rm -f "$tmp"
-        red 'Paket SlowDNS resmi HTTP Custom gagal diunduh.'
-        return 1
-    fi
-    if [[ "$(sha256sum "$tmp" | awk '{print $1}')" != "$SLOWDNS_PACKAGE_SHA256" ]]; then
-        rm -f "$tmp"
-        red 'Checksum paket SlowDNS resmi tidak cocok; instalasi dibatalkan.'
-        return 1
-    fi
-    chmod 644 "$tmp"
-    mv -f "$tmp" "$SLOWDNS_PACKAGE"
-}
-
 install_binary() {
-    local tmpdir tmpbin status=1
-    download_package || return 1
-    tmpdir=$(mktemp -d "$SLOWDNS_DIR/.extract.XXXXXX")
-    if tar -xzf "$SLOWDNS_PACKAGE" -C "$tmpdir" slowdns; then
-        tmpbin="$tmpdir/slowdns"
-        if [[ ! -x "$tmpbin" ]]; then
-            red 'Binary slowdns tidak ditemukan dalam paket resmi.'
-        elif [[ "$(sha256sum "$tmpbin" | awk '{print $1}')" != "$SLOWDNS_BINARY_SHA256" ]]; then
-            red 'Checksum binary SlowDNS resmi tidak cocok.'
-        else
-            install -d -m 0700 "$SLOWDNS_DIR"
-            install -m 0755 "$tmpbin" "$SLOWDNS_BIN"
-            status=0
-        fi
-    else
-        red 'Paket SlowDNS resmi tidak dapat diekstrak.'
+    local tmp actual
+    install -d -m 0700 "$SLOWDNS_DIR"
+    tmp=$(mktemp "$SLOWDNS_DIR/slowdns.XXXXXX")
+    if ! wget -q -O "$tmp" "$SLOWDNS_BINARY_URL" || [[ ! -s "$tmp" ]]; then
+        rm -f "$tmp"
+        red 'Binary SlowDNS resmi HTTP Custom gagal diunduh.'
+        return 1
     fi
-    rm -rf -- "$tmpdir"
-    return "$status"
+    actual=$(sha256sum "$tmp" | awk '{print $1}')
+    if [[ "$actual" != "$SLOWDNS_BINARY_SHA256" ]]; then
+        rm -f "$tmp"
+        red 'Checksum binary SlowDNS resmi tidak cocok; instalasi dibatalkan.'
+        return 1
+    fi
+    install -m 0755 "$tmp" "$SLOWDNS_BIN"
+    rm -f "$tmp"
 }
 
 migrate_keys() {
@@ -179,8 +150,8 @@ remove_network_rules() {
 write_env() {
     local ipaddr=$1 iface=$2 tmp
     tmp=$(mktemp "$SLOWDNS_DIR/slowdns.env.XXXXXX")
-    printf 'SLOWDNS_ENABLED="1"\nSLOWDNS_BINARY="slowdns"\nSLOWDNS_UDP_ADDR="%s:53"\nSLOWDNS_PRIVKEY_FILE="%s"\nSLOWDNS_DOMAIN="%s"\nSLOWDNS_NS_DOMAIN="%s"\nSLOWDNS_UPSTREAM_ADDR="%s"\nSLOWDNS_RESOLVER="%s"\nSLOWDNS_DIRECT_IPV4="%s"\nSLOWDNS_DIRECT_INTERFACE="%s"\nSLOWDNS_PACKAGE_SHA256="%s"\nSLOWDNS_BINARY_SHA256="%s"\n' \
-        "$ipaddr" "$SLOWDNS_KEY" "$SLOWDNS_DOMAIN" "$SLOWDNS_NS_DOMAIN" "$SLOWDNS_UPSTREAM" "$SLOWDNS_RESOLVER" "$ipaddr" "$iface" "$SLOWDNS_PACKAGE_SHA256" "$SLOWDNS_BINARY_SHA256" > "$tmp"
+    printf 'SLOWDNS_ENABLED="1"\nSLOWDNS_BINARY="slowdns"\nSLOWDNS_UDP_ADDR="%s:53"\nSLOWDNS_PRIVKEY_FILE="%s"\nSLOWDNS_DOMAIN="%s"\nSLOWDNS_NS_DOMAIN="%s"\nSLOWDNS_UPSTREAM_ADDR="%s"\nSLOWDNS_RESOLVER="%s"\nSLOWDNS_DIRECT_IPV4="%s"\nSLOWDNS_DIRECT_INTERFACE="%s"\nSLOWDNS_BINARY_SHA256="%s"\n' \
+        "$ipaddr" "$SLOWDNS_KEY" "$SLOWDNS_DOMAIN" "$SLOWDNS_NS_DOMAIN" "$SLOWDNS_UPSTREAM" "$SLOWDNS_RESOLVER" "$ipaddr" "$iface" "$SLOWDNS_BINARY_SHA256" > "$tmp"
     chmod 600 "$tmp"
     mv -f "$tmp" "$SLOWDNS_ENV_FILE"
 }

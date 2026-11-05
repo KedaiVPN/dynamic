@@ -7,19 +7,25 @@ trap 'rm -rf "$TMP"' EXIT
 
 mkdir -p "$TMP/bin" "$TMP/legacy"
 
-# Dummy package extraction: the test must exercise manager state transitions,
-# not execute the bundled tunnel server binary.
-cat > "$TMP/bin/tar" <<'EOF'
+cat > "$TMP/bin/systemctl" <<'EOF'
+#!/usr/bin/env bash
+case "${1:-}" in
+  is-active) exit 0 ;;
+  daemon-reload|enable|restart|disable) exit 0 ;;
+  *) exit 0 ;;
+esac
+EOF
+cat > "$TMP/bin/wget" <<'EOF'
 #!/usr/bin/env bash
 out=''
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -C) out=$2; shift 2 ;;
+    -O) out=$2; shift 2 ;;
     *) shift ;;
   esac
 done
-mkdir -p "$out"
-cat > "$out/slowdns" <<'BIN'
+[[ -n "$out" ]]
+cat > "$out" <<'BIN'
 #!/usr/bin/env bash
 if [[ "${1:-}" == -gen-key ]]; then
   shift
@@ -34,20 +40,12 @@ if [[ "${1:-}" == -gen-key ]]; then
   printf '%064d\n' 2 > "$pub"
 fi
 BIN
-chmod 755 "$out/slowdns"
+chmod 755 "$out"
 EOF
 
-cat > "$TMP/bin/systemctl" <<'EOF'
-#!/usr/bin/env bash
-case "${1:-}" in
-  is-active) exit 0 ;;
-  daemon-reload|enable|restart|disable) exit 0 ;;
-  *) exit 0 ;;
-esac
-EOF
 cat > "$TMP/bin/sha256sum" <<'EOF'
 #!/usr/bin/env bash
-if [[ "${1:-}" == */.extract.*/slowdns ]]; then
+if [[ "${1:-}" == */slowdns.* ]]; then
   printf '%s  %s\n' 'a9d19e39ae23261628e8f21dac79548b31dceb45f959017bc50300e7ebfcad7d' "$1"
 else
   /usr/bin/sha256sum "$@"
@@ -86,7 +84,7 @@ SLOWDNS_BIN="$TMP/slowdns/slowdns" \
 SLOWDNS_KEY="$TMP/slowdns/server.key" \
 SLOWDNS_PUB="$TMP/slowdns/server.pub" \
 SLOWDNS_SERVICE="$TMP/slowdns.service" \
-SLOWDNS_PACKAGE="$ROOT/slowdns-linux-amd64.tar.gz" \
+SLOWDNS_BINARY_URL='https://example.invalid/slowdns-linux-amd64' \
 SLOWDNS_LEGACY_DIR="$TMP/legacy" \
 SLOWDNS_DOMAIN_OVERRIDE='fresh.example.test' \
 SLOWDNS_BIND_IP='198.51.100.7' \
