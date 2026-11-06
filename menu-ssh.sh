@@ -657,7 +657,7 @@ echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 8${BIRed}]${BIWhite} Check Member SS
 echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 9${BIRed}]${BIWhite} Edit Limit Login SSH                         ${BIRed}║${NC}"
 echo -e "${BIRed} ║   ${BIRed}[${BIWhite}10${BIRed}]${BIWhite} Lock/Unlock User SSH                         ${BIRed}║${NC}"
 echo -e "${BIRed} ║   ${BIRed}[${BIWhite}11${BIRed}]${BIWhite} Trial Account SSH                            ${BIRed}║${NC}"
-echo -e "${BIRed} ║   ${BIRed}[${BIWhite}12${BIRed}]${BIWhite} SLOWDNS                                     ${BIRed}║${NC}"
+echo -e "${BIRed} ║   ${BIRed}[${BIWhite}12${BIRed}]${BIWhite} SLOWDNS                                      ${BIRed}║${NC}"
 echo -e "${BIRed} ╚═════════════════════════════════════════════════════╝${NC}"
 echo -e "     ${BIYellow}Press x or [ Ctrl+C ] • To-${BIWhite}Exit${NC}"
 echo ""

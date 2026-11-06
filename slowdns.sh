@@ -182,20 +182,34 @@ EOF
 }
 
 status() {
+    clear && printf '\033[3J'
+    local BIRed='\033[1;91m' BIYellow='\033[1;93m' BIWhite='\033[1;97m' BIGreen='\033[1;92m' UWhite='\033[4;37m' NC='\033[0m'
+    echo -e "${BIRed} ╔═════════════════════════════════════════════════════╗${NC}"
+    echo -e "${BIRed} ║                  ${BIWhite}${UWhite}> SLOWDNS INFO <${NC}                   ${BIRed}║${NC}"
+    echo -e "${BIRed} ╠═════════════════════════════════════════════════════╣${NC}"
     if [[ -r "$SLOWDNS_ENV_FILE" ]]; then
         # Read only the fields written by this manager; never source server state.
-        local domain ns pub=''
+        local domain ns pub='' stat='' listener='' stat_str=''
         domain=$(awk -F= '$1=="SLOWDNS_DOMAIN" {gsub(/"/,"",$2); print $2}' "$SLOWDNS_ENV_FILE")
         ns=$(awk -F= '$1=="SLOWDNS_NS_DOMAIN" {gsub(/"/,"",$2); print $2}' "$SLOWDNS_ENV_FILE")
+        listener=$(awk -F= '$1=="SLOWDNS_UDP_ADDR" {gsub(/"/,"",$2); print $2}' "$SLOWDNS_ENV_FILE")
         [[ -r "$SLOWDNS_PUB" ]] && pub=$(tr -d '[:space:]' < "$SLOWDNS_PUB")
-        echo "Status     : $(systemctl is-active slowdns.service 2>/dev/null || true)"
-        echo "Domain     : $domain"
-        echo "Ns-Domain  : $ns"
-        echo "Listener   : $(awk -F= '$1=="SLOWDNS_UDP_ADDR" {gsub(/"/,"",$2); print $2}' "$SLOWDNS_ENV_FILE")"
-        echo "Pubkey     : $pub"
+        stat=$(systemctl is-active slowdns.service 2>/dev/null || true)
+        if [[ "$stat" == "active" ]]; then
+            stat_str="${BIGreen}active (running)${NC}"
+        else
+            stat_str="${BIRed}${stat:-nonaktif}${NC}"
+        fi
+        echo -e "${BIRed} ║ ${BIWhite}Status    : ${stat_str}"
+        echo -e "${BIRed} ║ ${BIWhite}Domain    : ${BIYellow}${domain}${NC}"
+        echo -e "${BIRed} ║ ${BIWhite}Ns-Domain : ${BIYellow}${ns}${NC}"
+        echo -e "${BIRed} ║ ${BIWhite}Listener  : ${BIWhite}${listener}${NC}"
+        echo -e "${BIRed} ║ ${BIWhite}Pubkey    : ${BIWhite}${pub}${NC}"
     else
-        echo 'Status     : nonaktif'
+        echo -e "${BIRed} ║ ${BIWhite}Status    : ${BIRed}nonaktif${NC}"
     fi
+    echo -e "${BIRed} ╚═════════════════════════════════════════════════════╝${NC}"
+    echo ""
 }
 
 enable_slowdns() {
@@ -235,24 +249,28 @@ disable_slowdns() {
 }
 
 menu() {
+    local BIRed='\033[1;91m' BIYellow='\033[1;93m' BIWhite='\033[1;97m' UWhite='\033[4;37m' NC='\033[0m'
     while true; do
         clear && printf '\033[3J'
-        echo '╔══════════════════════════════════════════════════════════╗'
-        echo '║                  SLOWDNS HTTP CUSTOM                    ║'
-        echo '╠══════════════════════════════════════════════════════════╣'
-        echo '[01] AKTIFKAN SLOWDNS RESMI'
-        echo '[02] NONAKTIFKAN SLOWDNS'
-        echo '[03] CEK STATUS SLOWDNS'
-        echo '[04] LIHAT INFORMASI SLOWDNS'
-        echo '[x ] KEMBALI'
-        echo '╚══════════════════════════════════════════════════════════╝'
-        read -rp ' Select menu : ' option
+        echo -e "${BIRed} ╔═════════════════════════════════════════════════════╗${NC}"
+        echo -e "${BIRed} ║                  ${BIWhite}${UWhite}> SLOWDNS MENU <${NC}                   ${BIRed}║${NC}"
+        echo -e "${BIRed} ╠═════════════════════════════════════════════════════╣${NC}"
+        echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 1${BIRed}]${BIWhite} Aktifkan SlowDNS                             ${BIRed}║${NC}"
+        echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 2${BIRed}]${BIWhite} Nonaktifkan SlowDNS                          ${BIRed}║${NC}"
+        echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 3${BIRed}]${BIWhite} Cek Status SlowDNS                           ${BIRed}║${NC}"
+        echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 4${BIRed}]${BIWhite} Informasi SlowDNS                            ${BIRed}║${NC}"
+        echo -e "${BIRed} ║   ${BIRed}[${BIWhite} x${BIRed}]${BIWhite} Kembali ke Menu SSH                          ${BIRed}║${NC}"
+        echo -e "${BIRed} ╚═════════════════════════════════════════════════════╝${NC}"
+        echo -e "     ${BIYellow}Press x or [ Ctrl+C ] • To-${BIWhite}Exit${NC}"
+        echo ""
+        read -p " Select menu : " option
+        echo -e ""
         case "$option" in
-            1|01) enable_slowdns; read -n 1 -s -r -p 'Tekan tombol untuk kembali...' ;;
-            2|02) disable_slowdns; read -n 1 -s -r -p 'Tekan tombol untuk kembali...' ;;
-            3|03|4|04) status; read -n 1 -s -r -p 'Tekan tombol untuk kembali...' ;;
+            1|01) enable_slowdns; read -n 1 -s -r -p "Press any key to back on menu" ;;
+            2|02) disable_slowdns; read -n 1 -s -r -p "Press any key to back on menu" ;;
+            3|03|4|04) status; read -n 1 -s -r -p "Press any key to back on menu" ;;
             x|X) return 0 ;;
-            *) ;;
+            *) echo "Press any key to back on menu"; sleep 1 ;;
         esac
     done
 }

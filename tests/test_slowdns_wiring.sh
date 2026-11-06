@@ -18,6 +18,46 @@ assert_contains update.sh 'update_local_script "slowdns.sh" "/usr/bin/slowdns"'
 assert_contains update.sh 'update_library_script "slowdns-config.sh" "/usr/lib/slowdns-config.sh"'
 assert_contains menu-ssh.sh '12) clear && printf '\''\033[3J'\'' ; slowdns ;;'
 assert_contains menu-ssh.sh 'SLOWDNS'
+
+python3 - <<'PY'
+import re
+from pathlib import Path
+
+# Verify SSH menu frame width
+lines = Path('menu-ssh.sh').read_text().splitlines()
+frame = lines[645:661]
+visible = []
+for line in frame:
+    quoted = re.findall(r'"(.*)"', line)
+    if not quoted:
+        continue
+    text = quoted[-1]
+    text = re.sub(r'\$\{?\w+\}?', '', text)
+    text = re.sub(r'\\033\[[0-9;]*m', '', text)
+    visible.append((line, len(text)))
+widths = {width for _, width in visible}
+assert widths == {56}, f'SSH menu frame has uneven display widths: {visible}'
+
+# Verify SlowDNS menu frame width
+sd_lines = Path('slowdns.sh').read_text().splitlines()
+menu_idx = next(i for i, l in enumerate(sd_lines) if 'menu()' in l)
+frame_sd = [l for l in sd_lines[menu_idx:menu_idx+30] if 'echo -e "${BIRed}' in l and any(c in l for c in '╔║╠╚')]
+visible_sd = []
+for line in frame_sd:
+    quoted = re.findall(r'"(.*)"', line)
+    if not quoted:
+        continue
+    text = quoted[-1]
+    text = re.sub(r'\$\{?\w+\}?', '', text)
+    text = re.sub(r'\\033\[[0-9;]*m', '', text)
+    visible_sd.append((line, len(text)))
+widths_sd = {width for _, width in visible_sd}
+assert widths_sd == {56}, f'SlowDNS menu frame has uneven display widths: {visible_sd}'
+PY
+
+assert_contains slowdns.sh '${BIRed} ╔═════════════════════════════════════════════════════╗${NC}'
+assert_contains slowdns.sh '${BIRed} ║                  ${BIWhite}${UWhite}> SLOWDNS MENU <${NC}                   ${BIRed}║${NC}'
+assert_contains slowdns.sh '${BIRed} ║   ${BIRed}[${BIWhite} 1${BIRed}]${BIWhite} Aktifkan SlowDNS                             ${BIRed}║${NC}'
 assert_contains usernew.sh 'slowdns_load_config'
 assert_contains menu-ssh.sh 'slowdns_load_config'
 assert_contains api-modules/api-ssh-create.sh 'slowdns_json_fields'
