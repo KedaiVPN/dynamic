@@ -97,7 +97,7 @@ assert acc["password"] == "pass456", f"Invalid password: {acc['password']}"
 assert acc["domain"] == "vps.example.com", f"Invalid domain: {acc['domain']}"
 assert acc["ns_domain"] == "ns-vps.example.com", f"Invalid ns_domain: {acc['ns_domain']}"
 assert len(acc["pubkey"]) == 64, f"Invalid pubkey: {acc['pubkey']}"
-assert acc["dns"] == "103.150.60.5:53", f"Invalid dns: {acc['dns']}"
+assert acc["dns"] == "vps.example.com", f"Invalid dns: {acc['dns']}"
 assert acc["ip_limit"] == "2", f"Invalid ip_limit: {acc['ip_limit']}"
 PY
 
@@ -113,7 +113,7 @@ assert acc["username"].startswith("trialDNS"), f"Invalid username prefix: {acc['
 assert acc["domain"] == "vps.example.com", f"Invalid domain: {acc['domain']}"
 assert acc["ns_domain"] == "ns-vps.example.com", f"Invalid ns_domain: {acc['ns_domain']}"
 assert len(acc["pubkey"]) == 64, f"Invalid pubkey: {acc['pubkey']}"
-assert acc["dns"] == "103.150.60.5:53", f"Invalid dns: {acc['dns']}"
+assert acc["dns"] == "vps.example.com", f"Invalid dns: {acc['dns']}"
 assert acc["expired"] == "30 Minutes", f"Invalid expired: {acc['expired']}"
 PY
 

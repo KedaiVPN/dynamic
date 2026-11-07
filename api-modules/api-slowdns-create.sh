@@ -91,14 +91,6 @@ if [[ -n "$iplimit" && "$iplimit" -gt 0 ]]; then
     echo "$user $iplimit" >> "$limit_file"
 fi
 
-# Ensure DNS listener address is in IPv4:53 format
-dns_addr="$SLOWDNS_RESOLVER"
-if [[ ! "$dns_addr" =~ ^[0-9]+(\.[0-9]+){3}:53$ ]]; then
-    if [[ -n "${SLOWDNS_UDP_ADDR:-}" && "$SLOWDNS_UDP_ADDR" =~ ^[0-9]+(\.[0-9]+){3}:53$ ]]; then
-        dns_addr="$SLOWDNS_UDP_ADDR"
-    fi
-fi
-
 # JSON Response
 cat <<EOF
 {
@@ -110,7 +102,7 @@ cat <<EOF
     "domain": "$SLOWDNS_DOMAIN",
     "ns_domain": "$SLOWDNS_NS_DOMAIN",
     "pubkey": "$SLOWDNS_PUBKEY",
-    "dns": "$dns_addr",
+    "dns": "$SLOWDNS_DOMAIN",
     "expired": "$exp_date",
     "ip_limit": "$iplimit",
     "quota": "$quota"
