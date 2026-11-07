@@ -158,6 +158,40 @@ app.get('/statusssh', (req, res) => {
     runScript('api-ssh-status.sh', [user], res);
 });
 
+// --- SlowDNS Endpoints ---
+
+app.get('/createslowdns', (req, res) => {
+    const { user, password, exp, quota, iplimit } = req.query;
+    if (!user || !password || !exp) {
+        return res.status(400).json({ status: 'error', message: 'Missing required parameters (user, password, exp)' });
+    }
+    runScript('api-slowdns-create.sh', [user, password, exp, quota || 0, iplimit || 0], res);
+});
+
+app.get('/renewslowdns', (req, res) => {
+    const { user, exp, quota, iplimit } = req.query;
+    if (!user || !exp) {
+        return res.status(400).json({ status: 'error', message: 'Missing required parameters (user, exp)' });
+    }
+    runScript('api-slowdns-renew.sh', [user, exp, quota || 0, iplimit || 0], res);
+});
+
+app.get('/deleteslowdns', (req, res) => {
+    const { user } = req.query;
+    if (!user) return res.status(400).json({ status: 'error', message: 'Missing user parameter' });
+    runScript('api-slowdns-delete.sh', [user], res);
+});
+
+app.get('/trialslowdns', (req, res) => {
+    runScript('api-slowdns-trial.sh', [], res);
+});
+
+app.get('/statusslowdns', (req, res) => {
+    const { user } = req.query;
+    if (!user) return res.status(400).json({ status: 'error', message: 'Missing user parameter' });
+    runScript('api-slowdns-status.sh', [user], res);
+});
+
 // --- Xray Endpoints (Vmess, Vless, Trojan) ---
 
 const handleXrayCreate = (protocol, req, res) => {

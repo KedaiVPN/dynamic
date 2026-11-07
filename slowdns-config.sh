@@ -8,7 +8,7 @@ SLOWDNS_KEY_FILE=${SLOWDNS_KEY_FILE:-${SLOWDNS_DIR}/server.pub}
 SLOWDNS_RESOLVER=${SLOWDNS_RESOLVER:-1.1.1.1:53}
 
 slowdns_load_config() {
-    SLOWDNS_ENABLED=0
+    SLOWDNS_ENABLED=""
     SLOWDNS_DOMAIN=""
     SLOWDNS_NS_DOMAIN=""
     SLOWDNS_PUBKEY=""
@@ -20,7 +20,7 @@ slowdns_load_config() {
             value=${value%$'\r'}
             value=${value#\"}; value=${value%\"}
             case "$key" in
-                SLOWDNS_ENABLED) [[ "$value" == 1 ]] && SLOWDNS_ENABLED=1 ;;
+                SLOWDNS_ENABLED) [[ "$value" == 1 ]] && SLOWDNS_ENABLED=1; [[ "$value" == 0 ]] && SLOWDNS_ENABLED=0 ;;
                 SLOWDNS_DOMAIN) SLOWDNS_DOMAIN="$value" ;;
                 SLOWDNS_NS_DOMAIN) SLOWDNS_NS_DOMAIN="$value" ;;
                 SLOWDNS_UDP_ADDR) SLOWDNS_UDP_ADDR="$value" ;;
@@ -29,7 +29,18 @@ slowdns_load_config() {
         done < "$SLOWDNS_ENV_FILE"
     fi
 
+    if [[ -z "$SLOWDNS_ENABLED" ]]; then
+        if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet slowdns.service 2>/dev/null; then
+            SLOWDNS_ENABLED=1
+        else
+            SLOWDNS_ENABLED=0
+        fi
+    fi
+
     if [[ -z "$SLOWDNS_DOMAIN" && -r /etc/xray/domain ]]; then
+        SLOWDNS_DOMAIN=$(tr -d '[:space:]' < /etc/xray/domain)
+    elif [[ "$SLOWDNS_DOMAIN" =~ ^ns- && -r /etc/xray/domain ]]; then
+        [[ -z "$SLOWDNS_NS_DOMAIN" ]] && SLOWDNS_NS_DOMAIN="$SLOWDNS_DOMAIN"
         SLOWDNS_DOMAIN=$(tr -d '[:space:]' < /etc/xray/domain)
     fi
     if [[ -z "$SLOWDNS_NS_DOMAIN" && "$SLOWDNS_DOMAIN" =~ ^[^.]+\..+ ]]; then
