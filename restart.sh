@@ -78,9 +78,10 @@ echo -e "    [4] Restart Stunnel5"
 echo -e "    [5] Restart Nginx"
 echo -e "    [6] Restart Badvpn"
 echo -e "    [7] Restart HAProxy"
+echo -e "    [8] Restart SlowDNS"
 echo -e "    [x] Menu"
 echo -e ""
-read -p "    Select From Options [1-7 or x] :  " Restart
+read -p "    Select From Options [1-8 or x] :  " Restart
 echo -e ""
 echo -e "======================================"
 sleep 1
@@ -92,6 +93,9 @@ case $Restart in
                 systemctl restart ws-stunnel.service >/dev/null 2>&1
                 systemctl restart xray.service >/dev/null 2>&1
                 systemctl restart haproxy >/dev/null 2>&1
+                if systemctl is-active --quiet slowdns.service 2>/dev/null; then
+                    systemctl restart slowdns.service >/dev/null 2>&1
+                fi
                 /etc/init.d/ssh restart
                 /etc/init.d/dropbear restart
                 /etc/init.d/stunnel4 restart
@@ -171,6 +175,25 @@ case $Restart in
                 echo -e "        HAProxy Service Restarted     "
                 echo -e ""
                 echo -e "======================================"
+                ;;
+                8)
+                clear && printf '\033[3J'
+                if systemctl is-active --quiet slowdns.service 2>/dev/null; then
+                    systemctl restart slowdns.service >/dev/null 2>&1
+                    echo -e ""
+                    echo -e "======================================"
+                    echo -e ""
+                    echo -e "        SlowDNS Service Restarted     "
+                    echo -e ""
+                    echo -e "======================================"
+                else
+                    echo -e ""
+                    echo -e "======================================"
+                    echo -e ""
+                    echo -e "      SlowDNS Service is Not Active   "
+                    echo -e ""
+                    echo -e "======================================"
+                fi
                 ;;
                 x)
                 clear && printf '\033[3J'
