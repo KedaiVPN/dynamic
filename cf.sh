@@ -50,3 +50,6 @@ yellow "Domain added.."
 sleep 3
 domain=$(cat /root/domain)
 cp -r /root/domain /etc/xray/domain
+if [ -f /usr/bin/slowdns ] && systemctl is-active --quiet slowdns.service 2>/dev/null; then
+    /usr/bin/slowdns sync >/dev/null 2>&1 || true
+fi

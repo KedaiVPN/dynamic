@@ -149,6 +149,9 @@ else
 rm -fr /etc/xray/domain
 echo "IP=$host" > /var/lib/scrz-prem/ipvps.conf
 echo $host > /etc/xray/domain
+if [ -f /usr/bin/slowdns ] && systemctl is-active --quiet slowdns.service 2>/dev/null; then
+    /usr/bin/slowdns sync >/dev/null 2>&1 || true
+fi
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 echo "Dont forget to renew gen-ssl"
 echo ""
@@ -186,6 +189,9 @@ sleep 2
 echo -e "[ ${green}INFO${NC} ] Starting service $Cek " 
 sleep 2
 echo $domain > /etc/xray/domain
+if [ -f /usr/bin/slowdns ] && systemctl is-active --quiet slowdns.service 2>/dev/null; then
+    /usr/bin/slowdns sync >/dev/null 2>&1 || true
+fi
 systemctl start nginx
 systemctl start xray
 systemctl restart haproxy

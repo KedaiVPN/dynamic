@@ -248,6 +248,22 @@ disable_slowdns() {
     green 'SlowDNS nonaktif. Key dan konfigurasi resmi dipertahankan.'
 }
 
+sync_slowdns() {
+    require_root
+    command -v systemctl >/dev/null 2>&1 || return 0
+    systemctl is-active --quiet slowdns.service || return 0
+    read_domains || return 1
+    local ipaddr iface
+    ipaddr=$(discover_bind_ip)
+    iface=$(network_interface)
+    [[ "$ipaddr" =~ ^[0-9]+(\.[0-9]+){3}$ && -n "$iface" ]] || return 1
+    write_env "$ipaddr" "$iface"
+    write_service "$ipaddr"
+    systemctl daemon-reload >/dev/null 2>&1 || true
+    systemctl restart slowdns.service >/dev/null 2>&1 || true
+    green "SlowDNS synced with domain: $SLOWDNS_DOMAIN (NS: $SLOWDNS_NS_DOMAIN)"
+}
+
 menu() {
     local BIRed='\033[1;91m' BIYellow='\033[1;93m' BIWhite='\033[1;97m' UWhite='\033[4;37m' NC='\033[0m'
     while true; do
@@ -279,6 +295,7 @@ case "${1:-menu}" in
 enable|on) enable_slowdns ;;
 disable|off) disable_slowdns ;;
 status|info) status ;;
+sync) sync_slowdns ;;
 menu) menu ;;
-*) echo "Usage: $0 {enable|disable|status|menu}" >&2; exit 2 ;;
+*) echo "Usage: $0 {enable|disable|status|sync|menu}" >&2; exit 2 ;;
 esac

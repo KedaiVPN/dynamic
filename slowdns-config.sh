@@ -37,17 +37,41 @@ slowdns_load_config() {
         fi
     fi
 
-    if [[ -z "$SLOWDNS_DOMAIN" && -r /etc/xray/domain ]]; then
-        SLOWDNS_DOMAIN=$(tr -d '[:space:]' < /etc/xray/domain)
-    elif [[ "$SLOWDNS_DOMAIN" =~ ^ns- && -r /etc/xray/domain ]]; then
-        [[ -z "$SLOWDNS_NS_DOMAIN" ]] && SLOWDNS_NS_DOMAIN="$SLOWDNS_DOMAIN"
-        SLOWDNS_DOMAIN=$(tr -d '[:space:]' < /etc/xray/domain)
+    local xray_domain=""
+    if [[ -r /etc/xray/domain ]]; then
+        xray_domain=$(tr -d '[:space:]' < /etc/xray/domain)
     fi
+
+    if [[ -n "$xray_domain" && "$xray_domain" =~ ^[A-Za-z0-9][A-Za-z0-9.-]*[A-Za-z0-9]$ && "$xray_domain" == *.* ]]; then
+        SLOWDNS_DOMAIN="$xray_domain"
+        SLOWDNS_NS_DOMAIN="ns-${xray_domain}"
+    fi
+
     if [[ -z "$SLOWDNS_NS_DOMAIN" && "$SLOWDNS_DOMAIN" =~ ^[^.]+\..+ ]]; then
         SLOWDNS_NS_DOMAIN="ns-${SLOWDNS_DOMAIN}"
     fi
     if [[ -r "$SLOWDNS_KEY_FILE" ]]; then
         SLOWDNS_PUBKEY=$(tr -d '[:space:]' < "$SLOWDNS_KEY_FILE")
+    fi
+
+    # Auto-sync on-disk env and service if running as root and domain changed
+    if [[ ${EUID:-$(id -u)} -eq 0 && -f "$SLOWDNS_ENV_FILE" && -f /etc/systemd/system/slowdns.service ]]; then
+        local env_ns=""
+        env_ns=$(awk -F= '$1=="SLOWDNS_NS_DOMAIN" {gsub(/"/,"",$2); print $2}' "$SLOWDNS_ENV_FILE" 2>/dev/null || true)
+        if [[ -n "$SLOWDNS_NS_DOMAIN" && "$env_ns" != "$SLOWDNS_NS_DOMAIN" ]]; then
+            sed -i "s|^SLOWDNS_DOMAIN=.*|SLOWDNS_DOMAIN=\"${SLOWDNS_DOMAIN}\"|" "$SLOWDNS_ENV_FILE" 2>/dev/null || true
+            sed -i "s|^SLOWDNS_NS_DOMAIN=.*|SLOWDNS_NS_DOMAIN=\"${SLOWDNS_NS_DOMAIN}\"|" "$SLOWDNS_ENV_FILE" 2>/dev/null || true
+            if ! grep -q "SLOWDNS_NS_DOMAIN=" "$SLOWDNS_ENV_FILE"; then
+                echo "SLOWDNS_NS_DOMAIN=\"${SLOWDNS_NS_DOMAIN}\"" >> "$SLOWDNS_ENV_FILE"
+            fi
+            sed -i -E "s|(server\.key[[:space:]]+)[^[:space:]]+|\1${SLOWDNS_NS_DOMAIN}|" /etc/systemd/system/slowdns.service 2>/dev/null || true
+            if command -v systemctl >/dev/null 2>&1; then
+                systemctl daemon-reload >/dev/null 2>&1 || true
+                if systemctl is-active --quiet slowdns.service 2>/dev/null; then
+                    systemctl restart slowdns.service >/dev/null 2>&1 || true
+                fi
+            fi
+        fi
     fi
 
     if [[ ! "$SLOWDNS_DOMAIN" =~ ^[A-Za-z0-9][A-Za-z0-9.-]*[A-Za-z0-9]$ ]]; then
