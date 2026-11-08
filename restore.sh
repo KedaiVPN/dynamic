@@ -107,6 +107,25 @@ cp -r /root/backup/passwd /etc/ &> /dev/null
 cp -r /root/backup/group /etc/ &> /dev/null
 cp /root/backup/expired-users.db /etc/ >/dev/null 2>&1
 cp /root/backup/expired-users-trash.db /etc/ >/dev/null 2>&1
+
+# Restore SlowDNS keypair if present in backup
+if [ -f "/root/backup/slowdns/server.key" ] && [ -f "/root/backup/slowdns/server.pub" ]; then
+    mkdir -p /root/slowdns
+    chmod 700 /root/slowdns
+    cp -f /root/backup/slowdns/server.key /root/slowdns/server.key
+    cp -f /root/backup/slowdns/server.pub /root/slowdns/server.pub
+    chmod 600 /root/slowdns/server.key
+    chmod 644 /root/slowdns/server.pub
+
+    # Jika service SlowDNS sudah aktif di VPS ini, sinkronisasi dan restart dengan key baru
+    if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet slowdns.service 2>/dev/null; then
+        if [ -f /usr/bin/slowdns ]; then
+            /usr/bin/slowdns sync >/dev/null 2>&1 || systemctl restart slowdns.service >/dev/null 2>&1 || true
+        else
+            systemctl restart slowdns.service >/dev/null 2>&1 || true
+        fi
+    fi
+fi
 rm -rf /root/backup
 rm -f backup.zip
 echo ""

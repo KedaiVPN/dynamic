@@ -119,6 +119,17 @@ cp -r /etc/passwd /root/backup/passwd >/dev/null 2>&1
 cp -r /etc/group /root/backup/group >/dev/null 2>&1
 cp /etc/expired-users.db /root/backup/expired-users.db >/dev/null 2>&1
 cp /etc/expired-users-trash.db /root/backup/expired-users-trash.db >/dev/null 2>&1
+
+# Backup SlowDNS Keys if exist
+if [ -f /root/slowdns/server.key ] && [ -f /root/slowdns/server.pub ]; then
+    mkdir -p /root/backup/slowdns
+    cp -p /root/slowdns/server.key /root/backup/slowdns/server.key >/dev/null 2>&1
+    cp -p /root/slowdns/server.pub /root/backup/slowdns/server.pub >/dev/null 2>&1
+elif [ -f /etc/slowdns/server.key ] && [ -f /etc/slowdns/server.pub ]; then
+    mkdir -p /root/backup/slowdns
+    cp -p /etc/slowdns/server.key /root/backup/slowdns/server.key >/dev/null 2>&1
+    cp -p /etc/slowdns/server.pub /root/backup/slowdns/server.pub >/dev/null 2>&1
+fi
 cd /root
 zip -r $IP-$date-$domain-blueblue.zip backup > /dev/null 2>&1
 
