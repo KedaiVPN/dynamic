@@ -243,6 +243,42 @@ chmod 644 /etc/xray/xray.pem
 echo -e "[ ${GREEN}INFO${NC} ] Renew gen-ssl done... " 
 sleep 2
 
+# // Tuning Conntrack Kernel
+tuning_conntrack() {
+    echo -e "[ \033[0;32mINFO\033[0m ] Tuning kernel conntrack..."
+
+    # 1. Muat modul nf_conntrack jika belum termuat
+    if ! lsmod 2>/dev/null | grep -q nf_conntrack; then
+        modprobe nf_conntrack >/dev/null 2>&1 || true
+    fi
+
+    # 2. Terapkan langsung tanpa reboot
+    sysctl -w net.netfilter.nf_conntrack_max=2000000 >/dev/null 2>&1 || true
+    sysctl -w net.netfilter.nf_conntrack_tcp_timeout_time_wait=30 >/dev/null 2>&1 || true
+
+    # 3. Buat permanen (tulis ulang / overwrite, JANGAN append)
+    mkdir -p /etc/sysctl.d
+    cat > /etc/sysctl.d/99-conntrack.conf << 'EOF'
+net.netfilter.nf_conntrack_max = 2000000
+net.netfilter.nf_conntrack_tcp_timeout_time_wait = 30
+EOF
+    sysctl --system >/dev/null 2>&1 || true
+
+    # 4. Verifikasi dan log
+    local current_max=""
+    if [ -r /proc/sys/net/netfilter/nf_conntrack_max ]; then
+        current_max=$(cat /proc/sys/net/netfilter/nf_conntrack_max 2>/dev/null || true)
+    fi
+
+    if [ "$current_max" = "2000000" ]; then
+        echo -e "[ \033[0;32mOKEY\033[0m ] nf_conntrack_max berhasil disetel: $current_max"
+    else
+        echo -e "[ \033[0;33mWARN\033[0m ] nf_conntrack_max bernilai '${current_max:-unknown}' (diharapkan 2000000), instalasi tetap dilanjutkan"
+    fi
+}
+
+tuning_conntrack
+
 #install vnstat
 echo -e "$white\033[0;34m┌─────────────────────────────────────────┐${NC}"
 echo -e " \E[41;1;39m           ⇱ Install vnStat ⇲            \E[0m$NC"
