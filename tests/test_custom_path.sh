@@ -67,6 +67,17 @@ assert_file_contains 'vmess|/vmess-baru|/vmess|10002' "$TMP/custom-path-aliases.
 grep -Fq 'location ~ ^/vmess-lea$ {' "$TMP/xray-custom-paths.inc"
 grep -Fq 'location ~ ^/vmess-baru$ {' "$TMP/xray-custom-paths.inc"
 
+# --sync rebuilds NGINX_INCLUDE from ALIAS_CONFIG
+rm -f "$TMP/xray-custom-paths.inc"
+PATH_CONFIG="$TMP/custom-paths.conf" \
+ALIAS_CONFIG="$TMP/custom-path-aliases.conf" \
+NGINX_INCLUDE="$TMP/xray-custom-paths.inc" \
+NGINX_BIN=true \
+NGINX_RELOAD_CMD=true \
+"$SCRIPT" --sync
+grep -Fq 'location ~ ^/vmess-lea$ {' "$TMP/xray-custom-paths.inc"
+grep -Fq 'location ~ ^/vmess-baru$ {' "$TMP/xray-custom-paths.inc"
+
 # Cross-protocol conflicts and unsafe paths must be rejected.
 if PATH_CONFIG="$TMP/custom-paths.conf" ALIAS_CONFIG="$TMP/custom-path-aliases.conf" NGINX_INCLUDE="$TMP/xray-custom-paths.inc" NGINX_BIN=true NGINX_RELOAD_CMD=true "$SCRIPT" --set vless /vmess-lea; then
     echo 'FAIL: allowed path already owned by another protocol' >&2

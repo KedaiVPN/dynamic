@@ -126,6 +126,25 @@ if [ -f "/root/backup/slowdns/server.key" ] && [ -f "/root/backup/slowdns/server
         fi
     fi
 fi
+
+# Restore Custom Path config and synchronize Nginx include safely
+if [ -f "/etc/xray/custom-paths.conf" ] || [ -f "/etc/xray/custom-path-aliases.conf" ] || [ -f "/root/backup/nginx-conf/xray-custom-paths.inc" ]; then
+    mkdir -p /etc/nginx/conf.d
+    if [ -f "/root/backup/nginx-conf/xray-custom-paths.inc" ]; then
+        cp -f /root/backup/nginx-conf/xray-custom-paths.inc /etc/nginx/conf.d/xray-custom-paths.inc
+        chmod 644 /etc/nginx/conf.d/xray-custom-paths.inc
+    fi
+
+    if [ -x "/usr/bin/custom-path" ]; then
+        /usr/bin/custom-path --sync >/dev/null 2>&1 || true
+    fi
+
+    if command -v nginx >/dev/null 2>&1; then
+        if ! nginx -t >/dev/null 2>&1; then
+            : > /etc/nginx/conf.d/xray-custom-paths.inc
+        fi
+    fi
+fi
 rm -rf /root/backup
 rm -f backup.zip
 echo ""

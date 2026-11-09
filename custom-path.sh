@@ -5,7 +5,7 @@ PATH_CONFIG="${PATH_CONFIG:-/etc/xray/custom-paths.conf}"
 ALIAS_CONFIG="${ALIAS_CONFIG:-/etc/xray/custom-path-aliases.conf}"
 NGINX_INCLUDE="${NGINX_INCLUDE:-/etc/nginx/conf.d/xray-custom-paths.inc}"
 NGINX_BIN="${NGINX_BIN:-nginx}"
-NGINX_RELOAD_CMD="${NGINX_RELOAD_CMD:-systemctl reload nginx}"
+NGINX_RELOAD_CMD="${NGINX_RELOAD_CMD:-if command -v systemctl >/dev/null 2>&1; then if systemctl is-active --quiet nginx 2>/dev/null; then systemctl reload nginx; fi; elif command -v service >/dev/null 2>&1; then service nginx reload 2>/dev/null || true; fi}"
 
 readonly DEFAULT_VMESS_PATH="/vmess"
 readonly DEFAULT_VLESS_PATH="/vless"
@@ -205,6 +205,11 @@ show_paths() {
     printf 'TROJAN active path: %s\n' "$(active_path TROJAN_WS_PATH "$DEFAULT_TROJAN_PATH")"
 }
 
+sync_paths() {
+    ensure_files
+    apply_nginx_include
+}
+
 list_aliases() {
     ensure_files
     if [[ -s "$ALIAS_CONFIG" ]]; then
@@ -316,11 +321,14 @@ case "${1:-}" in
     --list)
         list_aliases
         ;;
+    --sync)
+        sync_paths
+        ;;
     '')
         interactive_menu
         ;;
     *)
-        echo "Usage: $0 [--validate-path PATH | --set vmess|vless|trojan PATH | --show | --list]" >&2
+        echo "Usage: $0 [--validate-path PATH | --set vmess|vless|trojan PATH | --show | --list | --sync]" >&2
         exit 2
         ;;
 esac

@@ -120,6 +120,12 @@ cp -r /etc/group /root/backup/group >/dev/null 2>&1
 cp /etc/expired-users.db /root/backup/expired-users.db >/dev/null 2>&1
 cp /etc/expired-users-trash.db /root/backup/expired-users-trash.db >/dev/null 2>&1
 
+# Backup Custom Path Nginx include if exists
+if [ -f /etc/nginx/conf.d/xray-custom-paths.inc ]; then
+    mkdir -p /root/backup/nginx-conf
+    cp -p /etc/nginx/conf.d/xray-custom-paths.inc /root/backup/nginx-conf/xray-custom-paths.inc >/dev/null 2>&1
+fi
+
 # Backup SlowDNS Keys if exist
 if [ -f /root/slowdns/server.key ] && [ -f /root/slowdns/server.pub ]; then
     mkdir -p /root/backup/slowdns
