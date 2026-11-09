@@ -35,4 +35,16 @@ assert_contains update.sh 'update_library_script "xray-account-detail.sh" "/usr/
 assert_contains menu4.sh 'CUSTOM PATH'
 assert_contains menu4.sh '; custom-path ;'
 
+# BadVPN client limit must be 1000 across installation and restart scripts to prevent buffer exhaustion.
+if grep -q 'max-clients 500' "$ROOT/ssh-vpn.sh"; then
+    echo 'FAIL: ssh-vpn.sh must use --max-clients 1000' >&2
+    exit 1
+fi
+if grep -q 'max-clients 500' "$ROOT/restart.sh"; then
+    echo 'FAIL: restart.sh must use --max-clients 1000' >&2
+    exit 1
+fi
+assert_contains ssh-vpn.sh '--max-clients 1000'
+assert_contains restart.sh '--max-clients 1000'
+
 echo 'PASS: installation, update, and menu wiring'

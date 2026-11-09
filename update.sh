@@ -270,6 +270,12 @@ systemctl restart ssh >/dev/null 2>&1
 systemctl restart sshd >/dev/null 2>&1
 
 # Fix TCP Kernel (Mencegah port exhaustion / time_wait numpuk)
+mkdir -p /etc/modules-load.d
+cat > /etc/modules-load.d/conntrack.conf << 'EOF'
+nf_conntrack
+EOF
+modprobe nf_conntrack >/dev/null 2>&1 || true
+
 sed -i '/net.core.somaxconn/d' /etc/sysctl.conf
 sed -i '/net.ipv4.tcp_fin_timeout/d' /etc/sysctl.conf
 sed -i '/net.ipv4.tcp_max_syn_backlog/d' /etc/sysctl.conf
@@ -281,7 +287,17 @@ echo "net.ipv4.tcp_fin_timeout = 15" >> /etc/sysctl.conf
 echo "net.ipv4.tcp_max_syn_backlog = 65535" >> /etc/sysctl.conf
 echo "net.ipv4.tcp_max_tw_buckets = 2000000" >> /etc/sysctl.conf
 echo "net.netfilter.nf_conntrack_max = 2000000" >> /etc/sysctl.conf
-sysctl -p >/dev/null 2>&1
+
+mkdir -p /etc/sysctl.d
+cat > /etc/sysctl.d/99-conntrack.conf << 'EOF'
+net.netfilter.nf_conntrack_max = 2000000
+net.netfilter.nf_conntrack_tcp_timeout_time_wait = 30
+EOF
+sysctl -p >/dev/null 2>&1 || true
+sysctl --system >/dev/null 2>&1 || true
+
+# Update BadVPN max-clients to 1000 in rc.local
+sed -i 's/--max-clients 500/--max-clients 1000/g' /etc/rc.local 2>/dev/null || true
 
 # Fix Nginx Xray Routing Proxy (agar Vmess/Vless/Trojan bisa connect dari port 443)
 # Preserve custom aliases independently when rewriting the base template.

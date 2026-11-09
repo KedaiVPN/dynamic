@@ -14,6 +14,7 @@ assert_contains() {
 # 1. Structural checks in setup.sh
 assert_contains setup.sh 'tuning_conntrack() {'
 assert_contains setup.sh 'tuning_conntrack'
+assert_contains setup.sh '/etc/modules-load.d/conntrack.conf'
 assert_contains setup.sh '/etc/sysctl.d/99-conntrack.conf'
 assert_contains setup.sh 'net.netfilter.nf_conntrack_max = 2000000'
 assert_contains setup.sh 'net.netfilter.nf_conntrack_tcp_timeout_time_wait = 30'
@@ -39,9 +40,10 @@ fi
 TMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TMP_DIR"' EXIT
 
+MODULES_LOAD_DIR="$TMP_DIR/etc/modules-load.d"
 SYSCTL_DIR="$TMP_DIR/etc/sysctl.d"
 PROC_FILE="$TMP_DIR/proc/nf_conntrack_max"
-mkdir -p "$SYSCTL_DIR" "$(dirname "$PROC_FILE")"
+mkdir -p "$MODULES_LOAD_DIR" "$SYSCTL_DIR" "$(dirname "$PROC_FILE")"
 echo "2000000" > "$PROC_FILE"
 
 # Extract tuning_conntrack definition from setup.sh
@@ -67,6 +69,11 @@ lsmod() {
 # Redefine file targets inside adapted test function
 adapted_tuning_conntrack() {
     echo -e "[ \033[0;32mINFO\033[0m ] Tuning kernel conntrack..."
+
+    mkdir -p "$MODULES_LOAD_DIR"
+    cat > "$MODULES_LOAD_DIR/conntrack.conf" << 'EOF'
+nf_conntrack
+EOF
 
     if ! lsmod 2>/dev/null | grep -q nf_conntrack; then
         modprobe nf_conntrack >/dev/null 2>&1 || true
@@ -99,6 +106,16 @@ adapted_tuning_conntrack
 RUNNER_EOF
 
 output=$(bash "$TMP_DIR/runner.sh")
+
+# Verify modules-load file contents
+if [ ! -f "$MODULES_LOAD_DIR/conntrack.conf" ]; then
+    echo "FAIL: conntrack.conf was not created in modules-load.d" >&2
+    exit 1
+fi
+if [ "$(tr -d '[:space:]' < "$MODULES_LOAD_DIR/conntrack.conf")" != "nf_conntrack" ]; then
+    echo "FAIL: conntrack.conf content in modules-load.d does not match expected" >&2
+    exit 1
+fi
 
 # Verify conf file contents
 if [ ! -f "$SYSCTL_DIR/99-conntrack.conf" ]; then
