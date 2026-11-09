@@ -239,9 +239,9 @@ echo -e "[ ${green}INFO$NC ] Installing badvpn for game support..."
 #wget -q -O /usr/bin/badvpn-udpgw "https://raw.githubusercontent.com/kenDevXD/0/main/badvpn-udpgw64"
 wget -q -O /usr/bin/badvpn-udpgw "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/newudpgw"
 chmod +x /usr/bin/badvpn-udpgw  >/dev/null 2>&1
-sed -i '$ i\screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 1000' /etc/rc.local >/dev/null 2>&1
-sed -i '$ i\screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 1000' /etc/rc.local >/dev/null 2>&1
-sed -i '$ i\screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 1000' /etc/rc.local >/dev/null 2>&1
+sed -i '$ i\screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 1000 --max-connections-for-client 1000' /etc/rc.local >/dev/null 2>&1
+sed -i '$ i\screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 1000 --max-connections-for-client 1000' /etc/rc.local >/dev/null 2>&1
+sed -i '$ i\screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 1000 --max-connections-for-client 1000' /etc/rc.local >/dev/null 2>&1
 systemctl daemon-reload >/dev/null 2>&1
 systemctl start rc-local.service >/dev/null 2>&1
 systemctl restart rc-local.service >/dev/null 2>&1
@@ -258,6 +258,19 @@ echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config
 echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config
 sed -i 's/#AllowTcpForwarding yes/AllowTcpForwarding yes/g' /etc/ssh/sshd_config
 sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+
+# SlowDNS Handshake Optimization
+if ! grep -q "SlowDNS Handshake Optimization" /etc/ssh/sshd_config; then
+    cat >> /etc/ssh/sshd_config << 'SSHEOF'
+
+# SlowDNS Handshake Optimization
+KexAlgorithms curve25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp256,diffie-hellman-group14-sha256,diffie-hellman-group-exchange-sha256
+Ciphers chacha20-poly1305@openssh.com,aes128-ctr,aes256-ctr
+MACs hmac-sha2-256-etm@openssh.com,hmac-sha2-256,hmac-sha1
+HostKeyAlgorithms ssh-ed25519,ecdsa-sha2-nistp256,rsa-sha2-256,ssh-rsa
+SSHEOF
+fi
+
 systemctl daemon-reload >/dev/null 2>&1
 systemctl start ssh >/dev/null 2>&1
 systemctl restart ssh >/dev/null 2>&1
@@ -506,9 +519,9 @@ echo -e "[ ${green}ok${NC} ] Restarting vnstat"
 sleep 2
 systemctl restart haproxy >/dev/null 2>&1
 echo -e "[ ${green}ok${NC} ] Restarting HAProxy"
-screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 1000 >/dev/null 2>&1
-screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 1000 >/dev/null 2>&1
-screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 1000 >/dev/null 2>&1
+screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 1000 --max-connections-for-client 1000 >/dev/null 2>&1
+screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 1000 --max-connections-for-client 1000 >/dev/null 2>&1
+screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 1000 --max-connections-for-client 1000 >/dev/null 2>&1
 history -c
 echo "unset HISTFILE" >> /etc/profile
 

@@ -297,7 +297,21 @@ sysctl -p >/dev/null 2>&1 || true
 sysctl --system >/dev/null 2>&1 || true
 
 # Update BadVPN max-clients to 1000 in rc.local
-sed -i 's/--max-clients 500/--max-clients 1000/g' /etc/rc.local 2>/dev/null || true
+sed -i 's/--max-clients 500/--max-clients 1000 --max-connections-for-client 1000/g' /etc/rc.local 2>/dev/null || true
+
+# SlowDNS Handshake Optimization
+if ! grep -q "SlowDNS Handshake Optimization" /etc/ssh/sshd_config; then
+    cat >> /etc/ssh/sshd_config << 'SSHEOF'
+
+# SlowDNS Handshake Optimization
+KexAlgorithms curve25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp256,diffie-hellman-group14-sha256,diffie-hellman-group-exchange-sha256
+Ciphers chacha20-poly1305@openssh.com,aes128-ctr,aes256-ctr
+MACs hmac-sha2-256-etm@openssh.com,hmac-sha2-256,hmac-sha1
+HostKeyAlgorithms ssh-ed25519,ecdsa-sha2-nistp256,rsa-sha2-256,ssh-rsa
+SSHEOF
+    systemctl restart ssh >/dev/null 2>&1 || true
+    systemctl restart sshd >/dev/null 2>&1 || true
+fi
 
 # Fix Nginx Xray Routing Proxy (agar Vmess/Vless/Trojan bisa connect dari port 443)
 # Preserve custom aliases independently when rewriting the base template.
