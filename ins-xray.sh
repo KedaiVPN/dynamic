@@ -51,6 +51,41 @@ IP=$(curl -sS ifconfig.me )
 # // Exporting Network Interface
 export NETWORK_IFACE="$(ip route show to default | awk '{print $5}')"
 
+download_with_retry() {
+    local url="$1"
+    local dest="$2"
+    local max_attempts="${3:-5}"
+    local delay="${4:-2}"
+    local tmp_file
+    local attempt=1
+
+    mkdir -p "$(dirname "$dest")"
+    tmp_file=$(mktemp "${dest}.tmp.XXXXXX") || return 1
+
+    while [ "$attempt" -le "$max_attempts" ]; do
+        rm -f "$tmp_file"
+        if command -v wget >/dev/null 2>&1; then
+            if wget -q --timeout=20 --tries=1 -O "$tmp_file" "$url" && [ -s "$tmp_file" ]; then
+                mv -f "$tmp_file" "$dest"
+                return 0
+            fi
+        fi
+        rm -f "$tmp_file"
+        if command -v curl >/dev/null 2>&1; then
+            if curl -fsSL --connect-timeout 15 --max-time 120 -o "$tmp_file" "$url" && [ -s "$tmp_file" ]; then
+                mv -f "$tmp_file" "$dest"
+                return 0
+            fi
+        fi
+        rm -f "$tmp_file"
+        if [ "$attempt" -lt "$max_attempts" ]; then
+            sleep "$delay"
+        fi
+        attempt=$((attempt + 1))
+    done
+    return 1
+}
+
 
 clear && printf '\033[3J'
 # source /var/lib/scrz-prem/ipvps.conf # This is usually missing on fresh installs
@@ -361,7 +396,20 @@ fi
 
 echo -e "[ ${GREEN}INFO${NC} ] Downloading Xray $latest_version for $arch..."
 cd `mktemp -d`
-curl -sL "$xraycore_link" -o xray.zip
+xray_downloaded=0
+for xray_attempt in 1 2 3 4 5; do
+    rm -f xray.zip
+    if download_with_retry "$xraycore_link" "xray.zip" 3 2 && unzip -tq xray.zip >/dev/null 2>&1; then
+        xray_downloaded=1
+        break
+    fi
+    echo -e "[ ${YELLOW}WARN${NC} ] Gagal mengunduh arsip Xray (percobaan ${xray_attempt}/5), mencoba ulang..."
+    sleep 2
+done
+if [ "$xray_downloaded" -ne 1 ]; then
+    echo -e "[ ${RED}ERROR${NC} ] Failed to download valid Xray archive!"
+    exit 1
+fi
 unzip -q xray.zip
 if [[ -f "xray" ]]; then
     rm -rf xray.zip
@@ -463,7 +511,7 @@ END
     systemctl restart ws-stunnel
 else
     # Try to download if missing (fallback)
-    wget -q -O /usr/local/bin/ws-stunnel "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/ws-stunnel"
+    download_with_retry "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/ws-stunnel" "/usr/local/bin/ws-stunnel" || exit 1
     chmod +x /usr/local/bin/ws-stunnel
 
     cat > /etc/systemd/system/ws-stunnel.service << END

@@ -34,10 +34,45 @@ NC='\e[0m'
 green() { echo -e "\\033[32;1m${*}\\033[0m"; }
 red() { echo -e "\\033[31;1m${*}\\033[0m"; }
 
+download_with_retry() {
+    local url="$1"
+    local dest="$2"
+    local max_attempts="${3:-5}"
+    local delay="${4:-2}"
+    local tmp_file
+    local attempt=1
+
+    mkdir -p "$(dirname "$dest")"
+    tmp_file=$(mktemp "${dest}.tmp.XXXXXX") || return 1
+
+    while [ "$attempt" -le "$max_attempts" ]; do
+        rm -f "$tmp_file"
+        if command -v wget >/dev/null 2>&1; then
+            if wget -q --timeout=20 --tries=1 -O "$tmp_file" "$url" && [ -s "$tmp_file" ]; then
+                mv -f "$tmp_file" "$dest"
+                return 0
+            fi
+        fi
+        rm -f "$tmp_file"
+        if command -v curl >/dev/null 2>&1; then
+            if curl -fsSL --connect-timeout 15 --max-time 120 -o "$tmp_file" "$url" && [ -s "$tmp_file" ]; then
+                mv -f "$tmp_file" "$dest"
+                return 0
+            fi
+        fi
+        rm -f "$tmp_file"
+        if [ "$attempt" -lt "$max_attempts" ]; then
+            sleep "$delay"
+        fi
+        attempt=$((attempt + 1))
+    done
+    return 1
+}
+
 #curl https://rclone.org/install.sh | bash
-apt install rclone
+apt install rclone -y
 printf "q\n" | rclone config
-wget -O /root/.config/rclone/rclone.conf "https://${Server_URL}/rclone.conf"
+download_with_retry "https://${Server_URL}/rclone.conf" "/root/.config/rclone/rclone.conf" || exit 1
 git clone  https://github.com/MrMan21/wondershaper.git
 cd wondershaper
 make install
@@ -46,21 +81,21 @@ rm -rf wondershaper
 cd /usr/bin
 # Download or copy scripts locally
 if [ -f "/root/backup.sh" ]; then
-    cp -f /root/backup.sh backup
+    cp -f /root/backup.sh /usr/bin/backup
 else
-    wget -q -O backup "https://${Server_URL}/backup.sh"
+    download_with_retry "https://${Server_URL}/backup.sh" "/usr/bin/backup" || exit 1
 fi
 
 if [ -f "/root/restore.sh" ]; then
-    cp -f /root/restore.sh restore
+    cp -f /root/restore.sh /usr/bin/restore
 else
-    wget -q -O restore "https://${Server_URL}/restore.sh"
+    download_with_retry "https://${Server_URL}/restore.sh" "/usr/bin/restore" || exit 1
 fi
 
 if [ -f "/root/logcleaner.sh" ]; then
-    cp -f /root/logcleaner.sh cleaner
+    cp -f /root/logcleaner.sh /usr/bin/cleaner
 else
-    wget -q -O cleaner "https://${Server_URL}/logcleaner.sh"
+    download_with_retry "https://${Server_URL}/logcleaner.sh" "/usr/bin/cleaner" || exit 1
 fi
 
 chmod +x /usr/bin/backup

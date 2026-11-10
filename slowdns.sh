@@ -52,11 +52,46 @@ discover_bind_ip() {
     ip -4 route get 1.1.1.1 2>/dev/null | awk '{for (i=1; i<=NF; i++) if ($i=="src") {print $(i+1); exit}}'
 }
 
+download_with_retry() {
+    local url="$1"
+    local dest="$2"
+    local max_attempts="${3:-5}"
+    local delay="${4:-2}"
+    local tmp_file
+    local attempt=1
+
+    mkdir -p "$(dirname "$dest")"
+    tmp_file=$(mktemp "${dest}.tmp.XXXXXX") || return 1
+
+    while [[ "$attempt" -le "$max_attempts" ]]; do
+        rm -f "$tmp_file"
+        if command -v wget >/dev/null 2>&1; then
+            if wget -q --timeout=20 --tries=1 -O "$tmp_file" "$url" && [[ -s "$tmp_file" ]]; then
+                mv -f "$tmp_file" "$dest"
+                return 0
+            fi
+        fi
+        rm -f "$tmp_file"
+        if command -v curl >/dev/null 2>&1; then
+            if curl -fsSL --connect-timeout 15 --max-time 120 -o "$tmp_file" "$url" && [[ -s "$tmp_file" ]]; then
+                mv -f "$tmp_file" "$dest"
+                return 0
+            fi
+        fi
+        rm -f "$tmp_file"
+        if [[ "$attempt" -lt "$max_attempts" ]]; then
+            sleep "$delay"
+        fi
+        attempt=$((attempt + 1))
+    done
+    return 1
+}
+
 install_binary() {
     local tmp actual
     install -d -m 0700 "$SLOWDNS_DIR"
     tmp=$(mktemp "$SLOWDNS_DIR/slowdns.XXXXXX")
-    if ! wget -q -O "$tmp" "$SLOWDNS_BINARY_URL" || [[ ! -s "$tmp" ]]; then
+    if ! download_with_retry "$SLOWDNS_BINARY_URL" "$tmp" || [[ ! -s "$tmp" ]]; then
         rm -f "$tmp"
         red 'Binary SlowDNS resmi HTTP Custom gagal diunduh.'
         return 1

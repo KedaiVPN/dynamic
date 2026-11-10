@@ -14,7 +14,23 @@ ln -fs /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
 
 # Download file binary udp-custom (dari link Google Drive user)
 echo -e "[ INFO ] Mendownload binary udp-custom..."
-wget -q --show-progress --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1Alr7rbAPlUEWh5i8j6iZ0HswuRsZZ_OV' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1Alr7rbAPlUEWh5i8j6iZ0HswuRsZZ_OV" -O /root/udp/udp-custom && rm -rf /tmp/cookies.txt
+udp_downloaded=0
+for udp_attempt in 1 2 3 4 5; do
+    rm -f /root/udp/udp-custom.tmp /tmp/cookies.txt
+    confirm_tok=$(wget --quiet --timeout=20 --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1Alr7rbAPlUEWh5i8j6iZ0HswuRsZZ_OV' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p' || true)
+    if wget -q --timeout=30 --tries=1 --show-progress --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=${confirm_tok}&id=1Alr7rbAPlUEWh5i8j6iZ0HswuRsZZ_OV" -O /root/udp/udp-custom.tmp && [ -s /root/udp/udp-custom.tmp ] && ! head -c 64 /root/udp/udp-custom.tmp | grep -qiE "<!doctype|<html"; then
+        mv -f /root/udp/udp-custom.tmp /root/udp/udp-custom
+        udp_downloaded=1
+        break
+    fi
+    rm -f /root/udp/udp-custom.tmp /tmp/cookies.txt
+    sleep 2
+done
+rm -f /tmp/cookies.txt
+if [ "$udp_downloaded" -ne 1 ]; then
+    echo -e "[ ERROR ] Gagal mendownload binary udp-custom setelah beberapa percobaan."
+    exit 1
+fi
 
 chmod +x /root/udp/udp-custom
 

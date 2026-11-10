@@ -39,6 +39,41 @@ REPO="https://raw.githubusercontent.com/KedaiVPN/dynamic/main"
 
 echo -e "[ ${GREEN}INFO${NC} ] Mendownload script yang termasuk dalam daftar update..."
 
+download_with_retry() {
+    local url="$1"
+    local dest="$2"
+    local max_attempts="${3:-5}"
+    local delay="${4:-2}"
+    local tmp_file
+    local attempt=1
+
+    mkdir -p "$(dirname "$dest")"
+    tmp_file=$(mktemp "${dest}.tmp.XXXXXX") || return 1
+
+    while [ "$attempt" -le "$max_attempts" ]; do
+        rm -f "$tmp_file"
+        if command -v wget >/dev/null 2>&1; then
+            if wget -q --timeout=20 --tries=1 -O "$tmp_file" "$url" && [ -s "$tmp_file" ]; then
+                mv -f "$tmp_file" "$dest"
+                return 0
+            fi
+        fi
+        rm -f "$tmp_file"
+        if command -v curl >/dev/null 2>&1; then
+            if curl -fsSL --connect-timeout 15 --max-time 120 -o "$tmp_file" "$url" && [ -s "$tmp_file" ]; then
+                mv -f "$tmp_file" "$dest"
+                return 0
+            fi
+        fi
+        rm -f "$tmp_file"
+        if [ "$attempt" -lt "$max_attempts" ]; then
+            sleep "$delay"
+        fi
+        attempt=$((attempt + 1))
+    done
+    return 1
+}
+
 # Static update list. Files not listed here are intentionally left untouched.
 # Download, validate Bash syntax, then atomically replace the installed file.
 update_local_script() {
@@ -48,7 +83,7 @@ update_local_script() {
     local tmp_file
 
     tmp_file=$(mktemp "${target_file}.update.XXXXXX")
-    if ! wget -q -O "$tmp_file" "${REPO}/${script_name}?v=$(date +%s)" || [ ! -s "$tmp_file" ]; then
+    if ! download_with_retry "${REPO}/${script_name}?v=$(date +%s)" "$tmp_file" || [ ! -s "$tmp_file" ]; then
         rm -f "$tmp_file"
         echo -e "[ ${RED}SKIP${NC} ] ${script_name}: source unavailable; existing file was kept."
         return 0
@@ -133,7 +168,7 @@ update_library_script() {
     local tmp_file
 
     tmp_file=$(mktemp "${target_file}.update.XXXXXX")
-    if wget -q -O "$tmp_file" "${REPO}/${script_name}?v=$(date +%s)" && bash -n "$tmp_file"; then
+    if download_with_retry "${REPO}/${script_name}?v=$(date +%s)" "$tmp_file" && bash -n "$tmp_file"; then
         chmod 644 "$tmp_file"
         mv "$tmp_file" "$target_file"
         echo -e "[ ${GREEN}OK${NC} ] ${script_name} updated."
@@ -262,8 +297,9 @@ systemctl enable haproxy >/dev/null 2>&1
 systemctl restart haproxy >/dev/null 2>&1
 
 # Fix Banner Issue.net (Hapus duplikasi SSHD)
-wget -q -O /etc/issue.net "${REPO}/issue.net"
-chmod +x /etc/issue.net
+if download_with_retry "${REPO}/issue.net" "/etc/issue.net"; then
+    chmod +x /etc/issue.net
+fi
 sed -i '/Banner \/etc\/issue.net/d' /etc/ssh/sshd_config
 echo "Banner /etc/issue.net" >> /etc/ssh/sshd_config
 systemctl restart ssh >/dev/null 2>&1
@@ -334,15 +370,44 @@ if [ "$sshd_needs_reload" -eq 1 ] && sshd -t >/dev/null 2>&1; then
     systemctl reload ssh >/dev/null 2>&1 || systemctl restart ssh >/dev/null 2>&1 || systemctl restart sshd >/dev/null 2>&1 || true
 fi
 
+# Limit systemd journal to 100MB and merge user-* journals into system.journal
+if [ -d /etc/systemd ]; then
+    mkdir -p /etc/systemd/journald.conf.d
+    cat > /etc/systemd/journald.conf.d/99-limit.conf << 'JRNEOF'
+[Journal]
+SystemMaxUse=100M
+RuntimeMaxUse=50M
+SplitMode=none
+JRNEOF
+    if command -v systemctl >/dev/null 2>&1; then
+        systemctl restart systemd-journald >/dev/null 2>&1 || true
+    fi
+    rm -f /var/log/journal/*/user-*.journal /run/log/journal/*/user-*.journal 2>/dev/null || true
+    if command -v journalctl >/dev/null 2>&1; then
+        journalctl --rotate >/dev/null 2>&1 || true
+        journalctl --vacuum-size=100M >/dev/null 2>&1 || true
+    fi
+fi
+
 # Fail2Ban protection for all SSH ports (22, 2253, 40000) with localhost whitelisted
+# Use systemd backend so logcleaner clearing /var/log/auth.log never resets fail2ban tracking
 if [ -d /etc/fail2ban ]; then
-    cat > /etc/fail2ban/jail.local << 'F2BEOF'
+    if ! python3 -c "import systemd.journal" >/dev/null 2>&1; then
+        DEBIAN_FRONTEND=noninteractive apt-get update -y >/dev/null 2>&1 || true
+        DEBIAN_FRONTEND=noninteractive apt-get install -y python3-systemd >/dev/null 2>&1 || true
+    fi
+    f2b_backend="auto"
+    if python3 -c "import systemd.journal" >/dev/null 2>&1; then
+        f2b_backend="systemd"
+    fi
+    cat > /etc/fail2ban/jail.local << F2BEOF
 [DEFAULT]
 ignoreip = 127.0.0.1/8 ::1
 
 [sshd]
 enabled = true
 port = 22,2253,40000
+backend = ${f2b_backend}
 F2BEOF
     systemctl enable fail2ban >/dev/null 2>&1 || true
     systemctl restart fail2ban >/dev/null 2>&1 || true
@@ -526,7 +591,7 @@ update_api_module() {
     local target_file="/usr/local/bin/api-modules/${script_name}"
 
     echo -e "[ ${GREEN}INFO${NC} ] Updating ${script_name}..."
-    wget -q -O "$tmp_file" "${REPO}/api-modules/${script_name}?v=$(date +%s)"
+    download_with_retry "${REPO}/api-modules/${script_name}?v=$(date +%s)" "$tmp_file" || true
 
     if [ -f "$tmp_file" ] && grep -q "$verify_string" "$tmp_file"; then
         echo -e "[ ${GREEN}OK${NC} ] ${script_name} downloaded and verified."
@@ -569,7 +634,7 @@ update_api_module "api-slowdns-delete.sh" "SlowDNS Delete"
 update_api_module "api-xray-delete.sh" "API Module"
 
 echo -e "[ ${GREEN}INFO${NC} ] Updating API Server Backend..."
-wget -q -O /etc/nevermore-api/node/server.js "${REPO}/api/server.js"
+download_with_retry "${REPO}/api/server.js?v=$(date +%s)" "/etc/nevermore-api/node/server.js" || true
 
 echo -e "[ ${GREEN}INFO${NC} ] Fixing Dependencies & Restarting API Service..."
 cd /etc/nevermore-api/node
@@ -586,7 +651,7 @@ systemctl unmask api-backend >/dev/null 2>&1
 
 # Ensure service file exists before restarting
 if [ ! -f "/etc/systemd/system/api-backend.service" ]; then
-    wget -q -O /etc/systemd/system/api-backend.service "${REPO}/api/api-backend.service"
+    download_with_retry "${REPO}/api/api-backend.service" "/etc/systemd/system/api-backend.service" || true
     systemctl daemon-reload >/dev/null 2>&1
     systemctl enable api-backend >/dev/null 2>&1
 fi

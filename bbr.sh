@@ -71,9 +71,43 @@ remove_all() {
 remove_all
 echo "net.core.default_qdisc=fq" >>/etc/sysctl.conf
 echo "net.ipv4.tcp_congestion_control=bbrplus" >>/etc/sysctl.conf
+download_with_retry() {
+    local url="$1"
+    local dest="$2"
+    local max_attempts="${3:-5}"
+    local delay="${4:-2}"
+    local tmp_file
+    local attempt=1
+
+    mkdir -p "$(dirname "$dest")"
+    tmp_file=$(mktemp "${dest}.tmp.XXXXXX") || return 1
+
+    while [ "$attempt" -le "$max_attempts" ]; do
+        rm -f "$tmp_file"
+        if command -v wget >/dev/null 2>&1; then
+            if wget -q --timeout=20 --tries=1 -O "$tmp_file" "$url" && [ -s "$tmp_file" ]; then
+                mv -f "$tmp_file" "$dest"
+                return 0
+            fi
+        fi
+        rm -f "$tmp_file"
+        if command -v curl >/dev/null 2>&1; then
+            if curl -fsSL --connect-timeout 15 --max-time 120 -o "$tmp_file" "$url" && [ -s "$tmp_file" ]; then
+                mv -f "$tmp_file" "$dest"
+                return 0
+            fi
+        fi
+        rm -f "$tmp_file"
+        if [ "$attempt" -lt "$max_attempts" ]; then
+            sleep "$delay"
+        fi
+        attempt=$((attempt + 1))
+    done
+    return 1
+}
 mkdir bbrplus && cd bbrplus
-wget -N --no-check-certificate https://github.com/NevermoreSSH/BBRplus/releases/download/bbr5.15/Debian-Ubuntu_Optional_linux-headers-5.15.96-bbrplus_5.15.96-bbrplus-1_amd64.deb >/dev/null 2>&1
-wget -N --no-check-certificate https://github.com/NevermoreSSH/BBRplus/releases/download/bbr5.15/Debian-Ubuntu_Required_linux-image-5.15.96-bbrplus_5.15.96-bbrplus-1_amd64.deb >/dev/null 2>&1
+download_with_retry "https://github.com/NevermoreSSH/BBRplus/releases/download/bbr5.15/Debian-Ubuntu_Optional_linux-headers-5.15.96-bbrplus_5.15.96-bbrplus-1_amd64.deb" "Debian-Ubuntu_Optional_linux-headers-5.15.96-bbrplus_5.15.96-bbrplus-1_amd64.deb" || exit 1
+download_with_retry "https://github.com/NevermoreSSH/BBRplus/releases/download/bbr5.15/Debian-Ubuntu_Required_linux-image-5.15.96-bbrplus_5.15.96-bbrplus-1_amd64.deb" "Debian-Ubuntu_Required_linux-image-5.15.96-bbrplus_5.15.96-bbrplus-1_amd64.deb" || exit 1
 dpkg -i Debian-Ubuntu_Optional_linux-headers-5.15.96-bbrplus_5.15.96-bbrplus-1_amd64.deb
 dpkg -i Debian-Ubuntu_Required_linux-image-5.15.96-bbrplus_5.15.96-bbrplus-1_amd64.deb
 cd .. && rm -rf bbrplus

@@ -16,7 +16,7 @@ fi
 function verify_license() {
     echo -e "\033[0;33m[ INFO ]\033[0m Sedang memverifikasi lisensi instalasi Anda..."
     local SERVER_IP
-    SERVER_IP=$(curl -sS ipv4.icanhazip.com)
+    SERVER_IP=$(curl -fsSL --retry 3 --max-time 10 ipv4.icanhazip.com 2>/dev/null || curl -fsSL --max-time 10 https://api.ipify.org 2>/dev/null || curl -fsSL --max-time 10 https://ifconfig.me 2>/dev/null || true)
     if [ -z "$SERVER_IP" ]; then
         echo -e "\033[0;31m[ ERROR ]\033[0m Gagal mengambil IP server. Periksa koneksi internet Anda."
         exit 1
@@ -25,7 +25,7 @@ function verify_license() {
     local VERCEL_API_URL="https://licence-manager-nu.vercel.app"
 
     local sync_response
-    sync_response=$(curl -sS "${VERCEL_API_URL}/api/check/tunneling?ip=${SERVER_IP}" || echo "")
+    sync_response=$(curl -fsSL --retry 3 --max-time 15 "${VERCEL_API_URL}/api/check/tunneling?ip=${SERVER_IP}" 2>/dev/null || echo "")
     
     local is_valid
     is_valid=$(echo "$sync_response" | grep -E -o '"valid"\s*:\s*true')
@@ -213,13 +213,48 @@ echo iptables-persistent iptables-persistent/autosave_v6 boolean true | debconf-
 
 # // Install Requirement Tools
 apt-get --reinstall --fix-missing install -y sudo dpkg psmisc socat jq ruby wondershaper python3 tmux nmap bzip2 gzip coreutils wget screen rsyslog iftop htop net-tools zip unzip wget vim net-tools curl nano sed screen gnupg gnupg1 bc apt-transport-https build-essential gcc g++ automake make autoconf perl m4 dos2unix dropbear libreadline-dev zlib1g-dev libssl-dev dirmngr libxml-parser-perl neofetch git lsof iptables iptables-persistent
-apt-get --reinstall --fix-missing install -y libreadline-dev zlib1g-dev libssl-dev python3 screen curl jq bzip2 gzip coreutils rsyslog iftop htop zip unzip net-tools sed gnupg gnupg1 bc sudo apt-transport-https build-essential dirmngr libxml-parser-perl neofetch screenfetch git lsof openssl easy-rsa fail2ban tmux vnstat dropbear libsqlite3-dev socat cron bash-completion ntpdate xz-utils sudo apt-transport-https gnupg2 gnupg1 dnsutils lsb-release chrony
+apt-get --reinstall --fix-missing install -y libreadline-dev zlib1g-dev libssl-dev python3 screen curl jq bzip2 gzip coreutils rsyslog iftop htop zip unzip net-tools sed gnupg gnupg1 bc sudo apt-transport-https build-essential dirmngr libxml-parser-perl neofetch screenfetch git lsof openssl easy-rsa fail2ban python3-systemd tmux vnstat dropbear libsqlite3-dev socat cron bash-completion ntpdate xz-utils sudo apt-transport-https gnupg2 gnupg1 dnsutils lsb-release chrony
 gem install lolcat
 
 # // Update & Upgrade
 apt update -y
 apt upgrade -y
 apt dist-upgrade -y
+
+download_with_retry() {
+    local url="$1"
+    local dest="$2"
+    local max_attempts="${3:-5}"
+    local delay="${4:-2}"
+    local tmp_file
+    local attempt=1
+
+    mkdir -p "$(dirname "$dest")"
+    tmp_file=$(mktemp "${dest}.tmp.XXXXXX") || return 1
+
+    while [ "$attempt" -le "$max_attempts" ]; do
+        rm -f "$tmp_file"
+        if command -v wget >/dev/null 2>&1; then
+            if wget -q --timeout=20 --tries=1 -O "$tmp_file" "$url" && [ -s "$tmp_file" ]; then
+                mv -f "$tmp_file" "$dest"
+                return 0
+            fi
+        fi
+        rm -f "$tmp_file"
+        if command -v curl >/dev/null 2>&1; then
+            if curl -fsSL --connect-timeout 15 --max-time 120 -o "$tmp_file" "$url" && [ -s "$tmp_file" ]; then
+                mv -f "$tmp_file" "$dest"
+                return 0
+            fi
+        fi
+        rm -f "$tmp_file"
+        if [ "$attempt" -lt "$max_attempts" ]; then
+            sleep "$delay"
+        fi
+        attempt=$((attempt + 1))
+    done
+    return 1
+}
 
 # // Clear
 clear && printf '\033[3J'
@@ -229,7 +264,10 @@ clear && printf '\033[3J';clear && printf '\033[3J';clear && printf '\033[3J'
 echo -e "[ \033[0;32mINFO\033[0m ] Starting renew gen-ssl... " 
 sleep 2
 mkdir -p /root/.acme.sh
-curl https://acme-install.netlify.app/acme.sh -o /root/.acme.sh/acme.sh
+if ! download_with_retry "https://acme-install.netlify.app/acme.sh" "/root/.acme.sh/acme.sh"; then
+    echo -e "\033[0;31m[ ERROR ]\033[0m Gagal mengunduh acme.sh."
+    exit 1
+fi
 chmod +x /root/.acme.sh/acme.sh
 /root/.acme.sh/acme.sh --upgrade --auto-upgrade
 /root/.acme.sh/acme.sh --set-default-ca --server letsencrypt
@@ -307,10 +345,13 @@ echo -e "$white\033[0;34m┌─────────────────�
 echo -e " \E[41;1;39m           ⇱ Install vnStat ⇲            \E[0m$NC"
 echo -e "$white\033[0;34m└─────────────────────────────────────────┘${NC}"
 sleep 1 
-if [ -f "vnstat.sh" ]; then
+if [ -s "vnstat.sh" ]; then
+    chmod +x vnstat.sh && ./vnstat.sh
+elif download_with_retry "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/vnstat.sh" "vnstat.sh"; then
     chmod +x vnstat.sh && ./vnstat.sh
 else
-    wget -q https://raw.githubusercontent.com/KedaiVPN/dynamic/main/vnstat.sh && chmod +x vnstat.sh && ./vnstat.sh
+    echo -e "${RED}[ ERROR ] Gagal mengunduh vnstat.sh.${NC}"
+    exit 1
 fi
 
 #install ssh-vpn
@@ -318,10 +359,13 @@ echo -e "$white\033[0;34m┌─────────────────�
 echo -e " \E[41;1;39m          ⇱ Install SSH / WS ⇲           \E[0m$NC"
 echo -e "$white\033[0;34m└─────────────────────────────────────────┘${NC}"
 sleep 1
-if [ -f "ssh-vpn.sh" ]; then
+if [ -s "ssh-vpn.sh" ]; then
+    chmod +x ssh-vpn.sh && ./ssh-vpn.sh
+elif download_with_retry "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/ssh-vpn.sh" "ssh-vpn.sh"; then
     chmod +x ssh-vpn.sh && ./ssh-vpn.sh
 else
-    wget -q https://raw.githubusercontent.com/KedaiVPN/dynamic/main/ssh-vpn.sh && chmod +x ssh-vpn.sh && ./ssh-vpn.sh
+    echo -e "${RED}[ ERROR ] Gagal mengunduh ssh-vpn.sh.${NC}"
+    exit 1
 fi
 
 #install udp-custom
@@ -329,10 +373,13 @@ echo -e "$white\033[0;34m┌─────────────────�
 echo -e " \E[41;1;39m          ⇱ Install UDP Custom ⇲          \E[0m$NC"
 echo -e "$white\033[0;34m└─────────────────────────────────────────┘${NC}"
 sleep 1
-if [ -f "udp-custom.sh" ]; then
+if [ -s "udp-custom.sh" ]; then
+    chmod +x udp-custom.sh && ./udp-custom.sh
+elif download_with_retry "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/udp-custom.sh" "udp-custom.sh"; then
     chmod +x udp-custom.sh && ./udp-custom.sh
 else
-    wget -q https://raw.githubusercontent.com/KedaiVPN/dynamic/main/udp-custom.sh && chmod +x udp-custom.sh && ./udp-custom.sh
+    echo -e "${RED}[ ERROR ] Gagal mengunduh udp-custom.sh.${NC}"
+    exit 1
 fi
 
 #install ins-xray
@@ -340,16 +387,22 @@ echo -e "$white\033[0;34m┌─────────────────�
 echo -e " \E[41;1;39m            ⇱ Install Xray ⇲             \E[0m$NC"
 echo -e "$white\033[0;34m└─────────────────────────────────────────┘${NC}"
 sleep 1 
-if [ -f "ins-xray.sh" ]; then
-    chmod +x ins-xray.sh && ./ins-xray.sh
+if [ -s "ins-xray.sh" ]; then
+    chmod +x ins-xray.sh && ./ins-xray.sh || { echo -e "${RED}[ ERROR ] Instalasi Xray gagal!${NC}"; exit 1; }
+elif download_with_retry "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/ins-xray.sh" "ins-xray.sh"; then
+    chmod +x ins-xray.sh && ./ins-xray.sh || { echo -e "${RED}[ ERROR ] Instalasi Xray gagal!${NC}"; exit 1; }
 else
-    wget -q https://raw.githubusercontent.com/KedaiVPN/dynamic/main/ins-xray.sh && chmod +x ins-xray.sh && ./ins-xray.sh
+    echo -e "${RED}[ ERROR ] Gagal mengunduh ins-xray.sh.${NC}"
+    exit 1
 fi
 
-if [ -f "set-br.sh" ]; then
+if [ -s "set-br.sh" ]; then
+    chmod +x set-br.sh && ./set-br.sh
+elif download_with_retry "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/set-br.sh" "set-br.sh"; then
     chmod +x set-br.sh && ./set-br.sh
 else
-    wget -q https://raw.githubusercontent.com/KedaiVPN/dynamic/main/set-br.sh && chmod +x set-br.sh && ./set-br.sh
+    echo -e "${RED}[ ERROR ] Gagal mengunduh set-br.sh.${NC}"
+    exit 1
 fi
 
 # // Download Data
@@ -359,10 +412,13 @@ repo_url="https://raw.githubusercontent.com/KedaiVPN/dynamic/main"
 download_or_copy() {
     local file_name=$1
     local target_path=$2
-    if [ -f "/root/${file_name}" ]; then
+    if [ -s "/root/${file_name}" ]; then
         cp -f "/root/${file_name}" "$target_path"
     else
-        wget -q -O "$target_path" "${repo_url}/${file_name}"
+        if ! download_with_retry "${repo_url}/${file_name}" "$target_path"; then
+            echo -e "${RED}[ ERROR ] Gagal mengunduh ${file_name} setelah beberapa percobaan.${NC}"
+            exit 1
+        fi
     fi
 }
 
@@ -391,7 +447,7 @@ download_or_copy "menu-ss.sh" "/usr/bin/menu-ss"
 download_or_copy "menu-trojan.sh" "/usr/bin/menu-trojan"
 download_or_copy "menu-trgo.sh" "/usr/bin/menu-trgo"
 download_or_copy "menu-ssh.sh" "/usr/bin/menu-ssh"
-download_or_copy "bckpbot.sh" "/usr/bin/bckp"
+# bckpbot.sh has no source file in this repository; do not request it.
 download_or_copy "usernew.sh" "/usr/bin/usernew"
 download_or_copy "menu4.sh" "/usr/bin/menu"
 download_or_copy "custom-path.sh" "/usr/bin/custom-path"
@@ -449,7 +505,6 @@ chmod +x /usr/bin/menu-trojan
 chmod +x /usr/bin/menu-trgo
 chmod +x /usr/bin/menu-ssh
 chmod +x /usr/bin/menu
-chmod +x /usr/bin/bckp
 chmod +x /usr/bin/wbm
 chmod +x /usr/bin/xp
 chmod +x /usr/bin/update
@@ -459,17 +514,23 @@ chmod +x /usr/bin/bbr
 
 
 # > install gotop
-    gotop_latest="$(curl -s https://api.github.com/repos/NevermoreSSH/gotop/releases | grep tag_name | sed -E 's/.*"v(.*)".*/\1/' | head -n 1)"
     gotop_link="https://github.com/NevermoreSSH/gotop/releases/download/gotopV4/gotop_v4.2.0_linux_amd64.deb"
-    curl -sL "$gotop_link" -o /tmp/gotop.deb
-    dpkg -i /tmp/gotop.deb >/dev/null 2>&1
+    if download_with_retry "$gotop_link" "/tmp/gotop.deb"; then
+        dpkg -i /tmp/gotop.deb >/dev/null 2>&1 || true
+        rm -f /tmp/gotop.deb
+    else
+        echo -e "${YELLOW}[ WARN ] Gagal mengunduh gotop, melewati instalasi gotop.${NC}"
+    fi
 
 
 # // Download / Setup License Checker
 if [ -f "/root/cek-lisensi.sh" ]; then
     cp -f /root/cek-lisensi.sh /usr/local/bin/cek-lisensi
 else
-    wget -q -O /usr/local/bin/cek-lisensi "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/cek-lisensi.sh"
+    if ! download_with_retry "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/cek-lisensi.sh" "/usr/local/bin/cek-lisensi"; then
+        echo -e "${RED}[ ERROR ] Gagal mengunduh cek-lisensi.sh.${NC}"
+        exit 1
+    fi
 fi
 chmod +x /usr/local/bin/cek-lisensi
 
@@ -603,10 +664,12 @@ echo ""
 echo "" | tee -a log-install.txt
 # // Install Monitoring service di akhir (idempotent, aman untuk server baru/lama)
 echo -e "\033[0;32m[INFO]\033[0m Menjalankan installer VPS Monitor (SSE)..."
-if [ -f "monitor.sh" ]; then
+if [ -s "monitor.sh" ]; then
+    chmod +x monitor.sh && ./monitor.sh
+elif download_with_retry "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/monitor.sh" "monitor.sh"; then
     chmod +x monitor.sh && ./monitor.sh
 else
-    wget -q https://raw.githubusercontent.com/KedaiVPN/dynamic/main/monitor.sh && chmod +x monitor.sh && ./monitor.sh
+    echo -e "${YELLOW}[ WARN ] Gagal mengunduh monitor.sh, lewati instalasi VPS Monitor.${NC}"
 fi
 
 rm -fr /root/weleh.sh 

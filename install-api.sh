@@ -7,10 +7,47 @@ set -e
 
 REPO="https://raw.githubusercontent.com/KedaiVPN/dynamic/main"
 
+download_with_retry() {
+    local url="$1"
+    local dest="$2"
+    local max_attempts="${3:-5}"
+    local delay="${4:-2}"
+    local tmp_file
+    local attempt=1
+
+    mkdir -p "$(dirname "$dest")"
+    tmp_file=$(mktemp "${dest}.tmp.XXXXXX") || return 1
+
+    while [ "$attempt" -le "$max_attempts" ]; do
+        rm -f "$tmp_file"
+        if command -v wget >/dev/null 2>&1; then
+            if wget -q --timeout=20 --tries=1 -O "$tmp_file" "$url" && [ -s "$tmp_file" ]; then
+                mv -f "$tmp_file" "$dest"
+                return 0
+            fi
+        fi
+        rm -f "$tmp_file"
+        if command -v curl >/dev/null 2>&1; then
+            if curl -fsSL --connect-timeout 15 --max-time 120 -o "$tmp_file" "$url" && [ -s "$tmp_file" ]; then
+                mv -f "$tmp_file" "$dest"
+                return 0
+            fi
+        fi
+        rm -f "$tmp_file"
+        if [ "$attempt" -lt "$max_attempts" ]; then
+            sleep "$delay"
+        fi
+        attempt=$((attempt + 1))
+    done
+    return 1
+}
+
 # 1. Install Dependencies
 echo "Installing Node.js and dependencies..."
 if ! command -v node &> /dev/null; then
-    curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+    download_with_retry "https://deb.nodesource.com/setup_22.x" "/tmp/nodesource_setup_22.x"
+    bash /tmp/nodesource_setup_22.x
+    rm -f /tmp/nodesource_setup_22.x
     apt-get install -y nodejs
 fi
 
@@ -43,7 +80,7 @@ files=(
 )
 
 for file in "${files[@]}"; do
-    wget -q -O "$file" "${REPO}/api-modules/${file}"
+    download_with_retry "${REPO}/api-modules/${file}" "$file"
     chmod +x "$file"
 done
 
@@ -53,8 +90,8 @@ mkdir -p /etc/nevermore-api/node
 cd /etc/nevermore-api/node
 
 # Download API files
-wget -q -O server.js "${REPO}/api/server.js"
-wget -q -O package.json "${REPO}/api/package.json"
+download_with_retry "${REPO}/api/server.js" "server.js"
+download_with_retry "${REPO}/api/package.json" "package.json"
 
 # Install Node modules
 if [ -f "package.json" ]; then
@@ -68,7 +105,7 @@ fi
 # 4. Setup Systemd Service
 echo "Setting up Service..."
 cd /etc/systemd/system/
-wget -q -O api-backend.service "${REPO}/api/api-backend.service"
+download_with_retry "${REPO}/api/api-backend.service" "api-backend.service"
 
 systemctl daemon-reload
 systemctl enable api-backend

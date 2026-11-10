@@ -92,8 +92,55 @@ echo "Installing vnStat"
 echo "Progress..."
 sleep 2
 
+download_with_retry() {
+    local url="$1"
+    local dest="$2"
+    local max_attempts="${3:-5}"
+    local delay="${4:-2}"
+    local tmp_file
+    local attempt=1
+
+    mkdir -p "$(dirname "$dest")"
+    tmp_file=$(mktemp "${dest}.tmp.XXXXXX") || return 1
+
+    while [ "$attempt" -le "$max_attempts" ]; do
+        rm -f "$tmp_file"
+        if command -v wget >/dev/null 2>&1; then
+            if wget -q --timeout=20 --tries=1 -O "$tmp_file" "$url" && [ -s "$tmp_file" ]; then
+                mv -f "$tmp_file" "$dest"
+                return 0
+            fi
+        fi
+        rm -f "$tmp_file"
+        if command -v curl >/dev/null 2>&1; then
+            if curl -fsSL --connect-timeout 15 --max-time 120 -o "$tmp_file" "$url" && [ -s "$tmp_file" ]; then
+                mv -f "$tmp_file" "$dest"
+                return 0
+            fi
+        fi
+        rm -f "$tmp_file"
+        if [ "$attempt" -lt "$max_attempts" ]; then
+            sleep "$delay"
+        fi
+        attempt=$((attempt + 1))
+    done
+    return 1
+}
+
 /etc/init.d/vnstat restart >/dev/null 2>&1
-wget -q https://github.com/NevermoreSSH/vnstat/releases/download/vnstat/vnstat-2.6.tar.gz
+vnstat_downloaded=0
+for vn_attempt in 1 2 3 4 5; do
+    rm -f vnstat-2.6.tar.gz
+    if download_with_retry "https://github.com/NevermoreSSH/vnstat/releases/download/vnstat/vnstat-2.6.tar.gz" "vnstat-2.6.tar.gz" 3 2 && tar -tzf vnstat-2.6.tar.gz >/dev/null 2>&1; then
+        vnstat_downloaded=1
+        break
+    fi
+    sleep 2
+done
+if [ "$vnstat_downloaded" -ne 1 ]; then
+    echo "Gagal mendownload vnstat-2.6.tar.gz"
+    exit 1
+fi
 tar zxvf vnstat-2.6.tar.gz
 cd vnstat-2.6
 ./configure --prefix=/usr --sysconfdir=/etc >/dev/null 2>&1 && make >/dev/null 2>&1 && make install >/dev/null 2>&1

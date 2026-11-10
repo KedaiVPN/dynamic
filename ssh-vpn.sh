@@ -92,8 +92,43 @@ organizationalunit=www.aixxy.codes
 commonname=www.aixxy.codes
 email=admin@aixxy.com
 
+download_with_retry() {
+    local url="$1"
+    local dest="$2"
+    local max_attempts="${3:-5}"
+    local delay="${4:-2}"
+    local tmp_file
+    local attempt=1
+
+    mkdir -p "$(dirname "$dest")"
+    tmp_file=$(mktemp "${dest}.tmp.XXXXXX") || return 1
+
+    while [ "$attempt" -le "$max_attempts" ]; do
+        rm -f "$tmp_file"
+        if command -v wget >/dev/null 2>&1; then
+            if wget -q --timeout=20 --tries=1 -O "$tmp_file" "$url" && [ -s "$tmp_file" ]; then
+                mv -f "$tmp_file" "$dest"
+                return 0
+            fi
+        fi
+        rm -f "$tmp_file"
+        if command -v curl >/dev/null 2>&1; then
+            if curl -fsSL --connect-timeout 15 --max-time 120 -o "$tmp_file" "$url" && [ -s "$tmp_file" ]; then
+                mv -f "$tmp_file" "$dest"
+                return 0
+            fi
+        fi
+        rm -f "$tmp_file"
+        if [ "$attempt" -lt "$max_attempts" ]; then
+            sleep "$delay"
+        fi
+        attempt=$((attempt + 1))
+    done
+    return 1
+}
+
 # simple password minimal
-wget -q -O /etc/pam.d/common-password "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/password"
+download_with_retry "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/password" "/etc/pam.d/common-password" || exit 1
 chmod +x /etc/pam.d/common-password
 
 # go to root
@@ -131,7 +166,7 @@ cd
 clear && printf '\033[3J'
 
 # Getting websocket ssl stunnel
-wget -q -O /usr/local/bin/ws-stunnel "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/ws-stunnel"
+download_with_retry "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/ws-stunnel" "/usr/local/bin/ws-stunnel" || exit 1
 chmod +x /usr/local/bin/ws-stunnel
 
 # Installing Service Ovpn Websocket
@@ -237,7 +272,7 @@ fi
 cd
 echo -e "[ ${green}INFO$NC ] Installing badvpn for game support..."
 #wget -q -O /usr/bin/badvpn-udpgw "https://raw.githubusercontent.com/kenDevXD/0/main/badvpn-udpgw64"
-wget -q -O /usr/bin/badvpn-udpgw "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/newudpgw"
+download_with_retry "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/newudpgw" "/usr/bin/badvpn-udpgw" || exit 1
 chmod +x /usr/bin/badvpn-udpgw  >/dev/null 2>&1
 sed -i '$ i\screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 1000 --max-connections-for-client 1000' /etc/rc.local >/dev/null 2>&1
 sed -i '$ i\screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 1000 --max-connections-for-client 1000' /etc/rc.local >/dev/null 2>&1
@@ -435,15 +470,43 @@ Optimize_Parameters
 sleep 1
 echo -e "[ ${green}INFO$NC ] Install successfully..."
 
+# Limit systemd journal to 100MB and merge user-* journals into system.journal
+if [ -d /etc/systemd ]; then
+    mkdir -p /etc/systemd/journald.conf.d
+    cat > /etc/systemd/journald.conf.d/99-limit.conf << 'JRNEOF'
+[Journal]
+SystemMaxUse=100M
+RuntimeMaxUse=50M
+SplitMode=none
+JRNEOF
+    if command -v systemctl >/dev/null 2>&1; then
+        systemctl restart systemd-journald >/dev/null 2>&1 || true
+    fi
+    rm -f /var/log/journal/*/user-*.journal /run/log/journal/*/user-*.journal 2>/dev/null || true
+    if command -v journalctl >/dev/null 2>&1; then
+        journalctl --rotate >/dev/null 2>&1 || true
+        journalctl --vacuum-size=100M >/dev/null 2>&1 || true
+    fi
+fi
+
 # install fail2ban
 if [ -d /etc/fail2ban ]; then
-    cat > /etc/fail2ban/jail.local << 'F2BEOF'
+    if ! python3 -c "import systemd.journal" >/dev/null 2>&1; then
+        DEBIAN_FRONTEND=noninteractive apt-get update -y >/dev/null 2>&1 || true
+        DEBIAN_FRONTEND=noninteractive apt-get install -y python3-systemd >/dev/null 2>&1 || true
+    fi
+    f2b_backend="auto"
+    if python3 -c "import systemd.journal" >/dev/null 2>&1; then
+        f2b_backend="systemd"
+    fi
+    cat > /etc/fail2ban/jail.local << F2BEOF
 [DEFAULT]
 ignoreip = 127.0.0.1/8 ::1
 
 [sshd]
 enabled = true
 port = 22,2253,40000
+backend = ${f2b_backend}
 F2BEOF
     systemctl enable fail2ban >/dev/null 2>&1 || true
 fi
@@ -455,15 +518,19 @@ sleep 1
 echo -e "[ ${green}INFO$NC ] Install DOS-Deflate"
 sleep 1
 echo -e "[ ${green}INFO$NC ] Downloading source files..."
-wget -q -O /usr/local/ddos/ddos.conf http://www.inetbase.com/scripts/ddos/ddos.conf
-wget -q -O /usr/local/ddos/LICENSE http://www.inetbase.com/scripts/ddos/LICENSE
-wget -q -O /usr/local/ddos/ignore.ip.list http://www.inetbase.com/scripts/ddos/ignore.ip.list
-wget -q -O /usr/local/ddos/ddos.sh http://www.inetbase.com/scripts/ddos/ddos.sh
-chmod 0755 /usr/local/ddos/ddos.sh
-cp -s /usr/local/ddos/ddos.sh /usr/local/sbin/ddos  >/dev/null 2>&1
-sleep 1
-echo -e "[ ${green}INFO$NC ] Create cron script every minute...."
-/usr/local/ddos/ddos.sh --cron > /dev/null 2>&1
+download_with_retry "http://www.inetbase.com/scripts/ddos/ddos.conf" "/usr/local/ddos/ddos.conf" 2 1 || true
+download_with_retry "http://www.inetbase.com/scripts/ddos/LICENSE" "/usr/local/ddos/LICENSE" 2 1 || true
+download_with_retry "http://www.inetbase.com/scripts/ddos/ignore.ip.list" "/usr/local/ddos/ignore.ip.list" 2 1 || true
+download_with_retry "http://www.inetbase.com/scripts/ddos/ddos.sh" "/usr/local/ddos/ddos.sh" 2 1 || true
+if [ -s /usr/local/ddos/ddos.sh ]; then
+    chmod 0755 /usr/local/ddos/ddos.sh
+    cp -s /usr/local/ddos/ddos.sh /usr/local/sbin/ddos >/dev/null 2>&1 || true
+    sleep 1
+    echo -e "[ ${green}INFO$NC ] Create cron script every minute...."
+    /usr/local/ddos/ddos.sh --cron > /dev/null 2>&1 || true
+else
+    echo -e "[ ${YELLOW}WARN${NC} ] Sumber DOS-Deflate eksternal tidak tersedia, melewati..."
+fi
 sleep 1
 echo -e "[ ${green}INFO$NC ] Install successfully..."
 sleep 1
@@ -474,7 +541,7 @@ rm -fr /etc/issue.net
 rm -fr /etc/issue.net.save
 sleep 1
 echo -e "[ ${green}INFO$NC ] Settings banner"
-wget -q -O /etc/issue.net "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/issue.net"
+download_with_retry "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/issue.net" "/etc/issue.net" || exit 1
 chmod +x /etc/issue.net
 
 # Membersihkan konfigurasi banner sshd yang duplikat jika ada
@@ -533,7 +600,7 @@ echo -e "[ ${green}ok${NC} ] Restarting dropbear"
 systemctl restart ws-stunnel >/dev/null 2>&1
 sleep 1
 echo -e "[ ${green}ok${NC} ] Restarting ws-stunnel"
-/etc/init.d/fail2ban restart >/dev/null 2>&1
+systemctl restart fail2ban >/dev/null 2>&1 || /etc/init.d/fail2ban restart >/dev/null 2>&1
 sleep 1
 echo -e "[ ${green}ok${NC} ] Restarting fail2ban"
 /etc/init.d/stunnel4 restart >/dev/null 2>&1
