@@ -293,13 +293,26 @@ cat > /etc/sysctl.d/99-conntrack.conf << 'EOF'
 net.netfilter.nf_conntrack_max = 2000000
 net.netfilter.nf_conntrack_tcp_timeout_time_wait = 30
 EOF
+sed -i '/^[[:space:]]*net\.core\.rmem_default[[:space:]]*=/d' /etc/sysctl.conf 2>/dev/null || true
+sed -i '/^[[:space:]]*net\.core\.wmem_default[[:space:]]*=/d' /etc/sysctl.conf 2>/dev/null || true
+cat > /etc/sysctl.d/99-udp-buffer.conf << 'EOF'
+net.core.rmem_default = 2097152
+net.core.wmem_default = 2097152
+EOF
+sysctl -w net.core.rmem_default=2097152 >/dev/null 2>&1 || true
+sysctl -w net.core.wmem_default=2097152 >/dev/null 2>&1 || true
 sysctl -p >/dev/null 2>&1 || true
 sysctl --system >/dev/null 2>&1 || true
 
 # Update BadVPN max-clients to 1000 in rc.local
 sed -i 's/--max-clients 500/--max-clients 1000 --max-connections-for-client 1000/g' /etc/rc.local 2>/dev/null || true
 
-# SlowDNS Handshake Optimization
+# SlowDNS Handshake Optimization & Cloudimg SSH Drop-in Cleanup
+sshd_needs_reload=0
+if [ -f /etc/ssh/sshd_config.d/60-cloudimg-settings.conf ]; then
+    rm -f /etc/ssh/sshd_config.d/60-cloudimg-settings.conf
+    sshd_needs_reload=1
+fi
 if ! grep -q "SlowDNS Handshake Optimization" /etc/ssh/sshd_config; then
     cat >> /etc/ssh/sshd_config << 'SSHEOF'
 
@@ -308,9 +321,31 @@ KexAlgorithms curve25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp256,
 Ciphers chacha20-poly1305@openssh.com,aes128-ctr,aes256-ctr
 MACs hmac-sha2-256-etm@openssh.com,hmac-sha2-256,hmac-sha1
 HostKeyAlgorithms ssh-ed25519,ecdsa-sha2-nistp256,rsa-sha2-256,ssh-rsa
+MaxStartups 60:30:200
 SSHEOF
-    systemctl restart ssh >/dev/null 2>&1 || true
-    systemctl restart sshd >/dev/null 2>&1 || true
+    sshd_needs_reload=1
+fi
+if ! grep -qE '^[[:space:]]*MaxStartups[[:space:]]+60:30:200' /etc/ssh/sshd_config; then
+    sed -i '/^[[:space:]]*MaxStartups[[:space:]]\+/d' /etc/ssh/sshd_config
+    printf 'MaxStartups 60:30:200\n' >> /etc/ssh/sshd_config
+    sshd_needs_reload=1
+fi
+if [ "$sshd_needs_reload" -eq 1 ] && sshd -t >/dev/null 2>&1; then
+    systemctl reload ssh >/dev/null 2>&1 || systemctl restart ssh >/dev/null 2>&1 || systemctl restart sshd >/dev/null 2>&1 || true
+fi
+
+# Fail2Ban protection for all SSH ports (22, 2253, 40000) with localhost whitelisted
+if [ -d /etc/fail2ban ]; then
+    cat > /etc/fail2ban/jail.local << 'F2BEOF'
+[DEFAULT]
+ignoreip = 127.0.0.1/8 ::1
+
+[sshd]
+enabled = true
+port = 22,2253,40000
+F2BEOF
+    systemctl enable fail2ban >/dev/null 2>&1 || true
+    systemctl restart fail2ban >/dev/null 2>&1 || true
 fi
 
 # Fix Nginx Xray Routing Proxy (agar Vmess/Vless/Trojan bisa connect dari port 443)

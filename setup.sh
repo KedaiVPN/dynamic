@@ -285,6 +285,23 @@ EOF
 
 tuning_conntrack
 
+# // Tuning Buffer Socket UDP Default (mencegah packet drop saat burst SlowDNS/UDP Custom)
+tuning_udp_buffer() {
+    echo -e "[ \033[0;32mINFO\033[0m ] Tuning buffer socket UDP default..."
+    sed -i '/^[[:space:]]*net\.core\.rmem_default[[:space:]]*=/d' /etc/sysctl.conf 2>/dev/null || true
+    sed -i '/^[[:space:]]*net\.core\.wmem_default[[:space:]]*=/d' /etc/sysctl.conf 2>/dev/null || true
+    mkdir -p /etc/sysctl.d
+    cat > /etc/sysctl.d/99-udp-buffer.conf << 'EOF'
+net.core.rmem_default = 2097152
+net.core.wmem_default = 2097152
+EOF
+    sysctl -w net.core.rmem_default=2097152 >/dev/null 2>&1 || true
+    sysctl -w net.core.wmem_default=2097152 >/dev/null 2>&1 || true
+    sysctl --system >/dev/null 2>&1 || true
+}
+
+tuning_udp_buffer
+
 #install vnstat
 echo -e "$white\033[0;34m┌─────────────────────────────────────────┐${NC}"
 echo -e " \E[41;1;39m           ⇱ Install vnStat ⇲            \E[0m$NC"

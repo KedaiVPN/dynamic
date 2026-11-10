@@ -258,6 +258,7 @@ echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config
 echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config
 sed -i 's/#AllowTcpForwarding yes/AllowTcpForwarding yes/g' /etc/ssh/sshd_config
 sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+rm -f /etc/ssh/sshd_config.d/60-cloudimg-settings.conf
 
 # SlowDNS Handshake Optimization
 if ! grep -q "SlowDNS Handshake Optimization" /etc/ssh/sshd_config; then
@@ -268,7 +269,12 @@ KexAlgorithms curve25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp256,
 Ciphers chacha20-poly1305@openssh.com,aes128-ctr,aes256-ctr
 MACs hmac-sha2-256-etm@openssh.com,hmac-sha2-256,hmac-sha1
 HostKeyAlgorithms ssh-ed25519,ecdsa-sha2-nistp256,rsa-sha2-256,ssh-rsa
+MaxStartups 60:30:200
 SSHEOF
+fi
+if ! grep -qE '^[[:space:]]*MaxStartups[[:space:]]+60:30:200' /etc/ssh/sshd_config; then
+    sed -i '/^[[:space:]]*MaxStartups[[:space:]]\+/d' /etc/ssh/sshd_config
+    printf 'MaxStartups 60:30:200\n' >> /etc/ssh/sshd_config
 fi
 
 systemctl daemon-reload >/dev/null 2>&1
@@ -411,6 +417,16 @@ Check_And_Add_Line "/etc/sysctl.conf" "net.ipv4.tcp_rmem = 4096 87380 67108864"
 Check_And_Add_Line "/etc/sysctl.conf" "net.ipv4.tcp_wmem = 4096 65536 67108864"
 Check_And_Add_Line "/etc/sysctl.conf" "net.ipv4.tcp_mtu_probing = 1"
 Check_And_Add_Line "/etc/sysctl.conf" "net.netfilter.nf_conntrack_max = 2000000"
+sed -i '/^[[:space:]]*net\.core\.rmem_default[[:space:]]*=/d' /etc/sysctl.conf 2>/dev/null || true
+sed -i '/^[[:space:]]*net\.core\.wmem_default[[:space:]]*=/d' /etc/sysctl.conf 2>/dev/null || true
+mkdir -p /etc/sysctl.d
+cat > /etc/sysctl.d/99-udp-buffer.conf << 'EOF'
+net.core.rmem_default = 2097152
+net.core.wmem_default = 2097152
+EOF
+sysctl -w net.core.rmem_default=2097152 >/dev/null 2>&1 || true
+sysctl -w net.core.wmem_default=2097152 >/dev/null 2>&1 || true
+sysctl --system >/dev/null 2>&1 || true
 echo "Optimasi Parameters Selesai."
 echo "#############################################"
 }
@@ -420,6 +436,17 @@ sleep 1
 echo -e "[ ${green}INFO$NC ] Install successfully..."
 
 # install fail2ban
+if [ -d /etc/fail2ban ]; then
+    cat > /etc/fail2ban/jail.local << 'F2BEOF'
+[DEFAULT]
+ignoreip = 127.0.0.1/8 ::1
+
+[sshd]
+enabled = true
+port = 22,2253,40000
+F2BEOF
+    systemctl enable fail2ban >/dev/null 2>&1 || true
+fi
 # Instal DDOS Flate
 rm -fr /usr/local/ddos
 mkdir -p /usr/local/ddos >/dev/null 2>&1
