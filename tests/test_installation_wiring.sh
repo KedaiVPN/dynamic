@@ -35,7 +35,8 @@ assert_contains update.sh 'update_library_script "xray-account-detail.sh" "/usr/
 assert_contains menu4.sh 'CUSTOM PATH'
 assert_contains menu4.sh '; custom-path ;'
 
-# BadVPN client limit must be 1000 across installation and restart scripts to prevent buffer exhaustion.
+# BadVPN client limit must be 1000 across installation, updater, and restart scripts,
+# running as dedicated systemd template unit (nobody, 1M FD limit, QUIC blocked for nobody).
 if grep -q 'max-clients 500' "$ROOT/ssh-vpn.sh"; then
     echo 'FAIL: ssh-vpn.sh must use --max-clients 1000' >&2
     exit 1
@@ -44,7 +45,24 @@ if grep -q 'max-clients 500' "$ROOT/restart.sh"; then
     echo 'FAIL: restart.sh must use --max-clients 1000' >&2
     exit 1
 fi
+if grep -q 'screen -dmS badvpn' "$ROOT/ssh-vpn.sh"; then
+    echo 'FAIL: ssh-vpn.sh must not spawn screen-based badvpn' >&2
+    exit 1
+fi
 assert_contains ssh-vpn.sh '--max-clients 1000'
 assert_contains restart.sh '--max-clients 1000'
+for script in ssh-vpn.sh update.sh; do
+    assert_contains "$script" '/etc/systemd/system/badvpn-udpgw@.service'
+    assert_contains "$script" 'User=nobody'
+    assert_contains "$script" 'LimitNOFILE=1048576'
+    assert_contains "$script" '--client-socket-sndbuf 0 --loglevel warning'
+    assert_contains "$script" 'badvpn-udpgw@7100 badvpn-udpgw@7200 badvpn-udpgw@7300'
+    assert_contains "$script" 'badvpn-block-quic'
+done
+assert_contains restart.sh 'badvpn-udpgw@7100 badvpn-udpgw@7200 badvpn-udpgw@7300'
+for script in setup.sh update.sh; do
+    assert_contains "$script" '/usr/local/sbin/enable-rps.sh'
+    assert_contains "$script" '/etc/systemd/system/network-rps.service'
+done
 
 echo 'PASS: installation, update, and menu wiring'

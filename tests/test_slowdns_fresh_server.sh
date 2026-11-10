@@ -84,6 +84,9 @@ SLOWDNS_BIN="$TMP/slowdns/slowdns" \
 SLOWDNS_KEY="$TMP/slowdns/server.key" \
 SLOWDNS_PUB="$TMP/slowdns/server.pub" \
 SLOWDNS_SERVICE="$TMP/slowdns.service" \
+SLOWDNS_WATCHDOG_BIN="$TMP/slowdns-watchdog.sh" \
+SLOWDNS_WATCHDOG_SERVICE="$TMP/slowdns-watchdog.service" \
+SLOWDNS_WATCHDOG_TIMER="$TMP/slowdns-watchdog.timer" \
 SLOWDNS_BINARY_URL='https://example.invalid/slowdns-linux-amd64' \
 SLOWDNS_LEGACY_DIR="$TMP/legacy" \
 SLOWDNS_DOMAIN_OVERRIDE='fresh.example.test' \
@@ -101,6 +104,11 @@ grep -Fqx 'SLOWDNS_NS_DOMAIN="ns-fresh.example.test"' "$TMP/slowdns/slowdns.env"
 grep -Fqx 'SLOWDNS_UDP_ADDR="198.51.100.7:53"' "$TMP/slowdns/slowdns.env"
 grep -Fq -- '-udp 198.51.100.7:53' "$TMP/slowdns.service"
 grep -Fq -- 'ns-fresh.example.test 127.0.0.1:22' "$TMP/slowdns.service"
+[[ -x "$TMP/slowdns-watchdog.sh" ]]
+[[ -s "$TMP/slowdns-watchdog.service" ]]
+[[ -s "$TMP/slowdns-watchdog.timer" ]]
+grep -Fqx "ExecStart=$TMP/slowdns-watchdog.sh" "$TMP/slowdns-watchdog.service"
+grep -Fqx 'Unit=slowdns-watchdog.service' "$TMP/slowdns-watchdog.timer"
 [[ ! -e "$TMP/legacy/server.key" ]]
 [[ ! -e "$TMP/legacy/server.pub" ]]
 

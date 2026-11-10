@@ -82,7 +82,9 @@ echo -e " \033[1;94m[5/5]\033[0m \033[1;97mMenonaktifkan layanan SlowDNS...\033[
 if command -v /usr/bin/slowdns >/dev/null 2>&1; then
     /usr/bin/slowdns disable >/dev/null 2>&1 || true
 fi
-rm -f /etc/systemd/system/slowdns.service
+systemctl disable --now slowdns-watchdog.timer >/dev/null 2>&1 || true
+systemctl stop slowdns-watchdog.service >/dev/null 2>&1 || true
+rm -f /etc/systemd/system/slowdns.service /etc/systemd/system/slowdns-watchdog.service /etc/systemd/system/slowdns-watchdog.timer /usr/local/sbin/slowdns-watchdog.sh
 rm -rf /root/slowdns /root/slowdns-linux-amd64.tar.gz
 # Remove legacy DNSTT state left by older dynamic releases.
 rm -rf /etc/slowdns

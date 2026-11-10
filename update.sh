@@ -364,19 +364,143 @@ cat > /etc/sysctl.d/99-conntrack.conf << 'EOF'
 net.netfilter.nf_conntrack_max = 2000000
 net.netfilter.nf_conntrack_tcp_timeout_time_wait = 30
 EOF
+prev_rmem_default=$(sysctl -n net.core.rmem_default 2>/dev/null || echo 0)
 sed -i '/^[[:space:]]*net\.core\.rmem_default[[:space:]]*=/d' /etc/sysctl.conf 2>/dev/null || true
 sed -i '/^[[:space:]]*net\.core\.wmem_default[[:space:]]*=/d' /etc/sysctl.conf 2>/dev/null || true
+sed -i '/^[[:space:]]*net\.core\.rmem_max[[:space:]]*=/d' /etc/sysctl.conf 2>/dev/null || true
+sed -i '/^[[:space:]]*net\.core\.wmem_max[[:space:]]*=/d' /etc/sysctl.conf 2>/dev/null || true
+sed -i '/^[[:space:]]*net\.core\.netdev_max_backlog[[:space:]]*=/d' /etc/sysctl.conf 2>/dev/null || true
 cat > /etc/sysctl.d/99-udp-buffer.conf << 'EOF'
-net.core.rmem_default = 2097152
-net.core.wmem_default = 2097152
+net.core.rmem_default = 8388608
+net.core.wmem_default = 8388608
+net.core.rmem_max = 67108864
+net.core.wmem_max = 67108864
+net.core.netdev_max_backlog = 250000
 EOF
-sysctl -w net.core.rmem_default=2097152 >/dev/null 2>&1 || true
-sysctl -w net.core.wmem_default=2097152 >/dev/null 2>&1 || true
+sysctl -w net.core.rmem_default=8388608 >/dev/null 2>&1 || true
+sysctl -w net.core.wmem_default=8388608 >/dev/null 2>&1 || true
+sysctl -w net.core.rmem_max=67108864 >/dev/null 2>&1 || true
+sysctl -w net.core.wmem_max=67108864 >/dev/null 2>&1 || true
+sysctl -w net.core.netdev_max_backlog=250000 >/dev/null 2>&1 || true
 sysctl -p >/dev/null 2>&1 || true
 sysctl --system >/dev/null 2>&1 || true
 
-# Update BadVPN max-clients to 1000 in rc.local
-sed -i 's/--max-clients 500/--max-clients 1000 --max-connections-for-client 1000/g' /etc/rc.local 2>/dev/null || true
+# Enable Receive Packet Steering (RPS) across vCPUs
+mkdir -p /usr/local/sbin /etc/systemd/system
+cat > /usr/local/sbin/enable-rps.sh << 'RPSEOF'
+#!/usr/bin/env bash
+set -euo pipefail
+cpus=$(nproc 2>/dev/null || echo 1)
+if [ "$cpus" -le 1 ]; then
+    exit 0
+fi
+if [ "$cpus" -gt 31 ]; then
+    cpus=31
+fi
+mask=$(printf '%x' $(( (1 << cpus) - 1 )))
+for q in /sys/class/net/*/queues/rx-*/rps_cpus; do
+    case "$q" in /sys/class/net/lo/*) continue ;; esac
+    [ -w "$q" ] && printf '%s' "$mask" > "$q" 2>/dev/null || true
+done
+RPSEOF
+chmod 755 /usr/local/sbin/enable-rps.sh
+cat > /etc/systemd/system/network-rps.service << 'RPSSVCEOF'
+[Unit]
+Description=Enable Receive Packet Steering (RPS) on NIC RX queues
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/enable-rps.sh
+
+[Install]
+WantedBy=multi-user.target
+RPSSVCEOF
+chmod 644 /etc/systemd/system/network-rps.service
+systemctl daemon-reload >/dev/null 2>&1 || true
+systemctl enable --now network-rps.service >/dev/null 2>&1 || true
+
+# Migrate BadVPN UDPGW from screen/rc.local to dedicated systemd unit (1M FD limit, nobody UID, no QUIC stall)
+sed -i '/badvpn-udpgw/d' /etc/rc.local 2>/dev/null || true
+badvpn_unit_tmp=$(mktemp /tmp/badvpn-udpgw.unit.XXXXXX)
+cat > "$badvpn_unit_tmp" << 'UDPGWEOF'
+[Unit]
+Description=BadVPN UDPGW on port %i
+After=network.target
+
+[Service]
+Type=simple
+User=nobody
+Group=nogroup
+ExecStart=/usr/bin/badvpn-udpgw --listen-addr 127.0.0.1:%i --max-clients 1000 --max-connections-for-client 1000 --client-socket-sndbuf 0 --loglevel warning
+Restart=always
+RestartSec=2s
+LimitNOFILE=1048576
+
+[Install]
+WantedBy=multi-user.target
+UDPGWEOF
+
+badvpn_needs_restart=0
+if [ ! -f /etc/systemd/system/badvpn-udpgw@.service ] || ! cmp -s "$badvpn_unit_tmp" /etc/systemd/system/badvpn-udpgw@.service; then
+    mv -f "$badvpn_unit_tmp" /etc/systemd/system/badvpn-udpgw@.service
+    chmod 644 /etc/systemd/system/badvpn-udpgw@.service
+    systemctl daemon-reload >/dev/null 2>&1 || true
+    badvpn_needs_restart=1
+else
+    rm -f "$badvpn_unit_tmp"
+fi
+
+for port in 7100 7200 7300; do
+    if ! systemctl is-active --quiet "badvpn-udpgw@${port}" 2>/dev/null; then
+        badvpn_needs_restart=1
+    fi
+done
+if [ "$(pgrep -xc badvpn-udpgw 2>/dev/null || echo 0)" -gt 3 ]; then
+    badvpn_needs_restart=1
+fi
+
+if [ "$badvpn_needs_restart" -eq 1 ]; then
+    systemctl stop badvpn-udpgw@7100 badvpn-udpgw@7200 badvpn-udpgw@7300 >/dev/null 2>&1 || true
+    pkill -x badvpn-udpgw >/dev/null 2>&1 || true
+    screen -wipe >/dev/null 2>&1 || true
+    systemctl enable --now badvpn-udpgw@7100 badvpn-udpgw@7200 badvpn-udpgw@7300 >/dev/null 2>&1 || true
+else
+    systemctl enable badvpn-udpgw@7100 badvpn-udpgw@7200 badvpn-udpgw@7300 >/dev/null 2>&1 || true
+fi
+
+# Block outbound QUIC (UDP 443) ONLY for badvpn-udpgw (nobody) so YouTube/browsers fall back cleanly to TCP/443
+if command -v iptables >/dev/null 2>&1; then
+    need_iptables_save=0
+    if ! iptables -C OUTPUT -p udp -m owner --uid-owner nobody --dport 443 -m comment --comment badvpn-block-quic -j REJECT --reject-with icmp-port-unreachable >/dev/null 2>&1; then
+        if iptables -A OUTPUT -p udp -m owner --uid-owner nobody --dport 443 -m comment --comment badvpn-block-quic -j REJECT --reject-with icmp-port-unreachable >/dev/null 2>&1; then
+            need_iptables_save=1
+        fi
+    elif [ -f /etc/iptables/rules.v4 ] && ! grep -Fq 'badvpn-block-quic' /etc/iptables/rules.v4 2>/dev/null; then
+        need_iptables_save=1
+    fi
+    if [ "$need_iptables_save" -eq 1 ] && command -v iptables-save >/dev/null 2>&1 && [ -d /etc/iptables ]; then
+        iptables-save > /etc/iptables/rules.v4.tmp 2>/dev/null || true
+        if [ -s /etc/iptables/rules.v4.tmp ] && iptables-restore --test < /etc/iptables/rules.v4.tmp >/dev/null 2>&1; then
+            chmod 600 /etc/iptables/rules.v4.tmp
+            mv -f /etc/iptables/rules.v4.tmp /etc/iptables/rules.v4
+        else
+            rm -f /etc/iptables/rules.v4.tmp
+        fi
+    fi
+fi
+
+# Sync SlowDNS watchdog and apply new 8MB socket buffer if SlowDNS is already active (never auto-enable)
+if systemctl is-active --quiet slowdns.service 2>/dev/null; then
+    if [ -x /usr/bin/slowdns ]; then
+        /usr/bin/slowdns sync-watchdog >/dev/null 2>&1 || true
+    fi
+    if [ "${prev_rmem_default:-0}" -lt 8388608 ] 2>/dev/null; then
+        systemctl restart slowdns.service >/dev/null 2>&1 || true
+    fi
+fi
 
 # SlowDNS Handshake Optimization & Cloudimg SSH Drop-in Cleanup
 sshd_needs_reload=0

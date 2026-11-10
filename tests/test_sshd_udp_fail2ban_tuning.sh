@@ -24,11 +24,14 @@ for script in ssh-vpn.sh update.sh; do
     assert_contains "$script" 'KexAlgorithms curve25519-sha256'
 done
 
-# 3. UDP default buffer tuning (2 MB) across fresh install and updater
+# 3. UDP default buffer tuning (8 MB) & backlog across fresh install and updater
 for script in setup.sh ssh-vpn.sh update.sh; do
     assert_contains "$script" '/etc/sysctl.d/99-udp-buffer.conf'
-    assert_contains "$script" 'net.core.rmem_default = 2097152'
-    assert_contains "$script" 'net.core.wmem_default = 2097152'
+    assert_contains "$script" 'net.core.rmem_default = 8388608'
+    assert_contains "$script" 'net.core.wmem_default = 8388608'
+    assert_contains "$script" 'net.core.rmem_max = 67108864'
+    assert_contains "$script" 'net.core.wmem_max = 67108864'
+    assert_contains "$script" 'net.core.netdev_max_backlog = 250000'
 done
 
 # 4. Fail2Ban protection on all SSH ports (22, 2253, 40000) with localhost ignoreip & systemd backend

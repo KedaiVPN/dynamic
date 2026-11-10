@@ -103,6 +103,7 @@ assert_contains slowdns-config.sh 'Pubkey    : %s'
 assert_contains slowdns-config.sh 'slowdns.env'
 assert_contains factory-reset.sh '/root/slowdns'
 assert_contains factory-reset.sh 'slowdns disable'
+assert_contains factory-reset.sh 'slowdns-watchdog.timer'
 assert_contains setup.sh 'chmod +x /usr/bin/slowdns'
 
 if grep -nE '(/usr/bin/slowdns|slowdns)[[:space:]]+(enable|on)' setup.sh >/dev/null; then
@@ -111,6 +112,7 @@ if grep -nE '(/usr/bin/slowdns|slowdns)[[:space:]]+(enable|on)' setup.sh >/dev/n
 fi
 assert_contains update.sh 'update_local_script "update.sh" "/usr/bin/update"'
 assert_contains update.sh 'update_library_script "slowdns-config.sh" "/usr/lib/slowdns-config.sh"'
+assert_contains update.sh '/usr/bin/slowdns sync-watchdog'
 
 if grep -nE '(/usr/bin/slowdns|slowdns)[[:space:]]+(enable|on)' update.sh >/dev/null; then
     echo 'FAIL: updater must not auto-enable or migrate SlowDNS' >&2

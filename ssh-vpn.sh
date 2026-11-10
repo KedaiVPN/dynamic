@@ -294,12 +294,29 @@ echo -e "[ ${green}INFO$NC ] Installing badvpn for game support..."
 #wget -q -O /usr/bin/badvpn-udpgw "https://raw.githubusercontent.com/kenDevXD/0/main/badvpn-udpgw64"
 download_with_retry "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/newudpgw" "/usr/bin/badvpn-udpgw" || exit 1
 chmod +x /usr/bin/badvpn-udpgw  >/dev/null 2>&1
-sed -i '$ i\screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 1000 --max-connections-for-client 1000' /etc/rc.local >/dev/null 2>&1
-sed -i '$ i\screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 1000 --max-connections-for-client 1000' /etc/rc.local >/dev/null 2>&1
-sed -i '$ i\screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 1000 --max-connections-for-client 1000' /etc/rc.local >/dev/null 2>&1
+pkill -x badvpn-udpgw >/dev/null 2>&1 || true
+sed -i '/badvpn-udpgw/d' /etc/rc.local 2>/dev/null || true
+cat > /etc/systemd/system/badvpn-udpgw@.service << 'UDPGWEOF'
+[Unit]
+Description=BadVPN UDPGW on port %i
+After=network.target
+
+[Service]
+Type=simple
+User=nobody
+Group=nogroup
+ExecStart=/usr/bin/badvpn-udpgw --listen-addr 127.0.0.1:%i --max-clients 1000 --max-connections-for-client 1000 --client-socket-sndbuf 0 --loglevel warning
+Restart=always
+RestartSec=2s
+LimitNOFILE=1048576
+
+[Install]
+WantedBy=multi-user.target
+UDPGWEOF
+chmod 644 /etc/systemd/system/badvpn-udpgw@.service
 systemctl daemon-reload >/dev/null 2>&1
-systemctl start rc-local.service >/dev/null 2>&1
-systemctl restart rc-local.service >/dev/null 2>&1
+systemctl enable --now badvpn-udpgw@7100 badvpn-udpgw@7200 badvpn-udpgw@7300 >/dev/null 2>&1 || true
+systemctl restart rc-local.service >/dev/null 2>&1 || true
 
 # /etc/ssh/sshd_config
 sed -i 's/Port 22/Port 22/g' /etc/ssh/sshd_config
@@ -463,9 +480,6 @@ Check_And_Add_Line "/etc/security/limits.conf" "* hard nofile 51200"
 Check_And_Add_Line "/etc/security/limits.conf" "root soft nofile 51200"
 Check_And_Add_Line "/etc/security/limits.conf" "root hard nofile 51200"
 Check_And_Add_Line "/etc/sysctl.conf" "fs.file-max = 51200"
-Check_And_Add_Line "/etc/sysctl.conf" "net.core.rmem_max = 67108864"
-Check_And_Add_Line "/etc/sysctl.conf" "net.core.wmem_max = 67108864"
-Check_And_Add_Line "/etc/sysctl.conf" "net.core.netdev_max_backlog = 250000"
 Check_And_Add_Line "/etc/sysctl.conf" "net.core.somaxconn = 65535"
 Check_And_Add_Line "/etc/sysctl.conf" "net.ipv4.tcp_syncookies = 1"
 Check_And_Add_Line "/etc/sysctl.conf" "net.ipv4.tcp_tw_reuse = 1"
@@ -482,13 +496,22 @@ Check_And_Add_Line "/etc/sysctl.conf" "net.ipv4.tcp_mtu_probing = 1"
 Check_And_Add_Line "/etc/sysctl.conf" "net.netfilter.nf_conntrack_max = 2000000"
 sed -i '/^[[:space:]]*net\.core\.rmem_default[[:space:]]*=/d' /etc/sysctl.conf 2>/dev/null || true
 sed -i '/^[[:space:]]*net\.core\.wmem_default[[:space:]]*=/d' /etc/sysctl.conf 2>/dev/null || true
+sed -i '/^[[:space:]]*net\.core\.rmem_max[[:space:]]*=/d' /etc/sysctl.conf 2>/dev/null || true
+sed -i '/^[[:space:]]*net\.core\.wmem_max[[:space:]]*=/d' /etc/sysctl.conf 2>/dev/null || true
+sed -i '/^[[:space:]]*net\.core\.netdev_max_backlog[[:space:]]*=/d' /etc/sysctl.conf 2>/dev/null || true
 mkdir -p /etc/sysctl.d
 cat > /etc/sysctl.d/99-udp-buffer.conf << 'EOF'
-net.core.rmem_default = 2097152
-net.core.wmem_default = 2097152
+net.core.rmem_default = 8388608
+net.core.wmem_default = 8388608
+net.core.rmem_max = 67108864
+net.core.wmem_max = 67108864
+net.core.netdev_max_backlog = 250000
 EOF
-sysctl -w net.core.rmem_default=2097152 >/dev/null 2>&1 || true
-sysctl -w net.core.wmem_default=2097152 >/dev/null 2>&1 || true
+sysctl -w net.core.rmem_default=8388608 >/dev/null 2>&1 || true
+sysctl -w net.core.wmem_default=8388608 >/dev/null 2>&1 || true
+sysctl -w net.core.rmem_max=67108864 >/dev/null 2>&1 || true
+sysctl -w net.core.wmem_max=67108864 >/dev/null 2>&1 || true
+sysctl -w net.core.netdev_max_backlog=250000 >/dev/null 2>&1 || true
 sysctl --system >/dev/null 2>&1 || true
 echo "Optimasi Parameters Selesai."
 echo "#############################################"
@@ -602,6 +625,10 @@ sudo iptables -A FORWARD -m string --algo bm --string "announce.php?passkey=" -j
 sudo iptables -A FORWARD -m string --algo bm --string "torrent" -j DROP
 sudo iptables -A FORWARD -m string --algo bm --string "announce" -j DROP
 sudo iptables -A FORWARD -m string --algo bm --string "info_hash" -j DROP
+# Blokir outbound QUIC (UDP 443) khusus badvpn-udpgw (nobody) agar YouTube fallback ke TCP/443
+if ! iptables -C OUTPUT -p udp -m owner --uid-owner nobody --dport 443 -m comment --comment badvpn-block-quic -j REJECT --reject-with icmp-port-unreachable >/dev/null 2>&1; then
+    iptables -A OUTPUT -p udp -m owner --uid-owner nobody --dport 443 -m comment --comment badvpn-block-quic -j REJECT --reject-with icmp-port-unreachable >/dev/null 2>&1 || true
+fi
 sudo iptables-save > /etc/iptables.up.rules
 sudo iptables-restore -t < /etc/iptables.up.rules
 sudo netfilter-persistent save >/dev/null 2>&1
@@ -649,9 +676,7 @@ echo -e "[ ${green}ok${NC} ] Restarting vnstat"
 sleep 2
 systemctl restart haproxy >/dev/null 2>&1
 echo -e "[ ${green}ok${NC} ] Restarting HAProxy"
-screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 1000 --max-connections-for-client 1000 >/dev/null 2>&1
-screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 1000 --max-connections-for-client 1000 >/dev/null 2>&1
-screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 1000 --max-connections-for-client 1000 >/dev/null 2>&1
+systemctl restart badvpn-udpgw@7100 badvpn-udpgw@7200 badvpn-udpgw@7300 >/dev/null 2>&1
 history -c
 echo "unset HISTFILE" >> /etc/profile
 

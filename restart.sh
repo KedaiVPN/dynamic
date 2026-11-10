@@ -110,10 +110,15 @@ case $Restart in
                 fi
                 /etc/init.d/cron restart
                 /etc/init.d/nginx restart
-                screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 1000 --max-connections-for-client 1000
-                screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 1000 --max-connections-for-client 1000
-                screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 1000 --max-connections-for-client 1000
-                systemctl restart rc-local.service
+                if [ -f /etc/systemd/system/badvpn-udpgw@.service ]; then
+                    systemctl restart badvpn-udpgw@7100 badvpn-udpgw@7200 badvpn-udpgw@7300 >/dev/null 2>&1
+                else
+                    pkill -x badvpn-udpgw >/dev/null 2>&1 || true
+                    screen -wipe >/dev/null 2>&1 || true
+                    screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 1000 --max-connections-for-client 1000 --client-socket-sndbuf 0 --loglevel warning
+                    screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 1000 --max-connections-for-client 1000 --client-socket-sndbuf 0 --loglevel warning
+                    screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 1000 --max-connections-for-client 1000 --client-socket-sndbuf 0 --loglevel warning
+                fi
                 echo -e ""
                 echo -e "======================================"
                 echo -e ""
@@ -167,10 +172,15 @@ case $Restart in
                 ;;
                 6)
                 clear && printf '\033[3J'
-                screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 1000 --max-connections-for-client 1000
-                screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 1000 --max-connections-for-client 1000
-                screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 1000 --max-connections-for-client 1000
-                systemctl restart rc-local.service >/dev/null 2>&1
+                if [ -f /etc/systemd/system/badvpn-udpgw@.service ]; then
+                    systemctl restart badvpn-udpgw@7100 badvpn-udpgw@7200 badvpn-udpgw@7300 >/dev/null 2>&1
+                else
+                    pkill -x badvpn-udpgw >/dev/null 2>&1 || true
+                    screen -wipe >/dev/null 2>&1 || true
+                    screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 1000 --max-connections-for-client 1000 --client-socket-sndbuf 0 --loglevel warning
+                    screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 1000 --max-connections-for-client 1000 --client-socket-sndbuf 0 --loglevel warning
+                    screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 1000 --max-connections-for-client 1000 --client-socket-sndbuf 0 --loglevel warning
+                fi
                 echo -e ""
                 echo -e "======================================"
                 echo -e ""

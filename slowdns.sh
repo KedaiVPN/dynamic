@@ -14,6 +14,15 @@ SLOWDNS_BINARY_URL=${SLOWDNS_BINARY_URL:-https://raw.githubusercontent.com/Kedai
 SLOWDNS_BINARY_SHA256=${SLOWDNS_BINARY_SHA256:-a9d19e39ae23261628e8f21dac79548b31dceb45f959017bc50300e7ebfcad7d}
 SLOWDNS_RESOLVER=${SLOWDNS_RESOLVER:-1.1.1.1:53}
 SLOWDNS_UPSTREAM=${SLOWDNS_UPSTREAM:-127.0.0.1:22}
+if [[ "$SLOWDNS_SERVICE" == "/etc/systemd/system/slowdns.service" ]]; then
+    SLOWDNS_WATCHDOG_BIN=${SLOWDNS_WATCHDOG_BIN:-/usr/local/sbin/slowdns-watchdog.sh}
+    SLOWDNS_WATCHDOG_SERVICE=${SLOWDNS_WATCHDOG_SERVICE:-/etc/systemd/system/slowdns-watchdog.service}
+    SLOWDNS_WATCHDOG_TIMER=${SLOWDNS_WATCHDOG_TIMER:-/etc/systemd/system/slowdns-watchdog.timer}
+else
+    SLOWDNS_WATCHDOG_BIN=${SLOWDNS_WATCHDOG_BIN:-$(dirname "$SLOWDNS_SERVICE")/slowdns-watchdog.sh}
+    SLOWDNS_WATCHDOG_SERVICE=${SLOWDNS_WATCHDOG_SERVICE:-$(dirname "$SLOWDNS_SERVICE")/slowdns-watchdog.service}
+    SLOWDNS_WATCHDOG_TIMER=${SLOWDNS_WATCHDOG_TIMER:-$(dirname "$SLOWDNS_SERVICE")/slowdns-watchdog.timer}
+fi
 
 red() { printf '\033[1;91m%s\033[0m\n' "$*"; }
 green() { printf '\033[1;92m%s\033[0m\n' "$*"; }
@@ -216,6 +225,122 @@ EOF
     systemctl daemon-reload
 }
 
+write_watchdog() {
+    local wd_dir svc_dir timer_dir svc_name
+    wd_dir=$(dirname "$SLOWDNS_WATCHDOG_BIN")
+    svc_dir=$(dirname "$SLOWDNS_WATCHDOG_SERVICE")
+    timer_dir=$(dirname "$SLOWDNS_WATCHDOG_TIMER")
+    svc_name=$(basename "$SLOWDNS_WATCHDOG_SERVICE")
+    mkdir -p "$wd_dir" "$svc_dir" "$timer_dir"
+
+    cat > "$SLOWDNS_WATCHDOG_BIN" <<'WDBIN'
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! systemctl is-active --quiet slowdns.service; then
+    exit 0
+fi
+
+pid=$(systemctl show -p MainPID --value slowdns.service 2>/dev/null || true)
+inv=$(systemctl show -p InvocationID --value slowdns.service 2>/dev/null || true)
+if [[ -z "$pid" || "$pid" == "0" || ! -d "/proc/$pid" ]]; then
+    exit 0
+fi
+
+upstream_port=22
+if [[ -r /root/slowdns/slowdns.env ]]; then
+    upstream_addr=$(awk -F= '$1=="SLOWDNS_UPSTREAM_ADDR" {gsub(/"/,"",$2); print $2}' /root/slowdns/slowdns.env 2>/dev/null || true)
+    if [[ "$upstream_addr" =~ :([0-9]+)$ ]]; then
+        upstream_port="${BASH_REMATCH[1]}"
+    fi
+fi
+
+active_conns=$(ss -tnpH state established "( dport = :${upstream_port} )" 2>/dev/null | grep -Ec "pid=${pid}(,|\))" || true)
+begins=$(journalctl -u slowdns.service _SYSTEMD_INVOCATION_ID="$inv" --no-pager -q 2>/dev/null | grep -c 'begin session' || true)
+ends=$(journalctl -u slowdns.service _SYSTEMD_INVOCATION_ID="$inv" --no-pager -q 2>/dev/null | grep -c 'end session' || true)
+zombie=$(( begins - ends - active_conns ))
+if (( zombie < 0 )); then
+    zombie=0
+fi
+
+cpu_pct="0.0"
+if command -v python3 >/dev/null 2>&1; then
+    cpu_pct=$(python3 - "$pid" <<'PY'
+import os, sys, time
+pid = sys.argv[1]
+clk = os.sysconf(os.sysconf_names["SC_CLK_TCK"])
+def proc_ticks():
+    with open(f"/proc/{pid}/stat") as f:
+        s = f.read()
+    rp = s.rfind(")")
+    fields = s[rp+2:].split()
+    return int(fields[11]) + int(fields[12])
+try:
+    t0 = proc_ticks()
+    m0 = time.monotonic()
+    time.sleep(2.0)
+    t1 = proc_ticks()
+    m1 = time.monotonic()
+    pct = ((t1 - t0) / clk) / max(0.1, (m1 - m0)) * 100.0
+    print(f"{pct:.1f}")
+except Exception:
+    print("0.0")
+PY
+    )
+fi
+cpu_int=${cpu_pct%.*}
+cpu_int=${cpu_int:-0}
+
+hour=$(date +%H)
+min=$(date +%M)
+today=$(date +%F)
+daily_stamp="/run/slowdns-watchdog-${today}"
+
+# 1) Zero-impact cleanup: restart only when 0 active SlowDNS tunnels and zombie/CPU spike detected
+if (( active_conns == 0 )) && ( (( zombie >= 5 )) || (( cpu_int >= 10 )) ); then
+    logger -t slowdns-watchdog "Zero-user zombie cleanup: active=${active_conns} zombie=${zombie} cpu=${cpu_pct}% -> restarting slowdns.service"
+    systemctl restart slowdns.service
+    exit 0
+fi
+
+# 2) Quiet-hour safety cleanup (04:00-04:09 WIB, max once/day) when zombies accumulate
+if [[ "$hour" == "04" && "$((10#$min))" -lt 10 && ! -f "$daily_stamp" ]] && ( (( zombie >= 15 )) || (( cpu_int >= 60 )) ); then
+    touch "$daily_stamp"
+    logger -t slowdns-watchdog "Quiet-hour cleanup: active=${active_conns} zombie=${zombie} cpu=${cpu_pct}% -> restarting slowdns.service"
+    systemctl restart slowdns.service
+    exit 0
+fi
+WDBIN
+    chmod 755 "$SLOWDNS_WATCHDOG_BIN"
+
+    cat > "$SLOWDNS_WATCHDOG_SERVICE" <<WDSVC
+[Unit]
+Description=Smart Watchdog for SlowDNS Zombie KCP Sessions
+After=slowdns.service
+
+[Service]
+Type=oneshot
+ExecStart=$SLOWDNS_WATCHDOG_BIN
+WDSVC
+    chmod 644 "$SLOWDNS_WATCHDOG_SERVICE"
+
+    cat > "$SLOWDNS_WATCHDOG_TIMER" <<WDTMR
+[Unit]
+Description=Run SlowDNS Zombie Session Watchdog every 5 minutes
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=5min
+AccuracySec=30s
+Unit=$svc_name
+
+[Install]
+WantedBy=timers.target
+WDTMR
+    chmod 644 "$SLOWDNS_WATCHDOG_TIMER"
+    systemctl daemon-reload >/dev/null 2>&1 || true
+}
+
 status() {
     clear && printf '\033[3J'
     local BIRed='\033[1;91m' BIYellow='\033[1;93m' BIWhite='\033[1;97m' BIGreen='\033[1;92m' UWhite='\033[4;37m' NC='\033[0m'
@@ -259,8 +384,10 @@ enable_slowdns() {
     migrate_keys || return 1
     write_env "$ipaddr" "$iface"
     write_service "$ipaddr"
+    write_watchdog
     install_network_rules "$ipaddr" "$iface" || return 1
     systemctl enable slowdns.service >/dev/null
+    systemctl enable --now slowdns-watchdog.timer >/dev/null 2>&1 || true
     systemctl restart slowdns.service
     if ! systemctl is-active --quiet slowdns.service || ! ss -lunH 2>/dev/null | awk '{print $4}' | grep -Fq "$ipaddr:53"; then
         red 'SlowDNS gagal aktif. Periksa: journalctl -u slowdns.service -n 50'
@@ -275,6 +402,8 @@ enable_slowdns() {
 disable_slowdns() {
     require_root
     systemctl disable --now slowdns.service >/dev/null 2>&1 || true
+    systemctl disable --now slowdns-watchdog.timer >/dev/null 2>&1 || true
+    systemctl stop slowdns-watchdog.service >/dev/null 2>&1 || true
     local ipaddr iface
     ipaddr=$(awk -F= '$1=="SLOWDNS_DIRECT_IPV4" {gsub(/"/,"",$2); print $2}' "$SLOWDNS_ENV_FILE" 2>/dev/null || true)
     iface=$(awk -F= '$1=="SLOWDNS_DIRECT_INTERFACE" {gsub(/"/,"",$2); print $2}' "$SLOWDNS_ENV_FILE" 2>/dev/null || true)
@@ -294,9 +423,19 @@ sync_slowdns() {
     [[ "$ipaddr" =~ ^[0-9]+(\.[0-9]+){3}$ && -n "$iface" ]] || return 1
     write_env "$ipaddr" "$iface"
     write_service "$ipaddr"
+    write_watchdog
     systemctl daemon-reload >/dev/null 2>&1 || true
+    systemctl enable --now slowdns-watchdog.timer >/dev/null 2>&1 || true
     systemctl restart slowdns.service >/dev/null 2>&1 || true
     green "SlowDNS synced with domain: $SLOWDNS_DOMAIN (NS: $SLOWDNS_NS_DOMAIN)"
+}
+
+sync_watchdog() {
+    require_root
+    command -v systemctl >/dev/null 2>&1 || return 0
+    systemctl is-active --quiet slowdns.service || return 0
+    write_watchdog
+    systemctl enable --now slowdns-watchdog.timer >/dev/null 2>&1 || true
 }
 
 menu() {
@@ -331,6 +470,7 @@ enable|on) enable_slowdns ;;
 disable|off) disable_slowdns ;;
 status|info) status ;;
 sync) sync_slowdns ;;
+sync-watchdog) sync_watchdog ;;
 menu) menu ;;
-*) echo "Usage: $0 {enable|disable|status|sync|menu}" >&2; exit 2 ;;
+*) echo "Usage: $0 {enable|disable|status|sync|sync-watchdog|menu}" >&2; exit 2 ;;
 esac

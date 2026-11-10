@@ -366,22 +366,73 @@ EOF
 
 tuning_conntrack
 
-# // Tuning Buffer Socket UDP Default (mencegah packet drop saat burst SlowDNS/UDP Custom)
+# // Tuning Buffer Socket UDP Default & Backlog (mencegah packet drop saat burst SlowDNS/UDP Custom)
 tuning_udp_buffer() {
     echo -e "[ \033[0;32mINFO\033[0m ] Tuning buffer socket UDP default..."
     sed -i '/^[[:space:]]*net\.core\.rmem_default[[:space:]]*=/d' /etc/sysctl.conf 2>/dev/null || true
     sed -i '/^[[:space:]]*net\.core\.wmem_default[[:space:]]*=/d' /etc/sysctl.conf 2>/dev/null || true
+    sed -i '/^[[:space:]]*net\.core\.rmem_max[[:space:]]*=/d' /etc/sysctl.conf 2>/dev/null || true
+    sed -i '/^[[:space:]]*net\.core\.wmem_max[[:space:]]*=/d' /etc/sysctl.conf 2>/dev/null || true
+    sed -i '/^[[:space:]]*net\.core\.netdev_max_backlog[[:space:]]*=/d' /etc/sysctl.conf 2>/dev/null || true
     mkdir -p /etc/sysctl.d
     cat > /etc/sysctl.d/99-udp-buffer.conf << 'EOF'
-net.core.rmem_default = 2097152
-net.core.wmem_default = 2097152
+net.core.rmem_default = 8388608
+net.core.wmem_default = 8388608
+net.core.rmem_max = 67108864
+net.core.wmem_max = 67108864
+net.core.netdev_max_backlog = 250000
 EOF
-    sysctl -w net.core.rmem_default=2097152 >/dev/null 2>&1 || true
-    sysctl -w net.core.wmem_default=2097152 >/dev/null 2>&1 || true
+    sysctl -w net.core.rmem_default=8388608 >/dev/null 2>&1 || true
+    sysctl -w net.core.wmem_default=8388608 >/dev/null 2>&1 || true
+    sysctl -w net.core.rmem_max=67108864 >/dev/null 2>&1 || true
+    sysctl -w net.core.wmem_max=67108864 >/dev/null 2>&1 || true
+    sysctl -w net.core.netdev_max_backlog=250000 >/dev/null 2>&1 || true
     sysctl --system >/dev/null 2>&1 || true
 }
 
 tuning_udp_buffer
+
+# // Enable Receive Packet Steering (RPS) agar interrupt RX UDP/53 terdistribusi ke semua vCPU
+tuning_rps() {
+    echo -e "[ \033[0;32mINFO\033[0m ] Mengaktifkan Receive Packet Steering (RPS)..."
+    mkdir -p /usr/local/sbin /etc/systemd/system
+    cat > /usr/local/sbin/enable-rps.sh << 'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+cpus=$(nproc 2>/dev/null || echo 1)
+if [ "$cpus" -le 1 ]; then
+    exit 0
+fi
+if [ "$cpus" -gt 31 ]; then
+    cpus=31
+fi
+mask=$(printf '%x' $(( (1 << cpus) - 1 )))
+for q in /sys/class/net/*/queues/rx-*/rps_cpus; do
+    case "$q" in /sys/class/net/lo/*) continue ;; esac
+    [ -w "$q" ] && printf '%s' "$mask" > "$q" 2>/dev/null || true
+done
+EOF
+    chmod 755 /usr/local/sbin/enable-rps.sh
+    cat > /etc/systemd/system/network-rps.service << 'EOF'
+[Unit]
+Description=Enable Receive Packet Steering (RPS) on NIC RX queues
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/enable-rps.sh
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    chmod 644 /etc/systemd/system/network-rps.service
+    systemctl daemon-reload >/dev/null 2>&1 || true
+    systemctl enable --now network-rps.service >/dev/null 2>&1 || true
+}
+
+tuning_rps
 
 #install vnstat
 echo -e "$white\033[0;34m┌─────────────────────────────────────────┐${NC}"
