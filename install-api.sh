@@ -42,17 +42,37 @@ download_with_retry() {
     return 1
 }
 
+apt_with_retry() {
+    local max_attempts=3
+    local attempt=1
+    while [ "$attempt" -le "$max_attempts" ]; do
+        if DEBIAN_FRONTEND=noninteractive apt-get \
+            -o DPkg::Lock::Timeout=120 \
+            -o Acquire::Retries=5 \
+            -o Acquire::http::Timeout=30 \
+            -o Acquire::https::Timeout=30 \
+            "$@"; then
+            return 0
+        fi
+        DEBIAN_FRONTEND=noninteractive dpkg --configure -a >/dev/null 2>&1 || true
+        DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=120 update -y >/dev/null 2>&1 || true
+        attempt=$((attempt + 1))
+        sleep 2
+    done
+    return 1
+}
+
 # 1. Install Dependencies
 echo "Installing Node.js and dependencies..."
 if ! command -v node &> /dev/null; then
     download_with_retry "https://deb.nodesource.com/setup_22.x" "/tmp/nodesource_setup_22.x"
     bash /tmp/nodesource_setup_22.x
     rm -f /tmp/nodesource_setup_22.x
-    apt-get install -y nodejs
+    apt_with_retry install -y nodejs
 fi
 
 if ! command -v npm &> /dev/null; then
-    apt-get install -y npm
+    apt_with_retry install -y npm
 fi
 
 # 2. Download Bash Wrapper Scripts

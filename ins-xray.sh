@@ -86,6 +86,26 @@ download_with_retry() {
     return 1
 }
 
+apt_with_retry() {
+    local max_attempts=3
+    local attempt=1
+    while [ "$attempt" -le "$max_attempts" ]; do
+        if DEBIAN_FRONTEND=noninteractive apt-get \
+            -o DPkg::Lock::Timeout=120 \
+            -o Acquire::Retries=5 \
+            -o Acquire::http::Timeout=30 \
+            -o Acquire::https::Timeout=30 \
+            "$@"; then
+            return 0
+        fi
+        DEBIAN_FRONTEND=noninteractive dpkg --configure -a >/dev/null 2>&1 || true
+        DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=120 update -y >/dev/null 2>&1 || true
+        attempt=$((attempt + 1))
+        sleep 2
+    done
+    return 1
+}
+
 
 clear && printf '\033[3J'
 # source /var/lib/scrz-prem/ipvps.conf # This is usually missing on fresh installs
@@ -119,19 +139,19 @@ sleep 1
 export DEBIAN_FRONTEND=noninteractive
 echo iptables-persistent iptables-persistent/autosave_v4 boolean true | debconf-set-selections
 echo iptables-persistent iptables-persistent/autosave_v6 boolean true | debconf-set-selections
-apt install iptables iptables-persistent -y
-apt install curl socat xz-utils wget apt-transport-https gnupg gnupg2 gnupg1 dnsutils lsb-release -y
-apt install socat cron bash-completion ntpdate -y
+apt_with_retry install -y iptables iptables-persistent || true
+apt_with_retry install -y curl socat xz-utils wget apt-transport-https gnupg gnupg2 dnsutils lsb-release || true
+apt_with_retry install -y socat cron bash-completion ntpdate || true
 #ntpdate pool.ntp.org
 ntpdate -u pool.ntp.org
-apt -y install chrony
+apt_with_retry install -y chrony || true
 timedatectl set-ntp true
 #systemctl enable chronyd && systemctl restart chronyd
 systemctl enable chrony && systemctl restart chrony
 timedatectl set-timezone Asia/Jakarta
 #chronyc sourcestats -v
 #chronyc tracking -v
-apt install curl pwgen openssl netcat cron unzip python3 -y
+apt_with_retry install -y curl pwgen openssl netcat cron unzip python3 || true
 
 # Make Folder & Log XRay & Log Trojan
 rm -fr /var/log/xray
@@ -169,11 +189,13 @@ chmod -R 755 /var/log/xray
 
 # Install Wondershaper
 cd /root/
-apt install wondershaper -y
-git clone https://github.com/magnific0/wondershaper.git >/dev/null 2>&1
-cd wondershaper
-make install
-cd
+apt_with_retry install -y wondershaper make git || true
+git clone https://github.com/magnific0/wondershaper.git >/dev/null 2>&1 || true
+if [ -d wondershaper ]; then
+    cd wondershaper
+    make install >/dev/null 2>&1 || true
+    cd
+fi
 rm -fr /root/wondershaper
 echo > /home/limit
 
@@ -182,12 +204,10 @@ install_ssl(){
     if [ -f "/usr/bin/apt-get" ];then
             isDebian=`cat /etc/issue|grep Debian`
             if [ "$isDebian" != "" ];then
-                    apt-get install -y nginx certbot
-                    apt install -y nginx certbot
+                    apt_with_retry install -y nginx certbot || true
                     sleep 3s
             else
-                    apt-get install -y nginx certbot
-                    apt install -y nginx certbot
+                    apt_with_retry install -y nginx certbot || true
                     sleep 3s
             fi
     else
@@ -304,7 +324,7 @@ backend grpc_backend
 EOF
 
 # install nginx (sudah diinstall di atas saat certbot)
-apt install -y nginx >/dev/null 2>&1
+apt_with_retry install -y nginx >/dev/null 2>&1 || true
 cd
 # wget -q -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/nginx.conf"
 # Embed nginx.conf with Proxy Protocol support for Xray frontend
@@ -471,7 +491,7 @@ rm -fr /etc/nginx/sites-enabled/default
 rm -fr /etc/nginx/sites-available/default
 
 # Install HAProxy only after PEM certificates are generated to prevent crash loops
-DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install -f -y haproxy
+apt_with_retry -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install -f -y haproxy || true
 
 # Fix HAProxy Service agar tidak gampang crash-loop "Start request repeated too quickly"
 mkdir -p /etc/systemd/system/haproxy.service.d

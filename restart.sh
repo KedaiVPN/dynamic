@@ -97,9 +97,17 @@ case $Restart in
                     systemctl restart slowdns.service >/dev/null 2>&1
                 fi
                 /etc/init.d/ssh restart
-                /etc/init.d/dropbear restart
+                if [ -x /etc/init.d/dropbear ]; then
+                    /etc/init.d/dropbear restart
+                else
+                    systemctl restart dropbear
+                fi
                 /etc/init.d/stunnel4 restart
-                /etc/init.d/fail2ban restart
+                if [ -x /etc/init.d/fail2ban ]; then
+                    /etc/init.d/fail2ban restart
+                else
+                    systemctl restart fail2ban
+                fi
                 /etc/init.d/cron restart
                 /etc/init.d/nginx restart
                 screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 1000 --max-connections-for-client 1000
@@ -125,7 +133,11 @@ case $Restart in
                 ;;
                 3)
                 clear && printf '\033[3J'
-                /etc/init.d/dropbear restart
+                if [ -x /etc/init.d/dropbear ]; then
+                    /etc/init.d/dropbear restart
+                else
+                    systemctl restart dropbear
+                fi
                 echo -e ""
                 echo -e "======================================"
                 echo -e ""

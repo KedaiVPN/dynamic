@@ -127,6 +127,26 @@ download_with_retry() {
     return 1
 }
 
+apt_with_retry() {
+    local max_attempts=3
+    local attempt=1
+    while [ "$attempt" -le "$max_attempts" ]; do
+        if DEBIAN_FRONTEND=noninteractive apt-get \
+            -o DPkg::Lock::Timeout=120 \
+            -o Acquire::Retries=5 \
+            -o Acquire::http::Timeout=30 \
+            -o Acquire::https::Timeout=30 \
+            "$@"; then
+            return 0
+        fi
+        DEBIAN_FRONTEND=noninteractive dpkg --configure -a >/dev/null 2>&1 || true
+        DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=120 update -y >/dev/null 2>&1 || true
+        attempt=$((attempt + 1))
+        sleep 2
+    done
+    return 1
+}
+
 # simple password minimal
 download_with_retry "https://raw.githubusercontent.com/KedaiVPN/dynamic/main/password" "/etc/pam.d/common-password" || exit 1
 chmod +x /etc/pam.d/common-password
@@ -319,6 +339,14 @@ systemctl restart ssh >/dev/null 2>&1
 # install dropbear
 sleep 1
 echo -e "[ ${green}INFO$NC ] Settings Dropbear"
+if ! dpkg -s dropbear >/dev/null 2>&1 || [ ! -x /usr/sbin/dropbear ] || [ ! -f /etc/init.d/dropbear ]; then
+    echo -e "[ ${green}INFO$NC ] Paket dropbear belum terpasang, menginstall dropbear..."
+    apt_with_retry update -y >/dev/null 2>&1 || true
+    if ! apt_with_retry install -y dropbear; then
+        echo -e "[ ${RED}ERROR${NC} ] Gagal menginstall paket dropbear!"
+        exit 1
+    fi
+fi
 cat > /etc/default/dropbear <<-END
 NO_START=0
 DROPBEAR_PORT=143
@@ -326,10 +354,10 @@ DROPBEAR_EXTRA_ARGS="-b /etc/issue.net -p 109 -p 58080"
 DROPBEAR_BANNER="/etc/issue.net"
 DROPBEAR_RECEIVE_WINDOW=65536
 END
+systemctl unmask dropbear >/dev/null 2>&1 || true
 systemctl daemon-reload >/dev/null 2>&1
 systemctl enable dropbear >/dev/null 2>&1
-systemctl start dropbear >/dev/null 2>&1
-systemctl restart dropbear >/dev/null 2>&1
+systemctl restart dropbear >/dev/null 2>&1 || /etc/init.d/dropbear restart >/dev/null 2>&1 || true
 cekker=$(cat /etc/shells | grep -w "/bin/false")
 if [[ "$cekker" = "/bin/false" ]];then
 echo -ne
@@ -345,8 +373,8 @@ killall -9 stunnel5 >/dev/null 2>&1
 killall -9 stunnel >/dev/null 2>&1
 
 # Install stunnel package and clean old certs
-apt-get -f install -y
-apt-get install stunnel4 -y
+apt_with_retry -f install -y >/dev/null 2>&1 || true
+apt_with_retry install -y stunnel4
 mkdir -p /etc/stunnel
 rm -f /etc/stunnel/stunnel.conf
 
@@ -490,10 +518,15 @@ JRNEOF
 fi
 
 # install fail2ban
+if [ ! -d /etc/fail2ban ] || ! command -v fail2ban-server >/dev/null 2>&1; then
+    echo -e "[ ${green}INFO$NC ] Paket fail2ban belum terpasang, menginstall fail2ban & python3-systemd..."
+    apt_with_retry update -y >/dev/null 2>&1 || true
+    apt_with_retry install -y fail2ban python3-systemd python3-pyinotify whois || true
+fi
 if [ -d /etc/fail2ban ]; then
     if ! python3 -c "import systemd.journal" >/dev/null 2>&1; then
-        DEBIAN_FRONTEND=noninteractive apt-get update -y >/dev/null 2>&1 || true
-        DEBIAN_FRONTEND=noninteractive apt-get install -y python3-systemd >/dev/null 2>&1 || true
+        apt_with_retry update -y >/dev/null 2>&1 || true
+        apt_with_retry install -y python3-systemd >/dev/null 2>&1 || true
     fi
     f2b_backend="auto"
     if python3 -c "import systemd.journal" >/dev/null 2>&1; then
@@ -508,7 +541,11 @@ enabled = true
 port = 22,2253,40000
 backend = ${f2b_backend}
 F2BEOF
+    systemctl unmask fail2ban >/dev/null 2>&1 || true
     systemctl enable fail2ban >/dev/null 2>&1 || true
+else
+    echo -e "[ ${RED}ERROR${NC} ] Direktori /etc/fail2ban tidak ditemukan, paket fail2ban gagal terpasang!"
+    exit 1
 fi
 # Instal DDOS Flate
 rm -fr /usr/local/ddos
@@ -548,9 +585,8 @@ chmod +x /etc/issue.net
 sed -i '/Banner \/etc\/issue.net/d' /etc/ssh/sshd_config
 echo "Banner /etc/issue.net" >> /etc/ssh/sshd_config
 
-systemctl restart ssh
-systemctl restart sshd
-systemctl restart dropbear
+systemctl restart ssh >/dev/null 2>&1 || systemctl restart sshd >/dev/null 2>&1 || true
+systemctl restart dropbear >/dev/null 2>&1 || /etc/init.d/dropbear restart >/dev/null 2>&1 || true
 
 # Blokir Torrent
 echo -e "[ ${green}INFO$NC ] Set iptables"
@@ -594,7 +630,7 @@ echo -e "[ ${green}ok${NC} ] Restarting cron"
 /etc/init.d/ssh restart >/dev/null 2>&1
 sleep 1
 echo -e "[ ${green}ok${NC} ] Restarting ssh"
-/etc/init.d/dropbear restart >/dev/null 2>&1
+systemctl restart dropbear >/dev/null 2>&1 || /etc/init.d/dropbear restart >/dev/null 2>&1
 sleep 1
 echo -e "[ ${green}ok${NC} ] Restarting dropbear"
 systemctl restart ws-stunnel >/dev/null 2>&1
@@ -606,7 +642,7 @@ echo -e "[ ${green}ok${NC} ] Restarting fail2ban"
 /etc/init.d/stunnel4 restart >/dev/null 2>&1
 sleep 1
 echo -e "[ ${green}ok${NC} ] Restarting stunnel4"
-/etc/init.d/vnstat restart >/dev/null 2>&1
+systemctl restart vnstat >/dev/null 2>&1 || /etc/init.d/vnstat restart >/dev/null 2>&1
 sleep 1
 echo -e "[ ${green}ok${NC} ] Restarting vnstat"
 # Memberi waktu agar backend server naik sebelum haproxy mengaksesnya

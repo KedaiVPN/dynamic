@@ -33,6 +33,10 @@ done
 
 # 4. Fail2Ban protection on all SSH ports (22, 2253, 40000) with localhost ignoreip & systemd backend
 assert_contains setup.sh 'python3-systemd'
+for script in setup.sh ssh-vpn.sh update.sh vnstat.sh install-api.sh set-br.sh ins-xray.sh; do
+    assert_contains "$script" 'apt_with_retry()'
+    assert_contains "$script" 'DPkg::Lock::Timeout=120'
+done
 for script in ssh-vpn.sh update.sh; do
     assert_contains "$script" '/etc/fail2ban/jail.local'
     assert_contains "$script" 'ignoreip = 127.0.0.1/8 ::1'
@@ -40,6 +44,8 @@ for script in ssh-vpn.sh update.sh; do
     assert_contains "$script" 'python3-systemd'
     assert_contains "$script" 'f2b_backend="systemd"'
     assert_contains "$script" 'backend = ${f2b_backend}'
+    assert_contains "$script" 'apt_with_retry install -y dropbear'
+    assert_contains "$script" 'apt_with_retry install -y fail2ban python3-systemd'
 done
 
 # 5. Systemd journal limit (100M) + SplitMode=none + user-*.journal cleanup

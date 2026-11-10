@@ -69,8 +69,28 @@ download_with_retry() {
     return 1
 }
 
+apt_with_retry() {
+    local max_attempts=3
+    local attempt=1
+    while [ "$attempt" -le "$max_attempts" ]; do
+        if DEBIAN_FRONTEND=noninteractive apt-get \
+            -o DPkg::Lock::Timeout=120 \
+            -o Acquire::Retries=5 \
+            -o Acquire::http::Timeout=30 \
+            -o Acquire::https::Timeout=30 \
+            "$@"; then
+            return 0
+        fi
+        DEBIAN_FRONTEND=noninteractive dpkg --configure -a >/dev/null 2>&1 || true
+        DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=120 update -y >/dev/null 2>&1 || true
+        attempt=$((attempt + 1))
+        sleep 2
+    done
+    return 1
+}
+
 #curl https://rclone.org/install.sh | bash
-apt install rclone -y
+apt_with_retry install -y rclone make git || true
 printf "q\n" | rclone config
 download_with_retry "https://${Server_URL}/rclone.conf" "/root/.config/rclone/rclone.conf" || exit 1
 git clone  https://github.com/MrMan21/wondershaper.git

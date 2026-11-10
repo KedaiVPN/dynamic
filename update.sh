@@ -74,6 +74,26 @@ download_with_retry() {
     return 1
 }
 
+apt_with_retry() {
+    local max_attempts=3
+    local attempt=1
+    while [ "$attempt" -le "$max_attempts" ]; do
+        if DEBIAN_FRONTEND=noninteractive apt-get \
+            -o DPkg::Lock::Timeout=120 \
+            -o Acquire::Retries=5 \
+            -o Acquire::http::Timeout=30 \
+            -o Acquire::https::Timeout=30 \
+            "$@"; then
+            return 0
+        fi
+        DEBIAN_FRONTEND=noninteractive dpkg --configure -a >/dev/null 2>&1 || true
+        DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=120 update -y >/dev/null 2>&1 || true
+        attempt=$((attempt + 1))
+        sleep 2
+    done
+    return 1
+}
+
 # Static update list. Files not listed here are intentionally left untouched.
 # Download, validate Bash syntax, then atomically replace the installed file.
 update_local_script() {
@@ -230,7 +250,12 @@ service cron restart >/dev/null 2>&1
 service cron reload >/dev/null 2>&1
 
 echo -e "[ ${GREEN}INFO${NC} ] Menerapkan patch Dropbear & HAProxy..."
-# Fix Dropbear
+# Fix Dropbear (install paket dropbear otomatis jika sebelumnya gagal terinstall)
+if ! dpkg -s dropbear >/dev/null 2>&1 || [ ! -x /usr/sbin/dropbear ] || [ ! -f /etc/init.d/dropbear ]; then
+    echo -e "[ ${GREEN}INFO${NC} ] Dropbear belum terpasang, menginstall paket dropbear..."
+    apt_with_retry update -y >/dev/null 2>&1 || true
+    apt_with_retry install -y dropbear || echo -e "[ ${RED}ERROR${NC} ] Gagal menginstall paket dropbear."
+fi
 cat > /etc/default/dropbear <<-END
 NO_START=0
 DROPBEAR_PORT=143
@@ -238,13 +263,23 @@ DROPBEAR_EXTRA_ARGS="-b /etc/issue.net -p 109 -p 58080"
 DROPBEAR_BANNER="/etc/issue.net"
 DROPBEAR_RECEIVE_WINDOW=65536
 END
+systemctl unmask dropbear >/dev/null 2>&1 || true
 systemctl daemon-reload >/dev/null 2>&1
 systemctl enable dropbear >/dev/null 2>&1
-systemctl restart dropbear >/dev/null 2>&1
+systemctl restart dropbear >/dev/null 2>&1 || /etc/init.d/dropbear restart >/dev/null 2>&1 || true
+
+# Ensure vnstat is installed if missing
+if ! command -v vnstat >/dev/null 2>&1; then
+    echo -e "[ ${GREEN}INFO${NC} ] vnStat belum terpasang, menginstall paket vnstat..."
+    apt_with_retry update -y >/dev/null 2>&1 || true
+    apt_with_retry install -y vnstat >/dev/null 2>&1 || true
+    systemctl enable vnstat >/dev/null 2>&1 || true
+    systemctl restart vnstat >/dev/null 2>&1 || true
+fi
 
 # Fix HAProxy
 systemctl stop nginx >/dev/null 2>&1
-DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install -f -y haproxy >/dev/null 2>&1
+apt_with_retry -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install -f -y haproxy >/dev/null 2>&1 || true
 
 mkdir -p /run/haproxy
 chown -R haproxy:haproxy /run/haproxy 2>/dev/null || true
@@ -391,10 +426,15 @@ fi
 
 # Fail2Ban protection for all SSH ports (22, 2253, 40000) with localhost whitelisted
 # Use systemd backend so logcleaner clearing /var/log/auth.log never resets fail2ban tracking
+if [ ! -d /etc/fail2ban ] || ! command -v fail2ban-server >/dev/null 2>&1; then
+    echo -e "[ ${GREEN}INFO${NC} ] Fail2Ban belum terpasang, menginstall fail2ban & python3-systemd..."
+    apt_with_retry update -y >/dev/null 2>&1 || true
+    apt_with_retry install -y fail2ban python3-systemd python3-pyinotify whois || echo -e "[ ${RED}ERROR${NC} ] Gagal menginstall paket fail2ban."
+fi
 if [ -d /etc/fail2ban ]; then
     if ! python3 -c "import systemd.journal" >/dev/null 2>&1; then
-        DEBIAN_FRONTEND=noninteractive apt-get update -y >/dev/null 2>&1 || true
-        DEBIAN_FRONTEND=noninteractive apt-get install -y python3-systemd >/dev/null 2>&1 || true
+        apt_with_retry update -y >/dev/null 2>&1 || true
+        apt_with_retry install -y python3-systemd >/dev/null 2>&1 || true
     fi
     f2b_backend="auto"
     if python3 -c "import systemd.journal" >/dev/null 2>&1; then
@@ -409,8 +449,9 @@ enabled = true
 port = 22,2253,40000
 backend = ${f2b_backend}
 F2BEOF
+    systemctl unmask fail2ban >/dev/null 2>&1 || true
     systemctl enable fail2ban >/dev/null 2>&1 || true
-    systemctl restart fail2ban >/dev/null 2>&1 || true
+    systemctl restart fail2ban >/dev/null 2>&1 || /etc/init.d/fail2ban restart >/dev/null 2>&1 || true
 fi
 
 # Fix Nginx Xray Routing Proxy (agar Vmess/Vless/Trojan bisa connect dari port 443)

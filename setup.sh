@@ -129,10 +129,30 @@ echo "$expiry_date_str" > /etc/xray/license_exp
 # // Install Basic Packages
 echo -e "\033[0;32m[ INFO ]\033[0m Updating and installing basic packages..."
 export DEBIAN_FRONTEND=noninteractive
-apt --fix-missing update
-apt update
-apt upgrade -y
-apt install -y bzip2 gzip coreutils screen dpkg wget vim curl nano zip unzip socat
+
+apt_with_retry() {
+    local max_attempts=3
+    local attempt=1
+    while [ "$attempt" -le "$max_attempts" ]; do
+        if DEBIAN_FRONTEND=noninteractive apt-get \
+            -o DPkg::Lock::Timeout=120 \
+            -o Acquire::Retries=5 \
+            -o Acquire::http::Timeout=30 \
+            -o Acquire::https::Timeout=30 \
+            "$@"; then
+            return 0
+        fi
+        DEBIAN_FRONTEND=noninteractive dpkg --configure -a >/dev/null 2>&1 || true
+        DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=120 update -y >/dev/null 2>&1 || true
+        attempt=$((attempt + 1))
+        sleep 2
+    done
+    return 1
+}
+
+apt_with_retry update --fix-missing || apt_with_retry update || true
+apt_with_retry upgrade -y || true
+apt_with_retry install -y bzip2 gzip coreutils screen dpkg wget vim curl nano zip unzip socat || true
 
 # // Exporting Language to UTF-8
 export LANG='en_US.UTF-8'
@@ -193,33 +213,56 @@ echo -e "${GREEN}Starting Installation............${NC}"
 # // Go To Root Directory
 cd /root/
 # // Remove
-apt-get remove --purge nginx* -y
-apt-get remove --purge nginx-common* -y
-apt-get remove --purge nginx-full* -y
-apt-get remove --purge dropbear* -y
-apt-get remove --purge stunnel4* -y
-apt-get remove --purge apache2* -y
-apt-get remove --purge ufw* -y
-apt-get remove --purge firewalld* -y
-apt-get remove --purge exim4* -y
-apt autoremove -y
+for pkg_glob in nginx* nginx-common* nginx-full* dropbear* stunnel4* apache2* ufw* firewalld* exim4*; do
+    DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=120 remove --purge "$pkg_glob" -y >/dev/null 2>&1 || true
+done
+apt_with_retry autoremove -y >/dev/null 2>&1 || true
 
 # // Update
-apt update -y
+apt_with_retry update -y || true
 
 # // Auto-answer iptables-persistent
 echo iptables-persistent iptables-persistent/autosave_v4 boolean true | debconf-set-selections
 echo iptables-persistent iptables-persistent/autosave_v6 boolean true | debconf-set-selections
 
-# // Install Requirement Tools
-apt-get --reinstall --fix-missing install -y sudo dpkg psmisc socat jq ruby wondershaper python3 tmux nmap bzip2 gzip coreutils wget screen rsyslog iftop htop net-tools zip unzip wget vim net-tools curl nano sed screen gnupg gnupg1 bc apt-transport-https build-essential gcc g++ automake make autoconf perl m4 dos2unix dropbear libreadline-dev zlib1g-dev libssl-dev dirmngr libxml-parser-perl neofetch git lsof iptables iptables-persistent
-apt-get --reinstall --fix-missing install -y libreadline-dev zlib1g-dev libssl-dev python3 screen curl jq bzip2 gzip coreutils rsyslog iftop htop zip unzip net-tools sed gnupg gnupg1 bc sudo apt-transport-https build-essential dirmngr libxml-parser-perl neofetch screenfetch git lsof openssl easy-rsa fail2ban python3-systemd tmux vnstat dropbear libsqlite3-dev socat cron bash-completion ntpdate xz-utils sudo apt-transport-https gnupg2 gnupg1 dnsutils lsb-release chrony
-gem install lolcat
+# // Install Core Required Tools First (keeps critical services like dropbear & fail2ban
+# // isolated from heavy optional/recommended packages such as ghostscript/libgs9)
+if ! apt_with_retry install -y \
+    sudo dpkg psmisc socat jq python3 tmux bzip2 gzip coreutils wget screen \
+    rsyslog iftop htop net-tools zip unzip vim curl nano sed bc \
+    apt-transport-https dos2unix dropbear fail2ban python3-systemd \
+    python3-pyinotify whois vnstat libsqlite3-dev libreadline-dev zlib1g-dev \
+    libssl-dev dirmngr gnupg gnupg2 easy-rsa git openssl lsof iptables \
+    iptables-persistent cron bash-completion ntpdate xz-utils dnsutils \
+    lsb-release chrony; then
+    echo -e "${YELLOW}[ WARN ] Batch inti apt gagal, mencoba ulang paket kritikal...${NC}"
+    apt_with_retry update -y || true
+    apt_with_retry install -y dropbear fail2ban python3-systemd python3-pyinotify whois vnstat jq zip unzip curl wget socat cron iptables-persistent chrony
+fi
+
+# // Build tools for vnstat/wondershaper compilation
+apt_with_retry install -y build-essential gcc g++ automake make autoconf perl m4 libxml-parser-perl || true
+
+# // Optional heavy/cosmetic tools (never block dropbear/fail2ban if mirror stalls)
+apt_with_retry install -y --no-install-recommends ruby wondershaper nmap neofetch screenfetch || true
+gem install lolcat >/dev/null 2>&1 || true
+
+# // Verify critical services packages are installed before continuing
+for req_pkg in dropbear fail2ban python3-systemd; do
+    if ! dpkg -s "$req_pkg" >/dev/null 2>&1; then
+        echo -e "${YELLOW}[ WARN ] Paket ${req_pkg} belum terpasang, mencoba ulang...${NC}"
+        apt_with_retry update -y || true
+        if ! apt_with_retry install -y "$req_pkg"; then
+            echo -e "${RED}[ ERROR ] Gagal menginstall paket kritikal: ${req_pkg}${NC}"
+            exit 1
+        fi
+    fi
+done
 
 # // Update & Upgrade
-apt update -y
-apt upgrade -y
-apt dist-upgrade -y
+apt_with_retry update -y || true
+apt_with_retry upgrade -y || true
+apt_with_retry dist-upgrade -y || true
 
 download_with_retry() {
     local url="$1"

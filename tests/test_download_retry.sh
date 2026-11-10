@@ -12,7 +12,7 @@ assert_contains() {
 }
 
 # 1. Syntax check across all modified installers and updaters
-for script in setup.sh ssh-vpn.sh ins-xray.sh install-api.sh set-br.sh udp-custom.sh vnstat.sh slowdns.sh update.sh bbr.sh; do
+for script in setup.sh ssh-vpn.sh ins-xray.sh install-api.sh set-br.sh udp-custom.sh vnstat.sh slowdns.sh update.sh bbr.sh restart.sh; do
     bash -n "$ROOT/$script"
 done
 
@@ -159,4 +159,38 @@ if ls "$TMP/out"/existing.js.tmp.* >/dev/null 2>&1; then
     exit 1
 fi
 
-echo 'PASS: download_with_retry handles TLS resets, curl fallback, and atomic preservation'
+# 6. Runtime test for apt_with_retry recovering from dpkg lock / mirror glitch
+sed -n '/^apt_with_retry() {/,/^}/p' "$ROOT/setup.sh" > "$TMP/apt_helper.sh"
+rm -f "$TMP/state"/*
+cat > "$TMP/bin/apt-get" <<'EOF'
+#!/usr/bin/env bash
+if [[ "$*" == *"update -y"* ]]; then
+    exit 0
+fi
+count_file="${MOCK_STATE}/apt_count"
+n=$(cat "$count_file" 2>/dev/null || echo 0)
+n=$((n + 1))
+echo "$n" > "$count_file"
+if [[ "$n" -eq 1 ]]; then
+    echo 'E: Could not get lock /var/lib/dpkg/lock-frontend' >&2
+    exit 100
+fi
+exit 0
+EOF
+cat > "$TMP/bin/dpkg" <<'EOF'
+#!/usr/bin/env bash
+exit 0
+EOF
+chmod +x "$TMP/bin/apt-get" "$TMP/bin/dpkg"
+
+PATH="$TMP/bin:$PATH" MOCK_STATE="$TMP/state" bash -c '
+    source "$1"
+    apt_with_retry install -y dropbear fail2ban
+' _ "$TMP/apt_helper.sh"
+
+if [[ "$(cat "$TMP/state/apt_count")" -ne 2 ]]; then
+    echo "FAIL: expected apt_with_retry to retry once and succeed on attempt 2" >&2
+    exit 1
+fi
+
+echo 'PASS: download_with_retry and apt_with_retry handle TLS resets, dpkg locks, and atomic preservation'

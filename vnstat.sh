@@ -127,7 +127,32 @@ download_with_retry() {
     return 1
 }
 
-/etc/init.d/vnstat restart >/dev/null 2>&1
+apt_with_retry() {
+    local max_attempts=3
+    local attempt=1
+    while [ "$attempt" -le "$max_attempts" ]; do
+        if DEBIAN_FRONTEND=noninteractive apt-get \
+            -o DPkg::Lock::Timeout=120 \
+            -o Acquire::Retries=5 \
+            -o Acquire::http::Timeout=30 \
+            -o Acquire::https::Timeout=30 \
+            "$@"; then
+            return 0
+        fi
+        DEBIAN_FRONTEND=noninteractive dpkg --configure -a >/dev/null 2>&1 || true
+        DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=120 update -y >/dev/null 2>&1 || true
+        attempt=$((attempt + 1))
+        sleep 2
+    done
+    return 1
+}
+
+if ! command -v gcc >/dev/null 2>&1 || ! command -v make >/dev/null 2>&1 || [ ! -f /usr/include/sqlite3.h ]; then
+    apt_with_retry update -y >/dev/null 2>&1 || true
+    apt_with_retry install -y build-essential libsqlite3-dev >/dev/null 2>&1 || true
+fi
+
+/etc/init.d/vnstat restart >/dev/null 2>&1 || true
 vnstat_downloaded=0
 for vn_attempt in 1 2 3 4 5; do
     rm -f vnstat-2.6.tar.gz
@@ -137,19 +162,29 @@ for vn_attempt in 1 2 3 4 5; do
     fi
     sleep 2
 done
-if [ "$vnstat_downloaded" -ne 1 ]; then
-    echo "Gagal mendownload vnstat-2.6.tar.gz"
+if [ "$vnstat_downloaded" -eq 1 ]; then
+    tar zxvf vnstat-2.6.tar.gz
+    cd vnstat-2.6
+    if ./configure --prefix=/usr --sysconfdir=/etc >/dev/null 2>&1 && make >/dev/null 2>&1 && make install >/dev/null 2>&1; then
+        cd
+        vnstat -u -i "$NET" >/dev/null 2>&1 || true
+        sed -i 's/Interface "'""eth0""'"/Interface "'""$NET""'"/g' /etc/vnstat.conf 2>/dev/null || true
+        chown vnstat:vnstat /var/lib/vnstat -R 2>/dev/null || true
+    else
+        cd
+        apt_with_retry update -y >/dev/null 2>&1 || true
+        apt_with_retry install -y vnstat || true
+    fi
+else
+    apt_with_retry update -y >/dev/null 2>&1 || true
+    apt_with_retry install -y vnstat || true
+fi
+if ! command -v vnstat >/dev/null 2>&1; then
+    echo "Gagal menginstall vnstat"
     exit 1
 fi
-tar zxvf vnstat-2.6.tar.gz
-cd vnstat-2.6
-./configure --prefix=/usr --sysconfdir=/etc >/dev/null 2>&1 && make >/dev/null 2>&1 && make install >/dev/null 2>&1
-cd
-vnstat -u -i $NET
-sed -i 's/Interface "'""eth0""'"/Interface "'""$NET""'"/g' /etc/vnstat.conf
-chown vnstat:vnstat /var/lib/vnstat -R
-systemctl enable vnstat >/dev/null 2>&1
-/etc/init.d/vnstat restart >/dev/null 2>&1
+systemctl enable vnstat >/dev/null 2>&1 || true
+/etc/init.d/vnstat restart >/dev/null 2>&1 || systemctl restart vnstat >/dev/null 2>&1 || true
 rm -f /root/vnstat-2.6.tar.gz >/dev/null 2>&1
 rm -rf /root/vnstat-2.6 >/dev/null 2>&1
 
