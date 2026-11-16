@@ -619,14 +619,7 @@ function trialssh(){
     echo -e "Password   : $pass"
     echo -e "Expired    : $masa_aktif_menit Menit"
     echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-    slowdns_info=""
-    if slowdns_is_active; then
-        slowdns_info=$(slowdns_account_fields)
-    fi
     echo -e "Host       : $domain"
-    if [[ -n "$slowdns_info" ]]; then
-        echo -e "$slowdns_info"
-    fi
     echo -e "OpenSSH    : $opensh"
     echo -e "Dropbear   : $db"
     echo -e "SSH-WS     : $portsshws"

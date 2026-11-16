@@ -16,11 +16,20 @@ assert_contains() {
 assert_contains ins-xray.sh 'include /etc/nginx/conf.d/xray-custom-paths.inc;'
 assert_contains update.sh 'include /etc/nginx/conf.d/xray-custom-paths.inc;'
 
+# HAProxy must wire the SlowDNS demuxer in both fresh install and updater templates
+assert_contains ins-xray.sh 'frontend slowdns_demux'
+assert_contains ins-xray.sh 'bind 127.0.0.1:10053'
+assert_contains update.sh 'frontend slowdns_demux'
+assert_contains update.sh 'bind 127.0.0.1:10053'
+
 # Fresh installation deploys manager/parser; update refreshes them atomically.
 assert_contains setup.sh 'download_or_copy "custom-path.sh" "/usr/bin/custom-path"'
 assert_contains setup.sh 'download_or_copy "xray-paths.sh" "/usr/lib/xray-paths.sh"'
 assert_contains setup.sh 'download_or_copy "xray-account-detail.sh" "/usr/lib/xray-account-detail.sh"'
 assert_contains setup.sh 'download_or_copy "slowdns.sh" "/usr/bin/slowdns"'
+assert_contains setup.sh 'download_or_copy "add-slowdns.sh" "/usr/bin/add-slowdns"'
+assert_contains setup.sh 'download_or_copy "trial-slowdns.sh" "/usr/bin/trial-slowdns"'
+assert_contains setup.sh 'download_or_copy "del-slowdns.sh" "/usr/bin/del-slowdns"'
 assert_contains setup.sh 'download_or_copy "slowdns-config.sh" "/usr/lib/slowdns-config.sh"'
 
 if grep -nE '(/usr/bin/slowdns|slowdns)[[:space:]]+(enable|on)' "$ROOT/setup.sh" >/dev/null; then

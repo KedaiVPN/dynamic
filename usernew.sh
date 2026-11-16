@@ -133,11 +133,6 @@ fi
 echo "$Login $limitlogin" >> "$limit_file"
 PID=`ps -ef |grep -v grep | grep sshws |awk '{print $2}'`
 
-slowdns_info=""
-if slowdns_is_active; then
-    slowdns_info=$(slowdns_account_fields)
-fi
-
 cat > /home/vps/public_html/ssh-$Login.txt <<-END
 ====================================================================
              P R O J E C T  O F  K E D A I  S S H
@@ -157,7 +152,6 @@ Expired On : $exp
 ====================================================================
 IP Address : $IP
 Host : $domen
-$slowdns_info
 OpenSSH : $opensh
 Dropbear : $db
 SSH-WS : $portsshws
@@ -182,9 +176,6 @@ echo -e "Password : $Pass" | tee -a /etc/log-create-user.log
 echo -e "Expired On : $expe1" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
 echo -e "Host : $domen" | tee -a /etc/log-create-user.log
-if [[ -n "$slowdns_info" ]]; then
-    echo -e "$slowdns_info" | tee -a /etc/log-create-user.log
-fi
 echo -e "SSH-WS : $portsshws" | tee -a /etc/log-create-user.log
 echo -e "SSH-SSL-WS : $wsssl" | tee -a /etc/log-create-user.log
 echo -e "SSL/TLS :  $ssl" | tee -a /etc/log-create-user.log
@@ -213,9 +204,6 @@ echo -e "Password : $Pass" | tee -a /etc/log-create-user.log
 echo -e "Expired On : $expe1" | tee -a /etc/log-create-user.log
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m" | tee -a /etc/log-create-user.log
 echo -e "Host : $domen" | tee -a /etc/log-create-user.log
-if [[ -n "$slowdns_info" ]]; then
-    echo -e "$slowdns_info" | tee -a /etc/log-create-user.log
-fi
 echo -e "SSH-WS : $portsshws" | tee -a /etc/log-create-user.log
 echo -e "SSH-SSL-WS : $wsssl" | tee -a /etc/log-create-user.log
 echo -e "SSL/TLS :  $ssl" | tee -a /etc/log-create-user.log

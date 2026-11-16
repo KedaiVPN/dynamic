@@ -38,7 +38,7 @@ cat > "$TMP/bin/ss" <<'EOF'
 #!/usr/bin/env bash
 n="${MOCK_ACTIVE:-0}"
 for ((i=0; i<n; i++)); do
-    echo "ESTAB 0 0 127.0.0.1:5000${i} 127.0.0.1:22 users:((\"slowdns\",pid=99999,fd=$((10+i))))"
+    echo "ESTAB 0 0 127.0.0.1:5000${i} 127.0.0.1:10053 users:((\"slowdns\",pid=99999,fd=$((10+i))))"
 done
 EOF
 

@@ -546,6 +546,9 @@ download_or_copy "usernew.sh" "/usr/bin/usernew"
 download_or_copy "menu4.sh" "/usr/bin/menu"
 download_or_copy "custom-path.sh" "/usr/bin/custom-path"
 download_or_copy "slowdns.sh" "/usr/bin/slowdns"
+download_or_copy "add-slowdns.sh" "/usr/bin/add-slowdns"
+download_or_copy "trial-slowdns.sh" "/usr/bin/trial-slowdns"
+download_or_copy "del-slowdns.sh" "/usr/bin/del-slowdns"
 download_or_copy "slowdns-config.sh" "/usr/lib/slowdns-config.sh"
 download_or_copy "xray-paths.sh" "/usr/lib/xray-paths.sh"
 download_or_copy "xray-account-detail.sh" "/usr/lib/xray-account-detail.sh"
@@ -573,6 +576,9 @@ chmod +x /usr/bin/add-tr
 chmod +x /usr/bin/add-trgo
 chmod +x /usr/bin/custom-path
 chmod +x /usr/bin/slowdns
+chmod +x /usr/bin/add-slowdns
+chmod +x /usr/bin/trial-slowdns
+chmod +x /usr/bin/del-slowdns
 chmod 644 /usr/lib/slowdns-config.sh
 # SlowDNS is optional. Fresh installs deploy the manager only; the operator
 # enables it later from menu SSH → SLOWDNS after DNS delegation is configured.

@@ -23,9 +23,10 @@ python3 - <<'PY'
 import re
 from pathlib import Path
 
-# Verify SSH menu frame width
+# Verify SSH menu frame width (locate frame dynamically; trialssh edits above shift lines)
 lines = Path('menu-ssh.sh').read_text().splitlines()
-frame = lines[645:661]
+hdr = next(i for i, l in enumerate(lines) if '> SSH MENU <' in l)
+frame = [l for l in lines[hdr:hdr+30] if any(c in l for c in '╔║╠╚')]
 visible = []
 for line in frame:
     quoted = re.findall(r'"(.*)"', line)

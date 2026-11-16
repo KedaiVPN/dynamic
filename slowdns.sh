@@ -13,7 +13,7 @@ SLOWDNS_SERVICE=${SLOWDNS_SERVICE:-/etc/systemd/system/slowdns.service}
 SLOWDNS_BINARY_URL=${SLOWDNS_BINARY_URL:-https://raw.githubusercontent.com/KedaiVPN/dynamic/main/slowdns-linux-amd64}
 SLOWDNS_BINARY_SHA256=${SLOWDNS_BINARY_SHA256:-a9d19e39ae23261628e8f21dac79548b31dceb45f959017bc50300e7ebfcad7d}
 SLOWDNS_RESOLVER=${SLOWDNS_RESOLVER:-1.1.1.1:53}
-SLOWDNS_UPSTREAM=${SLOWDNS_UPSTREAM:-127.0.0.1:22}
+SLOWDNS_UPSTREAM=${SLOWDNS_UPSTREAM:-127.0.0.1:10053}
 if [[ "$SLOWDNS_SERVICE" == "/etc/systemd/system/slowdns.service" ]]; then
     SLOWDNS_WATCHDOG_BIN=${SLOWDNS_WATCHDOG_BIN:-/usr/local/sbin/slowdns-watchdog.sh}
     SLOWDNS_WATCHDOG_SERVICE=${SLOWDNS_WATCHDOG_SERVICE:-/etc/systemd/system/slowdns-watchdog.service}
@@ -449,6 +449,9 @@ menu() {
         echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 2${BIRed}]${BIWhite} Nonaktifkan SlowDNS                          ${BIRed}║${NC}"
         echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 3${BIRed}]${BIWhite} Cek Status SlowDNS                           ${BIRed}║${NC}"
         echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 4${BIRed}]${BIWhite} Informasi SlowDNS                            ${BIRed}║${NC}"
+        echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 5${BIRed}]${BIWhite} Create Account SlowDNS                       ${BIRed}║${NC}"
+        echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 6${BIRed}]${BIWhite} Trial Account SlowDNS                        ${BIRed}║${NC}"
+        echo -e "${BIRed} ║   ${BIRed}[${BIWhite} 7${BIRed}]${BIWhite} Delete Account SlowDNS                       ${BIRed}║${NC}"
         echo -e "${BIRed} ║   ${BIRed}[${BIWhite} x${BIRed}]${BIWhite} Kembali ke Menu SSH                          ${BIRed}║${NC}"
         echo -e "${BIRed} ╚═════════════════════════════════════════════════════╝${NC}"
         echo -e "     ${BIYellow}Press x or [ Ctrl+C ] • To-${BIWhite}Exit${NC}"
@@ -459,6 +462,33 @@ menu() {
             1|01) enable_slowdns; read -n 1 -s -r -p "Press any key to back on menu" ;;
             2|02) disable_slowdns; read -n 1 -s -r -p "Press any key to back on menu" ;;
             3|03|4|04) status; read -n 1 -s -r -p "Press any key to back on menu" ;;
+            5|05)
+                if [[ -x /usr/bin/add-slowdns ]]; then
+                    /usr/bin/add-slowdns
+                elif [[ -x "$(dirname "$0")/add-slowdns.sh" ]]; then
+                    "$(dirname "$0")/add-slowdns.sh"
+                elif [[ -f "$(dirname "$0")/add-slowdns.sh" ]]; then
+                    bash "$(dirname "$0")/add-slowdns.sh"
+                fi
+                ;;
+            6|06)
+                if [[ -x /usr/bin/trial-slowdns ]]; then
+                    /usr/bin/trial-slowdns
+                elif [[ -x "$(dirname "$0")/trial-slowdns.sh" ]]; then
+                    "$(dirname "$0")/trial-slowdns.sh"
+                elif [[ -f "$(dirname "$0")/trial-slowdns.sh" ]]; then
+                    bash "$(dirname "$0")/trial-slowdns.sh"
+                fi
+                ;;
+            7|07)
+                if [[ -x /usr/bin/del-slowdns ]]; then
+                    /usr/bin/del-slowdns
+                elif [[ -x "$(dirname "$0")/del-slowdns.sh" ]]; then
+                    "$(dirname "$0")/del-slowdns.sh"
+                elif [[ -f "$(dirname "$0")/del-slowdns.sh" ]]; then
+                    bash "$(dirname "$0")/del-slowdns.sh"
+                fi
+                ;;
             x|X) return 0 ;;
             *) echo "Press any key to back on menu"; sleep 1 ;;
         esac

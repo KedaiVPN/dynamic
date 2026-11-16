@@ -180,6 +180,9 @@ update_local_script "bbr.sh" "/usr/bin/bbr" || true
 update_local_script "factory-reset.sh" "/usr/local/bin/factory-reset.sh" || true
 update_local_script "update.sh" "/usr/bin/update" || true
 update_local_script "slowdns.sh" "/usr/bin/slowdns" || true
+update_local_script "add-slowdns.sh" "/usr/bin/add-slowdns" || true
+update_local_script "trial-slowdns.sh" "/usr/bin/trial-slowdns" || true
+update_local_script "del-slowdns.sh" "/usr/bin/del-slowdns" || true
 
 # Data-only helper scripts are also syntax-validated before installing.
 update_library_script() {
@@ -326,6 +329,25 @@ sed -i '/use_backend ws_backend if is_http11/d' /etc/haproxy/haproxy.cfg
 
 sed -i '/acl is_websocket_ssl hdr(Upgrade) -i websocket/a \    acl is_http11 ssl_fc_alpn -i http/1.1\n    acl is_http2 ssl_fc_alpn -i h2' /etc/haproxy/haproxy.cfg
 sed -i '/use_backend ws_backend if is_websocket_ssl/a \    use_backend ws_backend if is_http11' /etc/haproxy/haproxy.cfg
+
+# SlowDNS multiplexer (SSH / V2Ray)
+if ! grep -q 'frontend slowdns_demux' /etc/haproxy/haproxy.cfg 2>/dev/null; then
+    cat >> /etc/haproxy/haproxy.cfg << 'EOF'
+
+frontend slowdns_demux
+    bind 127.0.0.1:10053
+    mode tcp
+    tcp-request inspect-delay 2s
+    tcp-request content accept if HTTP
+    acl is_ssh payload(0,7) -m bin 5353482d322e30
+    use_backend ssh_backend if is_ssh
+    default_backend ws_backend
+
+backend ssh_backend
+    mode tcp
+    server ssh_server 127.0.0.1:22
+EOF
+fi
 
 systemctl daemon-reload >/dev/null 2>&1
 systemctl enable haproxy >/dev/null 2>&1

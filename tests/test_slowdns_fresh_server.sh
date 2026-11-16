@@ -103,7 +103,7 @@ grep -Fqx 'SLOWDNS_DOMAIN="fresh.example.test"' "$TMP/slowdns/slowdns.env"
 grep -Fqx 'SLOWDNS_NS_DOMAIN="ns-fresh.example.test"' "$TMP/slowdns/slowdns.env"
 grep -Fqx 'SLOWDNS_UDP_ADDR="198.51.100.7:53"' "$TMP/slowdns/slowdns.env"
 grep -Fq -- '-udp 198.51.100.7:53' "$TMP/slowdns.service"
-grep -Fq -- 'ns-fresh.example.test 127.0.0.1:22' "$TMP/slowdns.service"
+grep -Fq -- 'ns-fresh.example.test 127.0.0.1:10053' "$TMP/slowdns.service"
 [[ -x "$TMP/slowdns-watchdog.sh" ]]
 [[ -s "$TMP/slowdns-watchdog.service" ]]
 [[ -s "$TMP/slowdns-watchdog.timer" ]]

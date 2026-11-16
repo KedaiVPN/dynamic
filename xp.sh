@@ -23,8 +23,12 @@ export LIGHT='\033[0;37m'
 export NC='\033[0m'
 
 # // Databases
-EXP_DB="/etc/expired-users.db"
-TRASH_DB="/etc/expired-users-trash.db"
+EXP_DB="${EXP_DB:-/etc/expired-users.db}"
+TRASH_DB="${TRASH_DB:-/etc/expired-users-trash.db}"
+XRAY_DIR="${XRAY_DIR:-/etc/xray}"
+XRAY_CONFIG="${XRAY_CONFIG:-$XRAY_DIR/config.json}"
+XRAY_LIMIT_DIR="${XRAY_LIMIT_DIR:-$XRAY_DIR/limit}"
+SSH_LIMIT_FILE="${SSH_LIMIT_FILE:-/etc/ssh/limit-user.conf}"
 
 if [ ! -f "$EXP_DB" ]; then
     echo "Database expired users not found!"
@@ -86,49 +90,55 @@ while read -r line; do
 
                 pass="merged-hashed" # Placeholder
                 userdel --force "$user"
-                if [ -f "/etc/ssh/limit-user.conf" ]; then
-                    sed -i "/^$user /d" /etc/ssh/limit-user.conf
+                if [ -f "$SSH_LIMIT_FILE" ]; then
+                    sed -i "/^$user /d" "$SSH_LIMIT_FILE"
                 fi
                 ;;
             vmess)
                 # Extract UUID from config before deleting
                 # Config format: "id": "uuid", ... "email": "user"
                 # We need to find the block for this user and extract ID
-                uuid=$(grep -A 1 "#vms $user " /etc/xray/config.json | grep "id" | cut -d '"' -f 4 | head -n 1 | tr -d '\n\r ')
+                uuid=$(grep -A 1 "#vms $user " "$XRAY_CONFIG" | grep "id" | cut -d '"' -f 4 | head -n 1 | tr -d '\n\r ')
                 if [ -z "$uuid" ]; then uuid="unknown"; fi
 
-                sed -i "/^ *#vms $user /,/^ *},{/d" /etc/xray/config.json
-                sed -i "/^ *#vmsg $user /,/^ *},{/d" /etc/xray/config.json
-                sed -i "/^ *### $user /,/^ *},{/d" /etc/xray/config.json
-                rm -f /etc/xray/$user-tls.json /etc/xray/$user-none.json
-                sed -i "/^$user /d" /etc/xray/limit/vmess /etc/xray/limit/lock-vmess
+                sed -i "/^ *#vms $user /,/^ *},{/d" "$XRAY_CONFIG"
+                sed -i "/^ *#vmsg $user /,/^ *},{/d" "$XRAY_CONFIG"
+                sed -i "/^ *### $user /,/^ *},{/d" "$XRAY_CONFIG"
+                rm -f "$XRAY_DIR/$user-tls.json" "$XRAY_DIR/$user-none.json"
+                if [ -d "$XRAY_LIMIT_DIR" ]; then
+                    sed -i "/^$user /d" "$XRAY_LIMIT_DIR/vmess" "$XRAY_LIMIT_DIR/lock-vmess" 2>/dev/null || true
+                fi
                 pass="$uuid"
                 ;;
             vless)
-                uuid=$(grep -A 1 "#vls $user " /etc/xray/config.json | grep "id" | cut -d '"' -f 4 | head -n 1 | tr -d '\n\r ')
+                uuid=$(grep -A 1 "#vls $user " "$XRAY_CONFIG" | grep "id" | cut -d '"' -f 4 | head -n 1 | tr -d '\n\r ')
                 if [ -z "$uuid" ]; then uuid="unknown"; fi
 
-                sed -i "/^ *#vls $user /,/^ *},{/d" /etc/xray/config.json
-                sed -i "/^ *#vlsg $user /,/^ *},{/d" /etc/xray/config.json
-                sed -i "/^$user /d" /etc/xray/limit/vless /etc/xray/limit/lock-vless
+                sed -i "/^ *#vls $user /,/^ *},{/d" "$XRAY_CONFIG"
+                sed -i "/^ *#vlsg $user /,/^ *},{/d" "$XRAY_CONFIG"
+                if [ -d "$XRAY_LIMIT_DIR" ]; then
+                    sed -i "/^$user /d" "$XRAY_LIMIT_DIR/vless" "$XRAY_LIMIT_DIR/lock-vless" 2>/dev/null || true
+                fi
                 pass="$uuid"
                 ;;
             trojan)
-                uuid=$(grep -A 1 "#tr $user " /etc/xray/config.json | grep "password" | cut -d '"' -f 4 | head -n 1 | tr -d '\n\r ')
+                uuid=$(grep -A 1 "#tr $user " "$XRAY_CONFIG" | grep "password" | cut -d '"' -f 4 | head -n 1 | tr -d '\n\r ')
                 if [ -z "$uuid" ]; then uuid="unknown"; fi
 
-                sed -i "/^ *#tr $user /,/^ *},{/d" /etc/xray/config.json
-                sed -i "/^ *#trg $user /,/^ *},{/d" /etc/xray/config.json
-                sed -i "/^$user /d" /etc/xray/limit/trojan /etc/xray/limit/lock-trojan
+                sed -i "/^ *#tr $user /,/^ *},{/d" "$XRAY_CONFIG"
+                sed -i "/^ *#trg $user /,/^ *},{/d" "$XRAY_CONFIG"
+                if [ -d "$XRAY_LIMIT_DIR" ]; then
+                    sed -i "/^$user /d" "$XRAY_LIMIT_DIR/trojan" "$XRAY_LIMIT_DIR/lock-trojan" 2>/dev/null || true
+                fi
                 pass="$uuid"
                 ;;
             ssws)
                 # Shadowsock format might be different
-                uuid=$(grep -A 1 "#ssw $user " /etc/xray/config.json | grep "password" | cut -d '"' -f 4 | head -n 1 | tr -d '\n\r ')
+                uuid=$(grep -A 1 "#ssw $user " "$XRAY_CONFIG" | grep "password" | cut -d '"' -f 4 | head -n 1 | tr -d '\n\r ')
                 if [ -z "$uuid" ]; then uuid="unknown"; fi
 
-                sed -i "/^ *#ssw $user /,/^ *},{/d" /etc/xray/config.json
-                sed -i "/^ *#sswg $user /,/^ *},{/d" /etc/xray/config.json
+                sed -i "/^ *#ssw $user /,/^ *},{/d" "$XRAY_CONFIG"
+                sed -i "/^ *#sswg $user /,/^ *},{/d" "$XRAY_CONFIG"
                 pass="$uuid"
                 ;;
         esac

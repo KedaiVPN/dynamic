@@ -321,6 +321,19 @@ backend ws_backend
 backend grpc_backend
     mode tcp
     server grpc_server 127.0.0.1:1013
+
+frontend slowdns_demux
+    bind 127.0.0.1:10053
+    mode tcp
+    tcp-request inspect-delay 2s
+    tcp-request content accept if HTTP
+    acl is_ssh payload(0,7) -m bin 5353482d322e30
+    use_backend ssh_backend if is_ssh
+    default_backend ws_backend
+
+backend ssh_backend
+    mode tcp
+    server ssh_server 127.0.0.1:22
 EOF
 
 # install nginx (sudah diinstall di atas saat certbot)
