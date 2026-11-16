@@ -1,5 +1,5 @@
 #!/bin/bash
-# API Module: SlowDNS Renew
+# API Module: SlowDNS Renew (All-in-One: SSH + VMess + VLess)
 # Args: user add_days quota iplimit
 
 user="$1"
@@ -68,13 +68,32 @@ if [[ -z "$new_exp_date" ]]; then
 fi
 new_exp_display="$new_exp_date"
 
-# Update System Expiry
+# 1. Update System Expiry (SSH)
 usermod -e "$new_exp_date" "$user" >/dev/null 2>&1
 passwd -u "$user" >/dev/null 2>&1
 
-# Update Database
+# 2. Update Database for all 3 protocols
 sed -i "/^$user ssh /d" /etc/expired-users.db
+sed -i "/^$user vmess /d" /etc/expired-users.db
+sed -i "/^$user vless /d" /etc/expired-users.db
+
 echo "$user ssh $new_exp_sec" >> /etc/expired-users.db
+echo "$user vmess $new_exp_sec" >> /etc/expired-users.db
+echo "$user vless $new_exp_sec" >> /etc/expired-users.db
+
+# 3. Update Xray config markers (#vms / #vls)
+if [ -f /etc/xray/config.json ]; then
+    sed -i "s/^ *#vms $user .*/#vms $user $new_exp_date/" /etc/xray/config.json
+    sed -i "s/^ *#vls $user .*/#vls $user $new_exp_date/" /etc/xray/config.json
+fi
+
+# 4. Update Xray limit files
+for proto in vmess vless; do
+    limit_f="/etc/xray/limit/$proto"
+    if [ -f "$limit_f" ]; then
+        sed -i "s/^$user \([^ ]*\) [^ ]*/$user \1 $new_exp_date/" "$limit_f"
+    fi
+done
 
 cat <<EOF
 {

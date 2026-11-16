@@ -99,6 +99,10 @@ assert acc["ns_domain"] == "ns-vps.example.com", f"Invalid ns_domain: {acc['ns_d
 assert len(acc["pubkey"]) == 64, f"Invalid pubkey: {acc['pubkey']}"
 assert acc["dns"] == "vps.example.com", f"Invalid dns: {acc['dns']}"
 assert acc["ip_limit"] == "2", f"Invalid ip_limit: {acc['ip_limit']}"
+# All-in-One SlowDNS fields
+assert "uuid" in acc, "Missing uuid in create response"
+assert "vmess_nontls_link" in acc, "Missing vmess_nontls_link in create response"
+assert "vless_nontls_link" in acc, "Missing vless_nontls_link in create response"
 PY
 
 # 3. Test Trial Create
@@ -115,6 +119,10 @@ assert acc["ns_domain"] == "ns-vps.example.com", f"Invalid ns_domain: {acc['ns_d
 assert len(acc["pubkey"]) == 64, f"Invalid pubkey: {acc['pubkey']}"
 assert acc["dns"] == "vps.example.com", f"Invalid dns: {acc['dns']}"
 assert acc["expired"] == "30 Minutes", f"Invalid expired: {acc['expired']}"
+# All-in-One SlowDNS fields
+assert "uuid" in acc, "Missing uuid in trial response"
+assert "vmess_nontls_link" in acc, "Missing vmess_nontls_link in trial response"
+assert "vless_nontls_link" in acc, "Missing vless_nontls_link in trial response"
 PY
 
 # 4. Test Renew
