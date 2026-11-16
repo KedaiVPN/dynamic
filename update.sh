@@ -514,10 +514,18 @@ if command -v iptables >/dev/null 2>&1; then
     fi
 fi
 
-# Sync SlowDNS watchdog and apply new 8MB socket buffer if SlowDNS is already active (never auto-enable)
+# Sync SlowDNS watchdog, migrate legacy upstream (127.0.0.1:22 -> 127.0.0.1:10053 demux),
+# and apply new 8MB socket buffer if SlowDNS is already active (never auto-enable)
 if systemctl is-active --quiet slowdns.service 2>/dev/null; then
     if [ -x /usr/bin/slowdns ]; then
-        /usr/bin/slowdns sync-watchdog >/dev/null 2>&1 || true
+        # One-time migration: pre-demux units point straight at sshd (:22) and would
+        # reset every VMess/VLESS stream. Re-run sync so env+service get upstream 10053.
+        if grep -q '127.0.0.1:22' /etc/systemd/system/slowdns.service 2>/dev/null && \
+           ! grep -q '127.0.0.1:10053' /etc/systemd/system/slowdns.service 2>/dev/null; then
+            /usr/bin/slowdns sync >/dev/null 2>&1 || true
+        else
+            /usr/bin/slowdns sync-watchdog >/dev/null 2>&1 || true
+        fi
     fi
     if [ "${prev_rmem_default:-0}" -lt 8388608 ] 2>/dev/null; then
         systemctl restart slowdns.service >/dev/null 2>&1 || true
